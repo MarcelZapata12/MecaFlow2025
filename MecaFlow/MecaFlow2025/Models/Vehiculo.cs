@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace MecaFlow2025.Models;
 
@@ -25,11 +26,23 @@ public partial class Vehiculo
 
     public int ClienteId { get; set; }
 
+
+    /*
     [Column(TypeName = "datetime")]
     public DateTime? FechaRegistro { get; set; }
+    */
+
+    //prueba de fecha
+    [Column(TypeName = "datetime")]
+    [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public DateTime? FechaRegistro { get; set; }
+
+
 
     [ForeignKey("ClienteId")]
     [InverseProperty("Vehiculos")]
+
+    [BindNever]
     public virtual Cliente Cliente { get; set; } = null!;
 
     [InverseProperty("Vehiculo")]
