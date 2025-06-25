@@ -1,0 +1,47 @@
+﻿@model MecaFlow2025.Models.Diagnostico
+@{
+    ViewData["Title"] = "Crear Diagnóstico";
+}
+
+<h1>Crear Diagnóstico</h1>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="VehiculoId" class="form-label">Vehículo</label>
+        <select asp-for="VehiculoId" class="form-select" asp-items="ViewBag.Vehiculos">
+            <option value="">-- Seleccione --</option>
+        </select>
+        <span asp-validation-for="VehiculoId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Fecha" class="form-label"></label>
+        <input asp-for="Fecha" class="form-control" type="date" />
+        <span asp-validation-for="Fecha" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Detalle" class="form-label"></label>
+        <textarea asp-for="Detalle" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="Detalle" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="EmpleadoId" class="form-label">Mecánico</label>
+        <select asp-for="EmpleadoId" class="form-select" asp-items="ViewBag.Empleados">
+            <option value="">-- Mecanico --</option>
+        </select>
+        <span asp-validation-for="EmpleadoId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

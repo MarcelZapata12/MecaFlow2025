@@ -1,0 +1,16 @@
+﻿@model MecaFlow2025.Models.Diagnostico
+@{
+    ViewData["Title"] = "Eliminar Diagnóstico";
+}
+
+<h1>Eliminar Diagnóstico</h1>
+<div class="alert alert-warning">
+    ¿Borrar diagnóstico de <strong>@Model.Vehiculo.Placa</strong> del día <strong>@Model.Fecha.ToString("yyyy-MM-dd")</strong>?
+</div>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="DiagnosticoId" />
+    <button type="submit" class="btn btn-danger">Sí, borrar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

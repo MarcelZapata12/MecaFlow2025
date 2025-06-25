@@ -1,0 +1,41 @@
+﻿@model MecaFlow2025.Models.Pago
+@{
+    ViewData["Title"] = "Registrar Pago";
+}
+
+<h1>Registrar Pago</h1>
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="FacturaId" class="form-label">Factura</label>
+        <select asp-for="FacturaId" class="form-select" asp-items="ViewBag.Facturas">
+            <option value="">-- Seleccione factura --</option>
+        </select>
+        <span asp-validation-for="FacturaId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FechaPago" class="form-label"></label>
+        <input asp-for="FechaPago" class="form-control" type="date" />
+        <span asp-validation-for="FechaPago" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MetodoPago" class="form-label"></label>
+        <select asp-for="MetodoPago" class="form-select" asp-items="ViewBag.Metodos">
+            <option value="">-- Seleccione método --</option>
+        </select>
+        <span asp-validation-for="MetodoPago" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

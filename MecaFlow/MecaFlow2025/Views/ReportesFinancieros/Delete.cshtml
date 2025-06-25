@@ -1,0 +1,16 @@
+﻿@model MecaFlow2025.Models.ReportesFinanciero
+@{
+    ViewData["Title"] = "Eliminar Reporte Financiero";
+}
+
+<h1>Eliminar Reporte</h1>
+<div class="alert alert-warning">
+    ¿Seguro que deseas eliminar el reporte del día <strong>@Model.Fecha.ToString("yyyy-MM-dd")</strong>?
+</div>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ReporteId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

@@ -1,0 +1,24 @@
+﻿@model MecaFlow2025.Models.ReportesFinanciero
+@{
+    ViewData["Title"] = "Detalle Reporte Financiero";
+}
+
+<h1>Detalle Reporte</h1>
+<dl class="row">
+    <dt class="col-sm-2">Fecha</dt>
+    <dd class="col-sm-10">@Model.Fecha.ToString("yyyy-MM-dd")</dd>
+
+    <dt class="col-sm-2">Total Ingresos</dt>
+    <dd class="col-sm-10">@Model.TotalIngresos?.ToString("C")</dd>
+
+    <dt class="col-sm-2">Total Gastos</dt>
+    <dd class="col-sm-10">@Model.TotalGastos?.ToString("C")</dd>
+
+    <dt class="col-sm-2">Observaciones</dt>
+    <dd class="col-sm-10">@Model.Observaciones</dd>
+</dl>
+
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.ReporteId" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+</p>

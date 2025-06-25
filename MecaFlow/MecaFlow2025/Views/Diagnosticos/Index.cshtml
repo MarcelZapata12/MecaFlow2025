@@ -1,0 +1,37 @@
+﻿@model IEnumerable<MecaFlow2025.Models.Diagnostico>
+@{
+    ViewData["Title"] = "Diagnósticos";
+}
+
+<h1>Diagnósticos</h1>
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nuevo Diagnóstico</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Vehículo</th>
+            <th>Fecha</th>
+            <th>Detalle</th>
+            <th>Empleado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model)
+        {
+            <tr>
+                <td>@d.DiagnosticoId</td>
+                <td>@d.Vehiculo.Placa</td>
+                <td>@d.Fecha.ToString("yyyy-MM-dd")</td>
+                <td>@d.Detalle</td>
+                <td>@d.Empleado?.Nombre</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@d.DiagnosticoId" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@d.DiagnosticoId" class="btn btn-sm btn-danger">Borrar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

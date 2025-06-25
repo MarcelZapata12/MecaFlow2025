@@ -1,8 +1,51 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="home-logo text-center">
+    <img src="~/images/mecaFlowLogo.png"
+         alt="MecaFlow"
+         class="img-fluid" />
+</div>
+
+<div class="home-modules d-flex justify-content-center gap-4 flex-wrap">
+    <a asp-controller="Clientes" asp-action="Index" class="card module-card">
+        <div class="card-body text-center">
+            <img src="~/images/cliente.png" alt="Clientes" class="mb-2" />
+            <h5 class="card-title">Clientes</h5>
+            <p class="card-text text-muted small">Gestión de clientes registrados.</p>
+        </div>
+    </a>
+
+    <a asp-controller="Vehiculos" asp-action="Index" class="card module-card">
+        <div class="card-body text-center">
+            <img src="~/images/vehiculo.png" alt="Vehículos" class="mb-2" />
+            <h5 class="card-title">Vehículos</h5>
+            <p class="card-text text-muted small">Administrar vehículos y su historial.</p>
+        </div>
+    </a>
+
+    <a asp-controller="Pagos" asp-action="Index" class="card module-card">
+        <div class="card-body text-center">
+            <img src="~/images/pagos.png" alt="Pagos" class="mb-2" />
+            <h5 class="card-title">Pagos</h5>
+            <p class="card-text text-muted small">Registrar y gestionar pagos.</p>
+        </div>
+    </a>
+
+    <a asp-controller="Diagnosticos" asp-action="Index" class="card module-card">
+        <div class="card-body text-center">
+            <img src="~/images/diagnosticos.png" alt="Diagnósticos" class="mb-2" />
+            <h5 class="card-title">Diagnósticos</h5>
+            <p class="card-text text-muted small">Registrar diagnósticos de taller.</p>
+        </div>
+    </a>
+
+    <a asp-controller="ReportesFinancieros" asp-action="Index" class="card module-card">
+        <div class="card-body text-center">
+            <img src="~/images/reportesFinancieros.png" alt="Reportes" class="mb-2" />
+            <h5 class="card-title">Reportes</h5>
+            <p class="card-text text-muted small">Ver y crear reportes económicos.</p>
+        </div>
+    </a>
 </div>

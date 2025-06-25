@@ -1,0 +1,36 @@
+﻿@model MecaFlow2025.Models.Vehiculo
+@{
+    ViewData["Title"] = "Editar Vehículo";
+}
+
+<h1>Editar Vehículo</h1>
+<hr />
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="VehiculoId" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label asp-for="Placa"></label>
+        <input asp-for="Placa" class="form-control" />
+        <span asp-validation-for="Placa" class="text-danger"></span>
+    </div>
+    <!-- Marca, Modelo, Anio idénticos a Create -->
+
+    <div class="form-group">
+        <label asp-for="ClienteId">Cliente</label>
+        <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-control">
+            <option value="">-- Seleccione un cliente --</option>
+        </select>
+        <span asp-validation-for="ClienteId" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

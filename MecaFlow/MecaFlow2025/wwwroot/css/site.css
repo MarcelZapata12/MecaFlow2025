@@ -1,22 +1,88 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+}
+
+.navbar-brand img {
+    max-height: 2rem;
+    width: auto;
+}
+
+//estilos defs prueba
+/* 1) Fondo general */
+body {
+    background-color: #f0f2f5;
+}
+
+
+.home-modules {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    padding: 3rem 1rem;
+}
+
+
+    .home-modules .card {
+        background: transparent;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: transform .2s ease, box-shadow .2s ease;
+        width: 14rem; /* ajuste ancho fijo para uniformidad */
+        text-decoration: none; /* quita subrayado si es <a> */
+        color: inherit; /* para que los links respeten el color de texto */
+    }
+
+        /* 4) Elevaci n al pasar el rat n */
+        .home-modules .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+    /* 5) Zona interior blanca redondeada */
+    .home-modules .card-body {
+        background: #ffffff;
+        border-radius: .75rem;
+        padding: 1.75rem 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+        /* Iconos centrados y con algo de espacio */
+        .home-modules .card-body img {
+            max-width: 4rem;
+            margin-bottom: 1rem;
+        }
+
+
+/* Logo m s grande en Home */
+.home-logo img {
+    max-height: 150px; /* aqu  decides lo  grande  que lo quieres */
+    width: auto; /* mantiene proporci n */
+    display: inline-block;
+}
+
+/* Opcional: un poquito m s de espacio bajo el logo */
+.home-logo {
+    margin-bottom: 2.5rem;
 }

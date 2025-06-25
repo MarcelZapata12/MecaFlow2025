@@ -1,0 +1,16 @@
+﻿@model MecaFlow2025.Models.Pago
+@{
+    ViewData["Title"] = "Eliminar Pago";
+}
+
+<h1>Eliminar Pago</h1>
+<div class="alert alert-warning">
+    ¿Eliminar el pago <strong>#@Model.PagoId</strong> de la factura <strong>#@Model.FacturaId</strong>?
+</div>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="PagoId" />
+    <button type="submit" class="btn btn-danger">Confirmar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

@@ -1,0 +1,27 @@
+﻿@model MecaFlow2025.Models.Vehiculo
+@{
+    ViewData["Title"] = "Detalles de Vehículo";
+}
+
+<h1>Detalles</h1>
+<hr />
+
+<dl class="row">
+    <dt class="col-sm-2">Placa</dt>
+    <dd class="col-sm-10">@Model.Placa</dd>
+    <dt class="col-sm-2">Marca</dt>
+    <dd class="col-sm-10">@Model.Marca</dd>
+    <dt class="col-sm-2">Modelo</dt>
+    <dd class="col-sm-10">@Model.Modelo</dd>
+    <dt class="col-sm-2">Año</dt>
+    <dd class="col-sm-10">@Model.Anio</dd>
+    <dt class="col-sm-2">Cliente</dt>
+    <dd class="col-sm-10">@Model.Cliente.Nombre</dd>
+    <dt class="col-sm-2">Fecha Registro</dt>
+    <dd class="col-sm-10">@Model.FechaRegistro?.ToString("g")</dd>
+</dl>
+
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.VehiculoId" class="btn btn-primary">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</p>

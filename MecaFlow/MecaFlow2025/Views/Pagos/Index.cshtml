@@ -1,0 +1,39 @@
+﻿@model IEnumerable<MecaFlow2025.Models.Pago>
+@{
+    ViewData["Title"] = "Pagos";
+}
+
+<h1>Pagos</h1>
+<p><a asp-action="Create" class="btn btn-success">Registrar Pago</a></p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th># Pago</th>
+            <th>Factura</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Fecha Pago</th>
+            <th>Método</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.PagoId</td>
+                <td>@("#" + p.FacturaId)</td>
+                <td>@p.Factura.Cliente.Nombre</td>
+                <td>@p.Factura.Vehiculo.Placa</td>
+                <td>@p.FechaPago.ToString("yyyy-MM-dd")</td>
+                <td>@p.MetodoPago</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@p.PagoId" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@p.PagoId" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@p.PagoId" class="btn btn-sm btn-danger">Borrar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,25 @@
+﻿@model MecaFlow2025.Models.Pago
+@{
+    ViewData["Title"] = "Detalle de Pago";
+}
+
+<h1>Detalle de Pago</h1>
+<dl class="row">
+    <dt class="col-sm-2"># Pago</dt>
+    <dd class="col-sm-10">@Model.PagoId</dd>
+    <dt class="col-sm-2">Factura</dt>
+    <dd class="col-sm-10">#@Model.FacturaId</dd>
+    <dt class="col-sm-2">Cliente</dt>
+    <dd class="col-sm-10">@Model.Factura.Cliente.Nombre</dd>
+    <dt class="col-sm-2">Vehículo</dt>
+    <dd class="col-sm-10">@Model.Factura.Vehiculo.Placa</dd>
+    <dt class="col-sm-2">Fecha Pago</dt>
+    <dd class="col-sm-10">@Model.FechaPago.ToString("yyyy-MM-dd")</dd>
+    <dt class="col-sm-2">Método</dt>
+    <dd class="col-sm-10">@Model.MetodoPago</dd>
+</dl>
+
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.PagoId" class="btn btn-primary">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+</p>
