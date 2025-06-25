@@ -1,0 +1,297 @@
+﻿@{
+    ViewData["Title"] = "Registro Personal de Asistencia";
+    var empleados = ViewBag.Empleados as SelectList;
+    var asistenciasHoy = ViewBag.AsistenciasHoy as List<MecaFlow2025.Models.Asistencia>;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-clock"></i> Registro Personal de Asistencia
+                    </h4>
+                    <div>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> Ver Todos los Registros
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Sección de registro rápido -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="fas fa-sign-in-alt"></i> Registrar Entrada</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="RegistrarEntrada" method="post" onsubmit="return confirmarAccion('entrada')">
+                                        <div class="mb-3">
+                                            <label for="empleadoEntrada" class="form-label">Seleccionar Empleado:</label>
+                                            <select name="empleadoId" id="empleadoEntrada" class="form-select" required>
+                                                <option value="">-- Selecciona tu nombre --</option>
+                                                @if (empleados != null)
+                                                {
+                                                    @foreach (var empleado in empleados)
+                                                    {
+                                                        <option value="@empleado.Value">@empleado.Text</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-lg w-100">
+                                            <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="mb-0"><i class="fas fa-sign-out-alt"></i> Registrar Salida</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form asp-action="RegistrarSalida" method="post" onsubmit="return confirmarAccion('salida')">
+                                        <div class="mb-3">
+                                            <label for="empleadoSalida" class="form-label">Seleccionar Empleado:</label>
+                                            <select name="empleadoId" id="empleadoSalida" class="form-select" required>
+                                                <option value="">-- Selecciona tu nombre --</option>
+                                                @if (empleados != null)
+                                                {
+                                                    @foreach (var empleado in empleados)
+                                                    {
+                                                        <option value="@empleado.Value">@empleado.Text</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <button type="submit" class="btn btn-danger btn-lg w-100">
+                                            <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del día actual -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calendar-day"></i> 
+                                Asistencias del Día - @DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (asistenciasHoy != null && asistenciasHoy.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Empleado</th>
+                                                <th>Entrada</th>
+                                                <th>Salida</th>
+                                                <th>Estado</th>
+                                                <th>Tiempo Trabajado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var asistencia in asistenciasHoy)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                                @asistencia.Empleado.Nombre.Substring(0, 1).ToUpper()
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-bold">@asistencia.Empleado.Nombre</div>
+                                                                <small class="text-muted">@asistencia.Empleado.Puesto</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        @if (asistencia.HoraEntrada.HasValue)
+                                                        {
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-sign-in-alt"></i> @asistencia.HoraEntrada.Value.ToString("HH:mm")
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">No registrada</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (asistencia.HoraSalida.HasValue)
+                                                        {
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-sign-out-alt"></i> @asistencia.HoraSalida.Value.ToString("HH:mm")
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">No registrada</span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (asistencia.HoraEntrada.HasValue && asistencia.HoraSalida.HasValue)
+                                                        {
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check"></i> Completo
+                                                            </span>
+                                                        }
+                                                        else if (asistencia.HoraEntrada.HasValue)
+                                                        {
+                                                            <span class="badge bg-warning">
+                                                                <i class="fas fa-clock"></i> En Trabajo
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">
+                                                                <i class="fas fa-question"></i> Sin Iniciar
+                                                            </span>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        @if (asistencia.HoraEntrada.HasValue && asistencia.HoraSalida.HasValue)
+                                                        {
+                                                            
+                                                                var horasTrabajadas = asistencia.HoraSalida.Value.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
+                                                                var horas = (int)horasTrabajadas.TotalHours;
+                                                                var minutos = horasTrabajadas.Minutes;
+                                                            
+                                                            <span class="badge bg-info">
+                                                                <i class="fas fa-hourglass-half"></i> @($"{horas}h {minutos}m")
+                                                            </span>
+                                                        }
+                                                        else if (asistencia.HoraEntrada.HasValue)
+                                                        {
+                                                            
+                                                                var tiempoActual = TimeOnly.FromDateTime(DateTime.Now);
+                                                                var tiempoTranscurrido = tiempoActual.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
+                                                                var horasTranscurridas = (int)tiempoTranscurrido.TotalHours;
+                                                                var minutosTranscurridos = tiempoTranscurrido.Minutes;
+                                                            
+                                                            <span class="badge bg-warning">
+                                                                <i class="fas fa-clock"></i> @($"{horasTranscurridas}h {minutosTranscurridos}m")
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">-</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                                    <div>No hay registros de asistencia para el día de hoy</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmarAccion(tipo) {
+        var empleadoSelect = document.getElementById(tipo === 'entrada' ? 'empleadoEntrada' : 'empleadoSalida');
+        var nombreEmpleado = empleadoSelect.options[empleadoSelect.selectedIndex].text;
+        
+        if (empleadoSelect.value === '') {
+            alert('Por favor selecciona un empleado');
+            return false;
+        }
+        
+        var mensaje = tipo === 'entrada' 
+            ? `¿Confirmas que deseas registrar la ENTRADA de ${nombreEmpleado}?`
+            : `¿Confirmas que deseas registrar la SALIDA de ${nombreEmpleado}?`;
+            
+        return confirm(mensaje);
+    }
+    
+    // Actualizar la hora actual cada segundo
+    function actualizarHora() {
+        var ahora = new Date();
+        var horaActual = ahora.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
+        
+        // Si existe un elemento para mostrar la hora, actualízalo
+        var elementoHora = document.getElementById('hora-actual');
+        if (elementoHora) {
+            elementoHora.textContent = horaActual;
+        }
+    }
+    
+    // Actualizar cada segundo
+    setInterval(actualizarHora, 1000);
+    
+    // Ejecutar al cargar la página
+    document.addEventListener('DOMContentLoaded', actualizarHora);
+</script>
+
+<style>
+    .avatar-sm {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border: 1px solid rgba(0, 0, 0, 0.125);
+        margin-bottom: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.25rem;
+        font-size: 1.1rem;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+    }
+    
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+    }
+</style>

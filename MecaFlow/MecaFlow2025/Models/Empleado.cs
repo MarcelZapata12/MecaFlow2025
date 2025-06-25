@@ -26,7 +26,7 @@ public partial class Empleado
 
     public DateOnly? FechaIngreso { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime? FechaRegistro { get; set; }
