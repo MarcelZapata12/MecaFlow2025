@@ -17,6 +17,24 @@
         <input asp-for="Placa" class="form-control" />
         <span asp-validation-for="Placa" class="text-danger"></span>
     </div>
+
+    <div class="form-group">
+        <label asp-for="Marca"></label>
+        <input asp-for="Marca" class="form-control" />
+        <span asp-validation-for="Marca" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Modelo"></label>
+        <input asp-for="Modelo" class="form-control" />
+        <span asp-validation-for="Modelo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Anio"></label>
+        <input asp-for="Anio" class="form-control" />
+        <span asp-validation-for="Anio" class="text-danger"></span>
+    </div>
     <!-- Marca, Modelo, Anio idénticos a Create -->
 
     <div class="form-group">
@@ -25,8 +43,9 @@
             <option value="">-- Seleccione un cliente --</option>
         </select>
         <span asp-validation-for="ClienteId" class="text-danger"></span>
+        </br>
     </div>
-
+    
     <button type="submit" class="btn btn-primary">Guardar</button>
     <a asp-action="Index" class="btn btn-secondary">Volver</a>
 </form>

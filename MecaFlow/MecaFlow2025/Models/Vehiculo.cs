@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ public partial class Vehiculo
     [ForeignKey("ClienteId")]
     [InverseProperty("Vehiculos")]
 
-    [BindNever]
+    [ValidateNever]
     public virtual Cliente Cliente { get; set; } = null!;
 
     [InverseProperty("Vehiculo")]
