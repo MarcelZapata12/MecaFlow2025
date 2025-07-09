@@ -5,54 +5,38 @@
 }
 
 <div class="container mt-4">
-    <h2 class="text-primary mb-4"><i class="bi bi-pencil-square"></i> Editar Diagnóstico</h2>
+    <h2 class="text-warning mb-4"><i class="bi bi-pencil-square"></i> Editar Diagnóstico</h2>
 
-    <form asp-action="Edit" method="post" class="shadow p-4 rounded bg-light">
-        @* Campo oculto para el ID *@
+    <form asp-action="Edit" class="shadow p-4 rounded bg-light">
         <input type="hidden" asp-for="DiagnosticoId" />
-
-        <!-- Mostrar errores generales -->
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
         <div class="mb-3">
             <label asp-for="VehiculoId" class="form-label">Vehículo</label>
             <select asp-for="VehiculoId" class="form-select" asp-items="ViewBag.Vehiculos">
                 <option value="">-- Selecciona un vehículo --</option>
             </select>
-            <span asp-validation-for="VehiculoId" class="text-danger"></span>
         </div>
-
         <div class="mb-3">
             <label asp-for="Fecha" class="form-label">Fecha</label>
             <input asp-for="Fecha" type="date" class="form-control" />
-            <span asp-validation-for="Fecha" class="text-danger"></span>
         </div>
-
         <div class="mb-3">
             <label asp-for="Detalle" class="form-label">Detalle</label>
             <textarea asp-for="Detalle" class="form-control" rows="3"></textarea>
-            <span asp-validation-for="Detalle" class="text-danger"></span>
         </div>
-
         <div class="mb-3">
             <label asp-for="EmpleadoId" class="form-label">Empleado</label>
             <select asp-for="EmpleadoId" class="form-select" asp-items="ViewBag.Empleados">
                 <option value="">-- Selecciona un empleado --</option>
             </select>
-            <span asp-validation-for="EmpleadoId" class="text-danger"></span>
         </div>
 
         <div class="d-flex justify-content-between">
             <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Cancelar
+                <i class="bi bi-arrow-left"></i> Volver
             </a>
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Guardar cambios
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-circle"></i> Guardar Cambios
             </button>
         </div>
     </form>
 </div>
-
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-}

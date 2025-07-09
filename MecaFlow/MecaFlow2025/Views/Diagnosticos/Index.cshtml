@@ -1,107 +1,196 @@
 ﻿@model IEnumerable<MecaFlow2025.Models.Diagnostico>
-
 @{
     ViewData["Title"] = "Diagnósticos";
 }
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-primary"><i class="bi bi-heart-pulse-fill"></i> Diagnósticos</h2>
-        <a asp-action="Create" class="btn btn-success shadow">
-            <i class="bi bi-plus-circle"></i> Nuevo Diagnóstico
-        </a>
+        <h2 class="text-primary">
+            <i class="bi bi-clipboard-heart"></i> Diagnósticos
+        </h2>
+        <div>
+            <a asp-action="ExportToExcel" class="btn btn-outline-success me-2">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
+            <a asp-action="ExportToPdf" class="btn btn-outline-danger me-2">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Nuevo Diagnóstico
+            </a>
+        </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered align-middle">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th>#</th>
-                    <th>Vehículo</th>
-                    <th>Fecha</th>
-                    <th>Detalle</th>
-                    <th>Empleado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="text-center">
-                @foreach (var d in Model)
-                {
-                    <tr>
-                        <td>@d.DiagnosticoId</td>
-                        <td>@d.Vehiculo?.Placa</td>
-                        <td>@d.Fecha.ToString("yyyy-MM-dd")</td>
-                        <td>@d.Detalle</td>
-                        <td>@d.Empleado?.Nombre</td>
-                        <td>
-                            <a asp-action="Edit" asp-route-id="@d.DiagnosticoId" class="btn btn-warning btn-sm me-1">
-                                <i class="bi bi-pencil-square"></i> Editar
-                            </a>
-
-                            <!-- Botón Eliminar con data-* -->
-                            <button type="button" class="btn btn-danger btn-sm"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#deleteModal"
-                                    data-id="@d.DiagnosticoId"
-                                    data-vehiculo="@d.Vehiculo?.Placa"
-                                    data-fecha="@d.Fecha.ToString("yyyy-MM-dd")"
-                                    data-detalle="@d.Detalle"
-                                    data-empleado="@d.Empleado?.Nombre"
-                                    onclick="showDeleteModal(this)">
-                                <i class="bi bi-trash3"></i> Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- MODAL COMPLETO -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteModalLabel"><i class="bi bi-exclamation-triangle-fill"></i> Confirmar eliminación</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+    <!-- KPIs -->
+    <div class="row text-white mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Diagnósticos</h5>
+                    <p class="display-6 fw-bold">@Model.Count()</p>
+                </div>
             </div>
-            <div class="modal-body">
-                <p>¿Estás seguro que deseas eliminar este diagnóstico?</p>
-                <ul class="list-group">
-                    <li class="list-group-item"><strong>Vehículo:</strong> <span id="modalVehiculo"></span></li>
-                    <li class="list-group-item"><strong>Fecha:</strong> <span id="modalFecha"></span></li>
-                    <li class="list-group-item"><strong>Detalle:</strong> <span id="modalDetalle"></span></li>
-                    <li class="list-group-item"><strong>Empleado:</strong> <span id="modalEmpleado"></span></li>
-                </ul>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Última Fecha</h5>
+                    <p class="display-6 fw-bold">
+                        @Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("yyyy-MM-dd")
+                    </p>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="post">
-                    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
-                </form>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Por Empleado</h5>
+                    <p class="display-6 fw-bold">@Model.Select(d => d.Empleado?.Nombre).Distinct().Count()</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark shadow">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Hoy</h5>
+                    <p class="display-6 fw-bold">
+                        @Model.Count(d => d.Fecha.Date == DateTime.Today)
+                    </p>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Buscador -->
+    <form method="get" asp-action="Index" class="input-group mb-3">
+        <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Buscar por placa, detalle o empleado...">
+        <button class="btn btn-outline-primary" type="submit">
+            <i class="bi bi-search"></i> Buscar
+        </button>
+    </form>
+
+    <!-- Gráfico -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <canvas id="diagnosticosChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <table class="table table-dark table-striped table-hover text-center align-middle">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>
+                    <a asp-action="Index" asp-route-sort="vehiculo" asp-route-dir="@(ViewBag.Sort == "vehiculo" && ViewBag.Dir == "asc" ? "desc" : "asc")">
+                        Vehículo
+                        @if (ViewBag.Sort == "vehiculo")
+                        {
+                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sort="fecha" asp-route-dir="@(ViewBag.Sort == "fecha" && ViewBag.Dir == "asc" ? "desc" : "asc")">
+                        Fecha
+                        @if (ViewBag.Sort == "fecha")
+                        {
+                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sort="detalle" asp-route-dir="@(ViewBag.Sort == "detalle" && ViewBag.Dir == "asc" ? "desc" : "asc")">
+                        Detalle
+                        @if (ViewBag.Sort == "detalle")
+                        {
+                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sort="empleado" asp-route-dir="@(ViewBag.Sort == "empleado" && ViewBag.Dir == "asc" ? "desc" : "asc")">
+                        Empleado
+                        @if (ViewBag.Sort == "empleado")
+                        {
+                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+                </th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model)
+            {
+                <tr class="@(d.Fecha.Date == DateTime.Today ? "table-success" : "")">
+                    <td>@d.DiagnosticoId</td>
+                    <td>@d.Vehiculo.Placa</td>
+                    <td>@d.Fecha.ToString("yyyy-MM-dd")</td>
+                    <td>@d.Detalle</td>
+                    <td>@d.Empleado?.Nombre</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@d.DiagnosticoId" class="btn btn-sm btn-warning">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@d.DiagnosticoId" class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @using System.Text.Json
     <script>
-        function showDeleteModal(button) {
-            const id = button.getAttribute("data-id");
-            const vehiculo = button.getAttribute("data-vehiculo");
-            const fecha = button.getAttribute("data-fecha");
-            const detalle = button.getAttribute("data-detalle");
-            const empleado = button.getAttribute("data-empleado");
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('diagnosticosChart');
+            if (!ctx) return;
 
-            // Setear valores en el modal
-            document.getElementById("modalVehiculo").innerText = vehiculo;
-            document.getElementById("modalFecha").innerText = fecha;
-            document.getElementById("modalDetalle").innerText = detalle;
-            document.getElementById("modalEmpleado").innerText = empleado;
+            const labels = @Html.Raw(JsonSerializer.Serialize(
+            Model.GroupBy(d => d.Fecha.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => g.Key.ToString("yyyy-MM-dd"))
+            ));
 
-            // Setear URL del formulario
-            document.getElementById("deleteForm").action = `/Diagnosticos/Delete/${id}`;
-        }
+            const data = @Html.Raw(JsonSerializer.Serialize(
+        Model.GroupBy(d => d.Fecha.Date)
+        .OrderBy(g => g.Key)
+        .Select(g => g.Count())
+        ));
+
+            if (labels.length === 0 || data.length === 0) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Diagnósticos por Fecha',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            precision: 0,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        });
     </script>
 }
+

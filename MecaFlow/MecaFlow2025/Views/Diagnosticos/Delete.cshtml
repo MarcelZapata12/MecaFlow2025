@@ -5,15 +5,18 @@
 }
 
 <div class="container mt-4">
-    <h2 class="text-danger mb-4"><i class="bi bi-trash3"></i> Eliminar Diagnóstico</h2>
+    <h2 class="text-danger mb-4">
+        <i class="bi bi-exclamation-triangle-fill"></i> Eliminar Diagnóstico
+    </h2>
 
-    <div class="alert alert-danger shadow-sm p-3">
-        ¿Estás seguro que deseas eliminar el siguiente diagnóstico?
+    <div class="alert alert-warning shadow">
+        <h5>¿Estás seguro que deseas eliminar este diagnóstico?</h5>
+        <p class="mb-0">Esta acción no se puede deshacer.</p>
     </div>
 
-    <dl class="row bg-light p-4 rounded shadow">
+    <dl class="row">
         <dt class="col-sm-3">Vehículo</dt>
-        <dd class="col-sm-9">@Model.Vehiculo?.Placa</dd>
+        <dd class="col-sm-9">@Model.Vehiculo.Placa</dd>
 
         <dt class="col-sm-3">Fecha</dt>
         <dd class="col-sm-9">@Model.Fecha.ToString("yyyy-MM-dd")</dd>
@@ -25,14 +28,15 @@
         <dd class="col-sm-9">@Model.Empleado?.Nombre</dd>
     </dl>
 
-    <form asp-action="Delete">
+    <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="DiagnosticoId" />
-        <div class="d-flex justify-content-between mt-3">
+
+        <div class="d-flex justify-content-between">
             <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-x-circle"></i> Cancelar
+                <i class="bi bi-arrow-left"></i> Cancelar
             </a>
             <button type="submit" class="btn btn-danger">
-                <i class="bi bi-trash"></i> Confirmar Eliminación
+                <i class="bi bi-trash3-fill"></i> Confirmar Eliminación
             </button>
         </div>
     </form>
