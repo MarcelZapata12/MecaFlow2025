@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// DiagnosticosController.cs (Completamente funcional con filtro de búsqueda)
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
@@ -16,39 +18,31 @@ namespace MecaFlow2025.Controllers
         }
 
         // GET: Diagnosticos
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string search)
         {
-            var lista = await _context.Diagnosticos
+            var diagnosticos = _context.Diagnosticos
                 .Include(d => d.Vehiculo)
                 .Include(d => d.Empleado)
-                .OrderByDescending(d => d.Fecha)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                diagnosticos = diagnosticos.Where(d =>
+                    d.Detalle.Contains(search) ||
+                    d.Vehiculo.Placa.Contains(search) ||
+                    d.Empleado.Nombre.Contains(search));
+            }
+
+            ViewBag.CurrentFilter = search;
+            var lista = await diagnosticos.OrderByDescending(d => d.Fecha).ToListAsync();
             return View(lista);
-        }
-
-        // GET: Diagnosticos/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var diag = await _context.Diagnosticos
-                .Include(d => d.Vehiculo)
-                .Include(d => d.Empleado)
-                .FirstOrDefaultAsync(d => d.DiagnosticoId == id);
-            if (diag == null) return NotFound();
-
-            return View(diag);
         }
 
         // GET: Diagnosticos/Create
         public IActionResult Create()
         {
-            ViewBag.Vehiculos = new SelectList(
-                _context.Vehiculos.OrderBy(v => v.Placa),
-                "VehiculoId", "Placa");
-            ViewBag.Empleados = new SelectList(
-                _context.Empleados.OrderBy(e => e.Nombre),
-                "EmpleadoId", "Nombre");
+            ViewBag.Vehiculos = new SelectList(_context.Vehiculos.OrderBy(v => v.Placa), "VehiculoId", "Placa");
+            ViewBag.Empleados = new SelectList(_context.Empleados.OrderBy(e => e.Nombre), "EmpleadoId", "Nombre");
             return View();
         }
 
@@ -58,12 +52,8 @@ namespace MecaFlow2025.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Vehiculos = new SelectList(
-                    _context.Vehiculos.OrderBy(v => v.Placa),
-                    "VehiculoId", "Placa", model.VehiculoId);
-                ViewBag.Empleados = new SelectList(
-                    _context.Empleados.OrderBy(e => e.Nombre),
-                    "EmpleadoId", "Nombre", model.EmpleadoId);
+                ViewBag.Vehiculos = new SelectList(_context.Vehiculos.OrderBy(v => v.Placa), "VehiculoId", "Placa", model.VehiculoId);
+                ViewBag.Empleados = new SelectList(_context.Empleados.OrderBy(e => e.Nombre), "EmpleadoId", "Nombre", model.EmpleadoId);
                 return View(model);
             }
 
@@ -80,12 +70,8 @@ namespace MecaFlow2025.Controllers
             var diag = await _context.Diagnosticos.FindAsync(id);
             if (diag == null) return NotFound();
 
-            ViewBag.Vehiculos = new SelectList(
-                _context.Vehiculos.OrderBy(v => v.Placa),
-                "VehiculoId", "Placa", diag.VehiculoId);
-            ViewBag.Empleados = new SelectList(
-                _context.Empleados.OrderBy(e => e.Nombre),
-                "EmpleadoId", "Nombre", diag.EmpleadoId);
+            ViewBag.Vehiculos = new SelectList(_context.Vehiculos.OrderBy(v => v.Placa), "VehiculoId", "Placa", diag.VehiculoId);
+            ViewBag.Empleados = new SelectList(_context.Empleados.OrderBy(e => e.Nombre), "EmpleadoId", "Nombre", diag.EmpleadoId);
             return View(diag);
         }
 
@@ -94,14 +80,11 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("DiagnosticoId,VehiculoId,Fecha,Detalle,EmpleadoId")] Diagnostico model)
         {
             if (id != model.DiagnosticoId) return BadRequest();
+
             if (!ModelState.IsValid)
             {
-                ViewBag.Vehiculos = new SelectList(
-                    _context.Vehiculos.OrderBy(v => v.Placa),
-                    "VehiculoId", "Placa", model.VehiculoId);
-                ViewBag.Empleados = new SelectList(
-                    _context.Empleados.OrderBy(e => e.Nombre),
-                    "EmpleadoId", "Nombre", model.EmpleadoId);
+                ViewBag.Vehiculos = new SelectList(_context.Vehiculos.OrderBy(v => v.Placa), "VehiculoId", "Placa", model.VehiculoId);
+                ViewBag.Empleados = new SelectList(_context.Empleados.OrderBy(e => e.Nombre), "EmpleadoId", "Nombre", model.EmpleadoId);
                 return View(model);
             }
 
@@ -128,6 +111,7 @@ namespace MecaFlow2025.Controllers
                 .Include(d => d.Vehiculo)
                 .Include(d => d.Empleado)
                 .FirstOrDefaultAsync(d => d.DiagnosticoId == id);
+
             if (diag == null) return NotFound();
 
             return View(diag);
