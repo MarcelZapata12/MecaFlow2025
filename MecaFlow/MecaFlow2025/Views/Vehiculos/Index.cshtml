@@ -6,6 +6,15 @@
 <h1>Vehículos</h1>
 <p><a asp-action="Create" class="btn btn-success">Nuevo Vehículo</a></p>
 
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="filtroPlaca" class="form-control" placeholder="Buscar por placa..."
+               value="@ViewBag.FiltroPlaca" />
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
+    </div>
+</form>
+
 <table class="table table-bordered">
     <thead>
         <tr>
@@ -23,8 +32,8 @@
         {
             <tr>
                 <td>@v.Placa</td>
-                <td>@v.Marca</td>
-                <td>@v.Modelo</td>
+                <td>@v.Marca.Nombre</td>
+                <td>@v.Modelo.Nombre</td>
                 <td>@v.Anio</td>
                 <td>@v.Cliente.Nombre</td>
                 <td>@v.FechaRegistro?.ToString("g")</td>
