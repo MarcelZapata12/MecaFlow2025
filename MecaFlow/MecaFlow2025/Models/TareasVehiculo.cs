@@ -17,9 +17,9 @@ public partial class TareasVehiculo
     [StringLength(200)]
     public string? Descripcion { get; set; }
 
-    public DateOnly? FechaRegistro { get; set; }
+    public DateTime? FechaRegistro { get; set; }
 
-    public bool? Realizada { get; set; }
+    public bool Realizada { get; set; }
 
     [ForeignKey("VehiculoId")]
     [InverseProperty("TareasVehiculos")]

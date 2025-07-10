@@ -1,0 +1,55 @@
+﻿@model MecaFlow2025.Models.TareasVehiculo
+
+@{
+    ViewData["Title"] = "Crear Tarea";
+}
+
+<h1>Crear Tarea</h1>
+<hr />
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+    <!-- Dropdown de placas de vehículos -->
+    <div class="form-group">
+        <label asp-for="VehiculoId" class="control-label">Vehículo (Placa)</label>
+        <select asp-for="VehiculoId" class="form-control" asp-items="ViewBag.Vehiculos">
+            <option value="">-- Seleccione una placa --</option>
+        </select>
+        <span asp-validation-for="VehiculoId" class="text-danger"></span>
+    </div>
+
+
+    <!-- Descripción -->
+    <div class="form-group">
+        <label asp-for="Descripcion" class="control-label"></label>
+        <input asp-for="Descripcion" class="form-control" />
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+
+    <!-- Fecha de registro -->
+    <div class="form-group">
+        <label asp-for="FechaRegistro" class="control-label"></label>
+        <input asp-for="FechaRegistro" class="form-control" type="date" />
+        <span asp-validation-for="FechaRegistro" class="text-danger"></span>
+    </div>
+
+    <!-- Checkbox de realizada -->
+    <div class="form-check mb-3">
+        <input type="hidden" name="Realizada" value="false" />
+
+        <input asp-for="Realizada" class="form-check-input" type="checkbox" id="Realizada" />
+        <label class="form-check-label" for="Realizada">¿Tarea realizada?</label>
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
