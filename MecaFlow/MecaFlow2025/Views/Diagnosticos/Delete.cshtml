@@ -1,43 +1,34 @@
 ﻿@model MecaFlow2025.Models.Diagnostico
-
 @{
-    ViewData["Title"] = "Eliminar Diagnóstico";
+    Layout = null;
 }
 
-<div class="container mt-4">
-    <h2 class="text-danger mb-4">
+<div class="text-center mb-4">
+    <h4 class="text-danger">
         <i class="bi bi-exclamation-triangle-fill"></i> Eliminar Diagnóstico
-    </h2>
-
-    <div class="alert alert-warning shadow">
-        <h5>¿Estás seguro que deseas eliminar este diagnóstico?</h5>
-        <p class="mb-0">Esta acción no se puede deshacer.</p>
+    </h4>
+    <div class="alert alert-warning mt-3">
+        <strong>¿Estás seguro que deseas eliminar este diagnóstico?</strong><br />
+        Esta acción no se puede deshacer.
     </div>
-
-    <dl class="row">
-        <dt class="col-sm-3">Vehículo</dt>
-        <dd class="col-sm-9">@Model.Vehiculo.Placa</dd>
-
-        <dt class="col-sm-3">Fecha</dt>
-        <dd class="col-sm-9">@Model.Fecha.ToString("yyyy-MM-dd")</dd>
-
-        <dt class="col-sm-3">Detalle</dt>
-        <dd class="col-sm-9">@Model.Detalle</dd>
-
-        <dt class="col-sm-3">Empleado</dt>
-        <dd class="col-sm-9">@Model.Empleado?.Nombre</dd>
-    </dl>
-
-    <form asp-action="Delete" method="post">
-        <input type="hidden" asp-for="DiagnosticoId" />
-
-        <div class="d-flex justify-content-between">
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Cancelar
-            </a>
-            <button type="submit" class="btn btn-danger">
-                <i class="bi bi-trash3-fill"></i> Confirmar Eliminación
-            </button>
-        </div>
-    </form>
 </div>
+
+<dl class="row text-start">
+    <dt class="col-sm-4">Vehículo</dt>
+    <dd class="col-sm-8">@Model.Vehiculo?.Placa</dd>
+    <dt class="col-sm-4">Fecha</dt>
+    <dd class="col-sm-8">@Model.Fecha.ToString("yyyy-MM-dd")</dd>
+    <dt class="col-sm-4">Detalle</dt>
+    <dd class="col-sm-8">@Model.Detalle</dd>
+    <dt class="col-sm-4">Empleado</dt>
+    <dd class="col-sm-8">@Model.Empleado?.Nombre</dd>
+</dl>
+
+<form asp-action="DeleteConfirmed" asp-route-id="@Model.DiagnosticoId" method="post" class="d-flex justify-content-between mt-4">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle"></i> Cancelar
+    </button>
+    <button type="submit" class="btn btn-danger">
+        <i class="bi bi-trash"></i> Confirmar Eliminación
+    </button>
+</form>

@@ -1,7 +1,11 @@
-using Microsoft.EntityFrameworkCore;                // <<— necesario para UseSqlServer
-using MecaFlow2025.Models;                          // <<— tu namespace del Context
+using Microsoft.EntityFrameworkCore;                // necesario para UseSqlServer
+using MecaFlow2025.Models;                          // tu namespace del Context
+using QuestPDF.Infrastructure;                      // <<— IMPORTANTE: agrega esto
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar QuestPDF para usar la licencia Community (gratis para proyectos educativos)
+QuestPDF.Settings.License = LicenseType.Community;
 
 // 1) Agrega MVC
 builder.Services.AddControllersWithViews();

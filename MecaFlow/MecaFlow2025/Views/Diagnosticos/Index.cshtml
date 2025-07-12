@@ -81,42 +81,10 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>
-                    <a asp-action="Index" asp-route-sort="vehiculo" asp-route-dir="@(ViewBag.Sort == "vehiculo" && ViewBag.Dir == "asc" ? "desc" : "asc")">
-                        Vehículo
-                        @if (ViewBag.Sort == "vehiculo")
-                        {
-                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
-                        }
-                    </a>
-                </th>
-                <th>
-                    <a asp-action="Index" asp-route-sort="fecha" asp-route-dir="@(ViewBag.Sort == "fecha" && ViewBag.Dir == "asc" ? "desc" : "asc")">
-                        Fecha
-                        @if (ViewBag.Sort == "fecha")
-                        {
-                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
-                        }
-                    </a>
-                </th>
-                <th>
-                    <a asp-action="Index" asp-route-sort="detalle" asp-route-dir="@(ViewBag.Sort == "detalle" && ViewBag.Dir == "asc" ? "desc" : "asc")">
-                        Detalle
-                        @if (ViewBag.Sort == "detalle")
-                        {
-                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
-                        }
-                    </a>
-                </th>
-                <th>
-                    <a asp-action="Index" asp-route-sort="empleado" asp-route-dir="@(ViewBag.Sort == "empleado" && ViewBag.Dir == "asc" ? "desc" : "asc")">
-                        Empleado
-                        @if (ViewBag.Sort == "empleado")
-                        {
-                            <i class="bi bi-arrow-@(ViewBag.Dir == "asc" ? "up" : "down")"></i>
-                        }
-                    </a>
-                </th>
+                <th>Vehículo</th>
+                <th>Fecha</th>
+                <th>Detalle</th>
+                <th>Empleado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -130,10 +98,12 @@
                     <td>@d.Detalle</td>
                     <td>@d.Empleado?.Nombre</td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@d.DiagnosticoId" class="btn btn-sm btn-warning">
+                        <a href="javascript:void(0)" class="btn btn-sm btn-warning"
+                           onclick="openModal('@Url.Action("Edit", "Diagnosticos", new { id = d.DiagnosticoId })')">
                             <i class="bi bi-pencil-square"></i>
                         </a>
-                        <a asp-action="Delete" asp-route-id="@d.DiagnosticoId" class="btn btn-sm btn-danger">
+                        <a href="javascript:void(0)" class="btn btn-sm btn-danger"
+                           onclick="openModal('@Url.Action("Delete", "Diagnosticos", new { id = d.DiagnosticoId })')">
                             <i class="bi bi-trash"></i>
                         </a>
                     </td>
@@ -143,10 +113,41 @@
     </table>
 </div>
 
+<!-- Modal genérico bien centrado -->
+<div class="modal fade" id="modalDiagnostico" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Editar / Eliminar Diagnóstico</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <!-- Aquí se cargará el formulario -->
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @using System.Text.Json
     <script>
+        function openModal(url) {
+            const modal = new bootstrap.Modal(document.getElementById('modalDiagnostico'));
+            document.getElementById('modalContent').innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('modalContent').innerHTML = html;
+                    modal.show();
+                });
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             const ctx = document.getElementById('diagnosticosChart');
             if (!ctx) return;
@@ -156,7 +157,6 @@
             .OrderBy(g => g.Key)
             .Select(g => g.Key.ToString("yyyy-MM-dd"))
             ));
-
             const data = @Html.Raw(JsonSerializer.Serialize(
         Model.GroupBy(d => d.Fecha.Date)
         .OrderBy(g => g.Key)
@@ -183,9 +183,7 @@
                         y: {
                             beginAtZero: true,
                             precision: 0,
-                            ticks: {
-                                stepSize: 1
-                            }
+                            ticks: { stepSize: 1 }
                         }
                     }
                 }
@@ -193,4 +191,3 @@
         });
     </script>
 }
-
