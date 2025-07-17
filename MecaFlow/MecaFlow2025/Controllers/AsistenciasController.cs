@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
+using MecaFlow2025.Attributes;
 
 namespace MecaFlow2025.Controllers
 {
+    [AuthorizeRole("Administrador", "Empleado")]
     public class AsistenciasController : Controller
     {
         private readonly MecaFlowContext _context;
@@ -31,14 +33,40 @@ namespace MecaFlow2025.Controllers
         {
             try
             {
-                // Obtener lista de empleados activos para el dropdown
-                var empleadosActivos = await _context.Empleados
-                    .Where(e => e.Activo)
-                    .OrderBy(e => e.Nombre)
-                    .Select(e => new { e.EmpleadoId, e.Nombre })
-                    .ToListAsync();
+                // Obtener el rol del usuario actual
+                var userRole = HttpContext.Session.GetString("UserRole");
+                var userName = HttpContext.Session.GetString("UserName");
 
-                ViewBag.Empleados = new SelectList(empleadosActivos, "EmpleadoId", "Nombre");
+                List<object> empleadosParaDropdown = new List<object>();
+
+                if (userRole == "Administrador")
+                {
+                    // Si es administrador, mostrar todos los empleados activos
+                    var empleadosActivos = await _context.Empleados
+                        .Where(e => e.Activo)
+                        .OrderBy(e => e.Nombre)
+                        .Select(e => new { e.EmpleadoId, e.Nombre })
+                        .ToListAsync();
+
+                    empleadosParaDropdown = empleadosActivos.Cast<object>().ToList();
+                }
+                else if (userRole == "Empleado")
+                {
+                    // Si es empleado, mostrar solo su propio registro
+                    // Buscar el empleado por el nombre de usuario (asumiendo que el UserName corresponde al nombre del empleado)
+                    var empleadoActual = await _context.Empleados
+                        .Where(e => e.Activo && e.Nombre == userName)
+                        .Select(e => new { e.EmpleadoId, e.Nombre })
+                        .FirstOrDefaultAsync();
+
+                    if (empleadoActual != null)
+                    {
+                        empleadosParaDropdown.Add(empleadoActual);
+                    }
+                }
+
+                ViewBag.Empleados = new SelectList(empleadosParaDropdown, "EmpleadoId", "Nombre");
+                ViewBag.UserRole = userRole;
 
                 // Obtener asistencias del día actual
                 var hoy = DateOnly.FromDateTime(DateTime.Today);
@@ -48,6 +76,12 @@ namespace MecaFlow2025.Controllers
                     .OrderBy(a => a.Empleado.Nombre)
                     .ToListAsync();
 
+                // Si es empleado, filtrar solo sus asistencias
+                if (userRole == "Empleado")
+                {
+                    asistenciasHoy = asistenciasHoy.Where(a => a.Empleado.Nombre == userName).ToList();
+                }
+
                 ViewBag.AsistenciasHoy = asistenciasHoy;
             }
             catch (Exception ex)
@@ -55,6 +89,7 @@ namespace MecaFlow2025.Controllers
                 TempData["Error"] = "Error al cargar los datos: " + ex.Message;
                 ViewBag.Empleados = new SelectList(new List<object>(), "EmpleadoId", "Nombre");
                 ViewBag.AsistenciasHoy = new List<Asistencia>();
+                ViewBag.UserRole = "Empleado";
             }
 
             return View();
@@ -73,13 +108,23 @@ namespace MecaFlow2025.Controllers
 
             try
             {
-                // Verificar que el empleado existe y está activo
+                // Validar permisos: si es empleado, solo puede registrar su propia asistencia
+                var userRole = HttpContext.Session.GetString("UserRole");
+                var userName = HttpContext.Session.GetString("UserName");
+
                 var empleado = await _context.Empleados
                     .FirstOrDefaultAsync(e => e.EmpleadoId == empleadoId && e.Activo);
 
                 if (empleado == null)
                 {
                     TempData["Error"] = "El empleado seleccionado no existe o no está activo.";
+                    return RedirectToAction(nameof(RegistroPersonal));
+                }
+
+                // Validar que el empleado solo pueda registrar su propia asistencia
+                if (userRole == "Empleado" && empleado.Nombre != userName)
+                {
+                    TempData["Error"] = "Solo puedes registrar tu propia asistencia.";
                     return RedirectToAction(nameof(RegistroPersonal));
                 }
 
@@ -140,13 +185,23 @@ namespace MecaFlow2025.Controllers
 
             try
             {
-                // Verificar que el empleado existe y está activo
+                // Validar permisos: si es empleado, solo puede registrar su propia asistencia
+                var userRole = HttpContext.Session.GetString("UserRole");
+                var userName = HttpContext.Session.GetString("UserName");
+
                 var empleado = await _context.Empleados
                     .FirstOrDefaultAsync(e => e.EmpleadoId == empleadoId && e.Activo);
 
                 if (empleado == null)
                 {
                     TempData["Error"] = "El empleado seleccionado no existe o no está activo.";
+                    return RedirectToAction(nameof(RegistroPersonal));
+                }
+
+                // Validar que el empleado solo pueda registrar su propia asistencia
+                if (userRole == "Empleado" && empleado.Nombre != userName)
+                {
+                    TempData["Error"] = "Solo puedes registrar tu propia asistencia.";
                     return RedirectToAction(nameof(RegistroPersonal));
                 }
 
@@ -205,6 +260,23 @@ namespace MecaFlow2025.Controllers
         // GET: Asistencias por empleado
         public async Task<IActionResult> MisAsistencias(int empleadoId, DateTime? fechaInicio, DateTime? fechaFin)
         {
+            // Validar permisos: si es empleado, solo puede ver sus propias asistencias
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userName = HttpContext.Session.GetString("UserName");
+
+            var empleado = await _context.Empleados.FindAsync(empleadoId);
+            if (empleado == null)
+            {
+                return NotFound();
+            }
+
+            // Validar que el empleado solo pueda ver sus propias asistencias
+            if (userRole == "Empleado" && empleado.Nombre != userName)
+            {
+                TempData["Error"] = "Solo puedes ver tus propias asistencias.";
+                return RedirectToAction(nameof(RegistroPersonal));
+            }
+
             // Si no se especifican fechas, mostrar las asistencias del mes actual
             if (!fechaInicio.HasValue)
                 fechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
@@ -214,12 +286,6 @@ namespace MecaFlow2025.Controllers
 
             var fechaInicioOnly = DateOnly.FromDateTime(fechaInicio.Value);
             var fechaFinOnly = DateOnly.FromDateTime(fechaFin.Value);
-
-            var empleado = await _context.Empleados.FindAsync(empleadoId);
-            if (empleado == null)
-            {
-                return NotFound();
-            }
 
             var asistencias = await _context.Asistencias
                 .Where(a => a.EmpleadoId == empleadoId &&
