@@ -34,7 +34,7 @@ namespace MecaFlow2025.Controllers
 
             return View(lista);
         }
-        
+
 
         // GET: Vehiculos/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -97,7 +97,7 @@ namespace MecaFlow2025.Controllers
                 vehiculo.MarcaId);
 
 
-            return View(vehiculo);  
+            return View(vehiculo);
         }
 
         // GET: Vehiculos/Edit/5
@@ -187,7 +187,7 @@ namespace MecaFlow2025.Controllers
                 .Include(v => v.Marca)
                 .Include(v => v.Modelo)
                 .FirstOrDefaultAsync(v => v.VehiculoId == id);
-            if (veh == null) return NotFound(); 
+            if (veh == null) return NotFound();
             return View(veh);
         }
 

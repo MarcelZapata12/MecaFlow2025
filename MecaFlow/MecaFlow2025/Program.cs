@@ -1,12 +1,12 @@
-<<<<<<< HEAD
+
 using Microsoft.EntityFrameworkCore;                // necesario para UseSqlServer
 using MecaFlow2025.Models;                          // tu namespace del Context
 using QuestPDF.Infrastructure;                      // <<� IMPORTANTE: agrega esto
-=======
-﻿using Microsoft.EntityFrameworkCore;
+
+using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
 using MecaFlow2025.Middleware; // ← AGREGAR ESTE USING
->>>>>>> Sebastian
+
 
 var builder = WebApplication.CreateBuilder(args);
 
