@@ -3,6 +3,7 @@
     ViewData["Title"] = "Clientes";
 }
 
+<<<<<<< HEAD
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-primary">
@@ -55,3 +56,55 @@
         </div>
     </div>
 </div>
+=======
+<div class="page-header mb-4">
+    <h1 class="display-6">Clientes</h1>
+    <div class="d-flex align-items-center">
+        <input id="clientSearch" type="search" class="form-control form-control-sm me-2"
+               placeholder="Buscar por nombre o correo…" />
+        <a asp-action="Create" class="btn btn-sm btn-primary">Nuevo Cliente</a>
+    </div>
+</div>
+
+<div id="clientsGrid" class="client-grid">
+    @foreach (var c in Model)
+    {
+        <div class="client-card card">
+            <div class="card-body">
+                <h5 class="card-title">@c.Nombre</h5>
+                <p class="card-text text-truncate"><i class="bi bi-envelope-fill me-1"></i>@c.Correo</p>
+                <p class="card-text text-truncate"><i class="bi bi-telephone-fill me-1"></i>@c.Telefono</p>
+                <p class="card-text"><i class="bi bi-geo-alt-fill me-1"></i>@c.Direccion</p>
+            </div>
+            <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
+                <a asp-action="Edit" asp-route-id="@c.ClienteId" class="text-primary">
+                    <i class="bi bi-pencil-square"></i>
+                </a>
+                <a asp-action="Details" asp-route-id="@c.ClienteId" class="text-secondary">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <form asp-action="Delete" asp-route-id="@c.ClienteId" method="post"
+                      onsubmit="return confirm('¿Eliminar este cliente?');" class="m-0 p-0">
+                    <button type="submit" class="btn btn-link p-0 text-danger">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // filtro sencillo en cliente-grid
+        document.getElementById('clientSearch').addEventListener('input', function() {
+            var q = this.value.toLowerCase();
+            document.querySelectorAll('#clientsGrid .card').forEach(function(card) {
+                var txt = card.querySelector('.card-title').innerText.toLowerCase()
+                        + ' ' + card.querySelector('.card-text').innerText.toLowerCase();
+                card.style.display = txt.includes(q) ? '' : 'none';
+            });
+        });
+    </script>
+}
+>>>>>>> Sebastian

@@ -13,6 +13,7 @@
         </a>
     </div>
 
+<<<<<<< HEAD
     <!-- KPIs -->
     <div class="row text-white mb-4">
         <div class="col-md-3">
@@ -64,6 +65,44 @@
                 <th>Cliente</th>
                 <th>Fecha Registro</th>
                 <th>Acciones</th>
+=======
+<form asp-action="Index" method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="filtroPlaca" class="form-control" placeholder="Buscar por placa..."
+               value="@ViewBag.FiltroPlaca" />
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <a asp-action="Index" class="btn btn-secondary">Limpiar</a>
+    </div>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Placa</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Año</th>
+            <th>Cliente</th>
+            <th>Fecha Registro</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model)
+        {
+            <tr>
+                <td>@v.Placa</td>
+                <td>@v.Marca.Nombre</td>
+                <td>@v.Modelo.Nombre</td>
+                <td>@v.Anio</td>
+                <td>@v.Cliente.Nombre</td>
+                <td>@v.FechaRegistro?.ToString("g")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@v.VehiculoId">Detalles</a> |
+                    <a asp-action="Edit" asp-route-id="@v.VehiculoId">Editar</a> |
+                    <a asp-action="Delete" asp-route-id="@v.VehiculoId">Eliminar</a>
+                </td>
+>>>>>>> Sebastian
             </tr>
         </thead>
         <tbody>

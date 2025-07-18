@@ -17,15 +17,19 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="Marca"></label>
-        <input asp-for="Marca" class="form-control" />
-        <span asp-validation-for="Marca" class="text-danger"></span>
+        <label asp-for="MarcaId"></label>
+        <select asp-for="MarcaId" class="form-control" id="MarcaId" asp-items="ViewBag.Marcas">
+            <option value="">Seleccione una marca</option>
+        </select>
+        <span asp-validation-for="MarcaId" class="text-danger"></span>
     </div>
 
+
     <div class="form-group">
-        <label asp-for="Modelo"></label>
-        <input asp-for="Modelo" class="form-control" />
-        <span asp-validation-for="Modelo" class="text-danger"></span>
+        <label asp-for="ModeloId"></label>
+        <select asp-for="ModeloId" class="form-control" id="ModeloId">
+            <option value="">Seleccione un modelo</option>
+        </select>
     </div>
 
     <div class="form-group">
@@ -48,4 +52,18 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        $('#MarcaId').change(function () {
+            var marcaId = $(this).val();
+            $('#ModeloId').empty().append('<option>Seleccione un modelo</option>');
+
+            if (marcaId) {
+                $.get('/Vehiculos/GetModelosPorMarca', { marcaId: marcaId }, function (data) {
+                    $.each(data, function (i, modelo) {
+                        $('#ModeloId').append('<option value="' + modelo.modeloId + '">' + modelo.nombre + '</option>');
+                    });
+                });
+            }
+        });
+    </script>
 }
