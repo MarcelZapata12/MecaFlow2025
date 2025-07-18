@@ -1,0 +1,124 @@
+﻿@model MecaFlow2025.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Registro";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
+    <div class="row w-100">
+        <div class="col-md-8 col-lg-6 col-xl-5 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2 class="mb-0">
+                        <i class="bi bi-person-plus-fill me-2"></i>
+                        Registro
+                    </h2>
+                    <p class="mb-0 opacity-75">Crear nueva cuenta</p>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Register" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label asp-for="Nombre" class="form-label fw-bold">
+                                    <i class="bi bi-person-fill me-1"></i>Nombre
+                                </label>
+                                <input asp-for="Nombre" class="form-control" placeholder="Ingrese su nombre" />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Apellido" class="form-label fw-bold">
+                                    <i class="bi bi-person-fill me-1"></i>Apellido
+                                </label>
+                                <input asp-for="Apellido" class="form-control" placeholder="Ingrese su apellido" />
+                                <span asp-validation-for="Apellido" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label asp-for="Cedula" class="form-label fw-bold">
+                                    <i class="bi bi-card-text me-1"></i>Cédula
+                                </label>
+                                <input asp-for="Cedula" class="form-control" placeholder="123456789" />
+                                <span asp-validation-for="Cedula" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Telefono" class="form-label fw-bold">
+                                    <i class="bi bi-telephone-fill me-1"></i>Teléfono
+                                </label>
+                                <input asp-for="Telefono" class="form-control" placeholder="8888-8888" />
+                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Rol" class="form-label fw-bold">
+                                <i class="bi bi-award-fill me-1"></i>Rol
+                            </label>
+                            <select asp-for="Rol" class="form-select">
+                                <option value="">Seleccione un rol</option>
+                                <option value="Cliente">Cliente</option>
+                                <option value="Empleado">Empleado</option>
+                                <option value="Administrador">Administrador</option>
+                            </select>
+                            <span asp-validation-for="Rol" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Correo" class="form-label fw-bold">
+                                <i class="bi bi-envelope-fill me-1"></i>Correo Electrónico
+                            </label>
+                            <input asp-for="Correo" type="email" class="form-control" placeholder="ejemplo@correo.com" />
+                            <span asp-validation-for="Correo" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contrasena" class="form-label fw-bold">
+                                <i class="bi bi-lock-fill me-1"></i>Contraseña
+                            </label>
+                            <input asp-for="Contrasena" type="password" class="form-control" placeholder="Ingrese su contraseña" />
+                            <span asp-validation-for="Contrasena" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ConfirmarContrasena" class="form-label fw-bold">
+                                <i class="bi bi-lock-fill me-1"></i>Confirmar Contraseña
+                            </label>
+                            <input asp-for="ConfirmarContrasena" type="password" class="form-control" placeholder="Confirme su contraseña" />
+                            <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-person-plus-fill me-2"></i>Registrarse
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">
+                            ¿Ya tienes una cuenta?
+                            <a asp-action="Login" class="text-primary text-decoration-none fw-bold">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -6,9 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using MecaFlow2025.Attributes;
 
 namespace MecaFlow2025.Controllers
 {
+    [AuthorizeRole("Administrador", "Empleado", "Cliente")]
     public class DiagnosticosController : Controller
     {
         private readonly MecaFlowContext _context;

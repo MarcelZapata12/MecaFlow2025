@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
+using MecaFlow2025.Attributes;
 
 namespace MecaFlow2025.Controllers
 {
+    [AuthorizeRole("Administrador")] 
     public class EmpleadosController : Controller
     {
         private readonly MecaFlowContext _context;
