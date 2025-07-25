@@ -1,13 +1,60 @@
 ﻿@{
     ViewData["Title"] = "Acceso Denegado";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "_Layout";
 }
+
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #0069d9;
+        border-color: #0062cc;
+    }
+
+    .btn i {
+        transition: transform 0.2s ease;
+    }
+
+    .btn:hover i {
+        transform: scale(1.2);
+    }
+</style>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-danger text-white text-center">
                     <h4><i class="fas fa-exclamation-triangle"></i> Acceso Denegado</h4>
                 </div>
                 <div class="card-body text-center">
@@ -26,3 +73,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const passwordToggles = document.querySelectorAll('.toggle-password');
+        passwordToggles.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = document.querySelector(this.dataset.target);
+                input.type = input.type === 'password' ? 'text' : 'password';
+                this.innerHTML = input.type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+        });
+    });
+</script>

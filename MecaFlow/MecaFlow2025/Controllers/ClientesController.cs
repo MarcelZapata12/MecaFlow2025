@@ -15,7 +15,6 @@ namespace MecaFlow2025.Controllers
     {
         private readonly MecaFlowContext _context;
 
-        // Lista fija de provincias de Costa Rica
         private readonly string[] Provincias = new[]
         {
             "San José", "Alajuela", "Cartago", "Heredia",
@@ -32,13 +31,11 @@ namespace MecaFlow2025.Controllers
             ViewBag.Provincias = new SelectList(Provincias, seleccionada);
         }
 
-        // GET: Clientes
         public async Task<IActionResult> Index()
         {
             return View(await _context.Clientes.ToListAsync());
         }
 
-        // GET: Clientes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -47,19 +44,16 @@ namespace MecaFlow2025.Controllers
             return View(cliente);
         }
 
-        // GET: Clientes/Create
         public IActionResult Create()
         {
             PoblarProvincias();
             return View();
         }
 
-        // POST: Clientes/Create
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
             [Bind("ClienteId,Nombre,Correo,Telefono,Direccion,FechaRegistro")] Cliente cliente)
         {
-            // Validaciones varias...
             if (!string.IsNullOrWhiteSpace(cliente.Telefono) &&
                 !Regex.IsMatch(cliente.Telefono, @"^\d+$"))
                 ModelState.AddModelError(nameof(cliente.Telefono),
@@ -82,7 +76,6 @@ namespace MecaFlow2025.Controllers
                 ModelState.AddModelError(nameof(cliente.Correo),
                     "Ese correo ya está registrado.");
 
-            // Validar que Dirección venga de la lista
             if (string.IsNullOrWhiteSpace(cliente.Direccion) ||
                 !Provincias.Contains(cliente.Direccion))
                 ModelState.AddModelError(nameof(cliente.Direccion),
@@ -95,12 +88,10 @@ namespace MecaFlow2025.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Si falla, repoblar el dropdown
             PoblarProvincias(cliente.Direccion);
             return View(cliente);
         }
 
-        // GET: Clientes/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -111,7 +102,6 @@ namespace MecaFlow2025.Controllers
             return View(cliente);
         }
 
-        // POST: Clientes/Edit/5
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(
             int id,
@@ -119,7 +109,6 @@ namespace MecaFlow2025.Controllers
         {
             if (id != cliente.ClienteId) return NotFound();
 
-            // Validaciones idénticas a Create
             if (!string.IsNullOrWhiteSpace(cliente.Telefono) &&
                 !Regex.IsMatch(cliente.Telefono, @"^\d+$"))
                 ModelState.AddModelError(nameof(cliente.Telefono),
@@ -166,7 +155,6 @@ namespace MecaFlow2025.Controllers
             return View(cliente);
         }
 
-        // GET: Clientes/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -175,13 +163,24 @@ namespace MecaFlow2025.Controllers
             return View(cliente);
         }
 
-        // POST: Clientes/Delete/5
         [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var cliente = await _context.Clientes.FindAsync(id);
+            var cliente = await _context.Clientes
+                .Include(c => c.Vehiculos)
+                    .ThenInclude(v => v.Diagnosticos)
+                .FirstOrDefaultAsync(c => c.ClienteId == id);
+
             if (cliente != null)
             {
+                foreach (var vehiculo in cliente.Vehiculos.ToList())
+                {
+                    if (vehiculo.Diagnosticos != null && vehiculo.Diagnosticos.Any())
+                        _context.Diagnosticos.RemoveRange(vehiculo.Diagnosticos);
+
+                    _context.Vehiculos.Remove(vehiculo);
+                }
+
                 _context.Clientes.Remove(cliente);
                 await _context.SaveChangesAsync();
             }

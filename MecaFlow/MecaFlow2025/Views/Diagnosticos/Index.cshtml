@@ -3,10 +3,51 @@
     ViewData["Title"] = "Diagnósticos";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-primary">
-            <i class="bi bi-clipboard-heart"></i> Diagnósticos
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+    }
+
+    .kpi-card {
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title, .card-text {
+        color: white;
+    }
+
+    .btn {
+        border-radius: 0.75rem;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.8s ease-in-out forwards;
+        opacity: 0;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .table thead th {
+        color: #f8f9fa;
+    }
+</style>
+
+<div class="container mt-5 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-clipboard-heart-fill text-danger"></i> Diagnósticos
         </h2>
         <div>
             <a asp-action="ExportToExcel" class="btn btn-outline-success me-2">
@@ -16,69 +57,55 @@
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
             <a asp-action="Create" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Nuevo Diagnóstico
+                <i class="bi bi-plus-circle-fill"></i> Nuevo Diagnóstico
             </a>
         </div>
     </div>
 
-    <!-- KPIs -->
     <div class="row text-white mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary shadow">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Total Diagnósticos</h5>
-                    <p class="display-6 fw-bold">@Model.Count()</p>
-                </div>
+            <div class="card bg-primary shadow kpi-card text-center p-3">
+                <h5>Total Diagnósticos</h5>
+                <h3 class="fw-bold">@Model.Count()</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-success shadow">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Última Fecha</h5>
-                    <p class="display-6 fw-bold">
-                        @Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("yyyy-MM-dd")
-                    </p>
-                </div>
+            <div class="card bg-success shadow kpi-card text-center p-3">
+                <h5>Última Fecha</h5>
+                <h3 class="fw-bold">
+                    @Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("yyyy-MM-dd")
+                </h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning shadow">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Por Empleado</h5>
-                    <p class="display-6 fw-bold">@Model.Select(d => d.Empleado?.Nombre).Distinct().Count()</p>
-                </div>
+            <div class="card bg-warning shadow kpi-card text-center p-3">
+                <h5>Por Empleado</h5>
+                <h3 class="fw-bold">@Model.Select(d => d.Empleado?.Nombre).Distinct().Count()</h3>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-dark shadow">
-                <div class="card-body text-center">
-                    <h5 class="card-title">Hoy</h5>
-                    <p class="display-6 fw-bold">
-                        @Model.Count(d => d.Fecha.Date == DateTime.Today)
-                    </p>
-                </div>
+            <div class="card bg-dark shadow kpi-card text-center p-3">
+                <h5>Hoy</h5>
+                <h3 class="fw-bold">@Model.Count(d => d.Fecha.Date == DateTime.Today)</h3>
             </div>
         </div>
     </div>
 
-    <!-- Buscador -->
-    <form method="get" asp-action="Index" class="input-group mb-3">
+    <form method="get" asp-action="Index" class="input-group mb-4">
         <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Buscar por placa, detalle o empleado...">
-        <button class="btn btn-outline-primary" type="submit">
-            <i class="bi bi-search"></i> Buscar
+        <button class="btn btn-outline-light" type="submit">
+            <i class="bi bi-search"></i>
         </button>
     </form>
 
-    <!-- Gráfico -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <canvas id="diagnosticosChart" height="120"></canvas>
+    <div class="card mb-4 shadow-sm fade-in">
+        <div class="card-body bg-dark rounded">
+            <canvas id="diagnosticosChart" height="100"></canvas>
         </div>
     </div>
 
-    <!-- Tabla -->
-    <table class="table table-dark table-striped table-hover text-center align-middle">
-        <thead>
+    <table class="table table-dark table-striped table-hover text-center align-middle shadow fade-in">
+        <thead class="bg-gradient">
             <tr>
                 <th>#</th>
                 <th>Vehículo</th>
@@ -113,7 +140,7 @@
     </table>
 </div>
 
-<!-- Modal genérico bien centrado -->
+<!-- Modal centrado -->
 <div class="modal fade" id="modalDiagnostico" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow">
@@ -122,7 +149,6 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="modalContent">
-                <!-- Aquí se cargará el formulario -->
                 <div class="text-center text-muted">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Cargando...</span>
@@ -153,15 +179,11 @@
             if (!ctx) return;
 
             const labels = @Html.Raw(JsonSerializer.Serialize(
-            Model.GroupBy(d => d.Fecha.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => g.Key.ToString("yyyy-MM-dd"))
+                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Key.ToString("yyyy-MM-dd"))
             ));
             const data = @Html.Raw(JsonSerializer.Serialize(
-        Model.GroupBy(d => d.Fecha.Date)
-        .OrderBy(g => g.Key)
-        .Select(g => g.Count())
-        ));
+                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Count())
+            ));
 
             if (labels.length === 0 || data.length === 0) return;
 
@@ -182,8 +204,9 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            precision: 0,
-                            ticks: { stepSize: 1 }
+                            ticks: {
+                                stepSize: 1
+                            }
                         }
                     }
                 }

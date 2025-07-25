@@ -1,110 +1,249 @@
 ﻿@model IEnumerable<MecaFlow2025.Models.Cliente>
+
 @{
     ViewData["Title"] = "Clientes";
 }
 
-<<<<<<< HEAD
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="text-primary">
-            <i class="bi bi-people-fill"></i> Clientes
-        </h2>
-        <a asp-action="Create" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Nuevo Cliente
-        </a>
-    </div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-dark table-striped table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Correo</th>
-                            <th>Teléfono</th>
-                            <th>Dirección</th>
-                            <th>Fecha Registro</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr>
-                                <td>@item.Nombre</td>
-                                <td>@item.Correo</td>
-                                <td>@item.Telefono</td>
-                                <td>@item.Direccion</td>
-                                <td>@(item.FechaRegistro.HasValue ? item.FechaRegistro.Value.ToString("yyyy-MM-dd") : "")</td>
-                                <td class="text-center">
-                                    <a asp-action="Edit" asp-route-id="@item.ClienteId" class="btn btn-sm btn-warning me-1">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                    <a asp-action="Details" asp-route-id="@item.ClienteId" class="btn btn-sm btn-info me-1">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.ClienteId" class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    @@keyframes pulse {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+    }
+
+    .client-card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+        animation: fadeInUp 0.5s ease-in-out;
+    }
+
+    .client-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .client-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-control:focus {
+        background-color: #2c2c2c;
+        color: #fff;
+        border-color: #66afe9;
+        box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
+    }
+
+    .card-footer a, .card-footer button {
+        transition: transform 0.2s ease;
+    }
+
+    .card-footer a:hover, .card-footer button:hover {
+        transform: scale(1.2);
+    }
+
+    .card-footer .icon-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 1.25rem;
+        color: inherit;
+    }
+
+    .action-icons {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        z-index: 2;
+    }
+
+    .action-icons form {
+        display: inline;
+    }
+
+    .modal-content {
+        background-color: #1f1f1f;
+        color: white;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .btn-pulse {
+        animation: pulse 2s infinite;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white">
+            <i class="bi bi-people-fill me-2"></i>Clientes
+        </h2>
+        <div class="d-flex align-items-center">
+            <input id="clientSearch" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…" />
+            <a asp-action="Create" class="btn btn-primary btn-pulse">
+                <i class="bi bi-plus-circle me-1"></i>Nuevo Cliente
+            </a>
         </div>
     </div>
-</div>
-=======
-<div class="page-header mb-4">
-    <h1 class="display-6">Clientes</h1>
-    <div class="d-flex align-items-center">
-        <input id="clientSearch" type="search" class="form-control form-control-sm me-2"
-               placeholder="Buscar por nombre o correo…" />
-        <a asp-action="Create" class="btn btn-sm btn-primary">Nuevo Cliente</a>
+
+    <div id="clientsGrid" class="client-grid">
+        @foreach (var c in Model)
+        {
+            <div class="client-card card">
+                <div class="action-icons">
+                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadEditForm(@c.ClienteId)">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#modalDetails-@c.ClienteId" class="text-info icon-btn" title="Detalles">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmDelete(@c.ClienteId)">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">@c.Nombre</h5>
+                    <p class="card-text text-truncate"><i class="bi bi-envelope-fill me-1"></i>@c.Correo</p>
+                    <p class="card-text text-truncate"><i class="bi bi-telephone-fill me-1"></i>@c.Telefono</p>
+                    <p class="card-text"><i class="bi bi-geo-alt-fill me-1"></i>@c.Direccion</p>
+                    <p class="card-text small text-muted">
+                        <i class="bi bi-calendar-check me-1"></i>
+                        @(c.FechaRegistro.HasValue ? c.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")
+                    </p>
+                </div>
+            </div>
+
+            <!-- Modal Details -->
+            <div class="modal fade" id="modalDetails-@c.ClienteId" tabindex="-1" aria-labelledby="modalDetailsLabel-@c.ClienteId" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalDetailsLabel-@c.ClienteId">Detalles del Cliente</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Nombre:</strong> @c.Nombre</p>
+                            <p><strong>Correo:</strong> @c.Correo</p>
+                            <p><strong>Teléfono:</strong> @c.Telefono</p>
+                            <p><strong>Dirección:</strong> @c.Direccion</p>
+                            <p><strong>Registrado el:</strong> @(c.FechaRegistro.HasValue ? c.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
-<div id="clientsGrid" class="client-grid">
-    @foreach (var c in Model)
-    {
-        <div class="client-card card">
-            <div class="card-body">
-                <h5 class="card-title">@c.Nombre</h5>
-                <p class="card-text text-truncate"><i class="bi bi-envelope-fill me-1"></i>@c.Correo</p>
-                <p class="card-text text-truncate"><i class="bi bi-telephone-fill me-1"></i>@c.Telefono</p>
-                <p class="card-text"><i class="bi bi-geo-alt-fill me-1"></i>@c.Direccion</p>
+<!-- Toast de éxito -->
+<div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">¡Acción realizada con éxito!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+</div>
+
+<!-- Modal Delete Global -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="card-footer bg-transparent border-0 d-flex justify-content-between">
-                <a asp-action="Edit" asp-route-id="@c.ClienteId" class="text-primary">
-                    <i class="bi bi-pencil-square"></i>
-                </a>
-                <a asp-action="Details" asp-route-id="@c.ClienteId" class="text-secondary">
-                    <i class="bi bi-eye"></i>
-                </a>
-                <form asp-action="Delete" asp-route-id="@c.ClienteId" method="post"
-                      onsubmit="return confirm('¿Eliminar este cliente?');" class="m-0 p-0">
-                    <button type="submit" class="btn btn-link p-0 text-danger">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este cliente?</p>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" method="post">
+                    <input type="hidden" name="id" id="deleteClienteId" />
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
                 </form>
             </div>
         </div>
-    }
+    </div>
+</div>
+
+<!-- Modal Edit Global -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="editModalBody">
+                <p class="text-center">Cargando...</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script>
-        // filtro sencillo en cliente-grid
-        document.getElementById('clientSearch').addEventListener('input', function() {
+        document.getElementById('clientSearch').addEventListener('input', function () {
             var q = this.value.toLowerCase();
-            document.querySelectorAll('#clientsGrid .card').forEach(function(card) {
-                var txt = card.querySelector('.card-title').innerText.toLowerCase()
-                        + ' ' + card.querySelector('.card-text').innerText.toLowerCase();
+            document.querySelectorAll('#clientsGrid .card').forEach(function (card) {
+                var txt = card.querySelector('.card-title').innerText.toLowerCase() +
+                    ' ' + Array.from(card.querySelectorAll('.card-text')).map(e => e.innerText.toLowerCase()).join(' ');
                 card.style.display = txt.includes(q) ? '' : 'none';
             });
         });
+
+        function loadEditForm(clienteId) {
+            const modalBody = document.getElementById("editModalBody");
+            modalBody.innerHTML = "<p class='text-center'>Cargando formulario...</p>";
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            modal.show();
+
+            fetch(`/Clientes/Edit/${clienteId}`)
+                .then(response => response.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+                })
+                .catch(err => {
+                    modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`;
+                });
+        }
+
+        function confirmDelete(clienteId) {
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            document.getElementById('deleteClienteId').value = clienteId;
+            document.getElementById('deleteForm').action = `/Clientes/Delete/${clienteId}`;
+            modal.show();
+        }
     </script>
 }
->>>>>>> Sebastian

@@ -10,7 +10,7 @@ using MecaFlow2025.Attributes;
 
 namespace MecaFlow2025.Controllers
 {
-    [AuthorizeRole("Administrador")] 
+    [AuthorizeRole("Administrador")]
     public class EmpleadosController : Controller
     {
         private readonly MecaFlowContext _context;
@@ -30,16 +30,13 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var empleado = await _context.Empleados
                 .FirstOrDefaultAsync(m => m.EmpleadoId == id);
+
             if (empleado == null)
-            {
                 return NotFound();
-            }
 
             return View(empleado);
         }
@@ -57,20 +54,17 @@ namespace MecaFlow2025.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Establecer valores por defecto si no se proporcionan
                 if (empleado.Activo == null)
-                {
                     empleado.Activo = true;
-                }
+
                 if (empleado.FechaRegistro == null)
-                {
                     empleado.FechaRegistro = DateTime.Now;
-                }
 
                 _context.Add(empleado);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             return View(empleado);
         }
 
@@ -78,15 +72,18 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var empleado = await _context.Empleados.FindAsync(id);
             if (empleado == null)
-            {
                 return NotFound();
+
+            // Si es una petición AJAX, retornamos la vista parcial
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("EditPartial", empleado);
             }
+
             return View(empleado);
         }
 
@@ -96,9 +93,7 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("EmpleadoId,Nombre,Cedula,Correo,Puesto,FechaIngreso,Activo,FechaRegistro")] Empleado empleado)
         {
             if (id != empleado.EmpleadoId)
-            {
                 return NotFound();
-            }
 
             if (ModelState.IsValid)
             {
@@ -106,20 +101,23 @@ namespace MecaFlow2025.Controllers
                 {
                     _context.Update(empleado);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!EmpleadoExists(empleado.EmpleadoId))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
-                return RedirectToAction(nameof(Index));
             }
+
+            // Si es AJAX, devolvemos la vista parcial con errores
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("EditPartial", empleado);
+            }
+
             return View(empleado);
         }
 
@@ -127,16 +125,13 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var empleado = await _context.Empleados
                 .FirstOrDefaultAsync(m => m.EmpleadoId == id);
+
             if (empleado == null)
-            {
                 return NotFound();
-            }
 
             return View(empleado);
         }
