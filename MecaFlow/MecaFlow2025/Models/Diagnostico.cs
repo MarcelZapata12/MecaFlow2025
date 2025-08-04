@@ -1,30 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
-namespace MecaFlow2025.Models;
-
-public partial class Diagnostico
+namespace MecaFlow2025.Models
 {
-    [Key]
-    public int DiagnosticoId { get; set; }
+    public partial class Diagnostico
+    {
+        [Key]
+        public int DiagnosticoId { get; set; }
 
-    public int VehiculoId { get; set; }
+        [Required(ErrorMessage = "El vehículo es obligatorio.")]
+        public int VehiculoId { get; set; }
 
-    public DateOnly Fecha { get; set; }
+        [Required(ErrorMessage = "La fecha es obligatoria.")]
+        [DataType(DataType.Date)]
+        public DateTime Fecha { get; set; }
 
-    [StringLength(500)]
-    public string? Detalle { get; set; }
+        [Required(ErrorMessage = "El detalle es obligatorio.")]
+        [StringLength(500, ErrorMessage = "El detalle no puede exceder los 500 caracteres.")]
+        public string Detalle { get; set; } = null!;
 
-    public int? EmpleadoId { get; set; }
+        [Required(ErrorMessage = "El empleado es obligatorio.")]
+        public int EmpleadoId { get; set; }
 
-    [ForeignKey("EmpleadoId")]
-    [InverseProperty("Diagnosticos")]
-    public virtual Empleado? Empleado { get; set; }
+        [ForeignKey("EmpleadoId")]
+        [InverseProperty("Diagnosticos")]
+        public virtual Empleado? Empleado { get; set; } = null!;
 
-    [ForeignKey("VehiculoId")]
-    [InverseProperty("Diagnosticos")]
-    public virtual Vehiculo Vehiculo { get; set; } = null!;
+        [ForeignKey("VehiculoId")]
+        [InverseProperty("Diagnosticos")]
+        public virtual Vehiculo? Vehiculo { get; set; } = null!;
+    }
 }

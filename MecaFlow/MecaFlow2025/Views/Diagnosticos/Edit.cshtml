@@ -1,47 +1,70 @@
 ﻿@model MecaFlow2025.Models.Diagnostico
 @{
-    ViewData["Title"] = "Editar Diagnóstico";
+    Layout = null;
 }
 
-<h1>Editar Diagnóstico</h1>
+<style>
+    .modal-content {
+        background-color: #1f1f1f;
+        color: white;
+        border-radius: 1rem;
+    }
+
+    .form-label {
+        color: #ccc;
+    }
+
+    .form-control, .form-select {
+        background-color: #2a2a2a;
+        color: #f8f9fa;
+        border: 1px solid #444;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+            background-color: #2f2f2f;
+            color: white;
+        }
+
+    .modal-title {
+        font-weight: bold;
+    }
+</style>
+
+<h4 class="text-primary mb-4">
+    <i class="bi bi-pencil-square"></i> Editar Diagnóstico
+</h4>
+
 <form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
     <input type="hidden" asp-for="DiagnosticoId" />
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-    <!-- Igual que Create, con dropdowns recargados -->
     <div class="mb-3">
         <label asp-for="VehiculoId" class="form-label">Vehículo</label>
-        <select asp-for="VehiculoId" class="form-select" asp-items="ViewBag.Vehiculos">
-            <option value="">-- Seleccione --</option>
-        </select>
-        <span asp-validation-for="VehiculoId" class="text-danger"></span>
+        <select asp-for="VehiculoId" class="form-select" asp-items="ViewBag.Vehiculos"></select>
     </div>
+
     <div class="mb-3">
-        <label asp-for="Fecha" class="form-label"></label>
+        <label asp-for="Fecha" class="form-label">Fecha</label>
         <input asp-for="Fecha" class="form-control" type="date" />
-        <span asp-validation-for="Fecha" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="Detalle" class="form-label"></label>
-        <textarea asp-for="Detalle" class="form-control" rows="4"></textarea>
-        <span asp-validation-for="Detalle" class="text-danger"></span>
-    </div>
-    <div class="mb-3">
-        <label asp-for="EmpleadoId" class="form-label">Mecánico</label>
-        <select asp-for="EmpleadoId" class="form-select" asp-items="ViewBag.Empleados">
-            <option value="">-- Opcional --</option>
-        </select>
-        <span asp-validation-for="EmpleadoId" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Actualizar</button>
-    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+    <div class="mb-3">
+        <label asp-for="Detalle" class="form-label">Detalle</label>
+        <textarea asp-for="Detalle" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="EmpleadoId" class="form-label">Empleado</label>
+        <select asp-for="EmpleadoId" class="form-select" asp-items="ViewBag.Empleados"></select>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Guardar Cambios
+        </button>
+    </div>
 </form>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

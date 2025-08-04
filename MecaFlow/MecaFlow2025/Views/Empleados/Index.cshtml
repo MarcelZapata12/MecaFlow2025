@@ -4,76 +4,233 @@
     ViewData["Title"] = "Empleados";
 }
 
-<h1>Empleados</h1>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Crear Nuevo Empleado</a>
-</p>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Nombre)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cedula)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Correo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Puesto)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FechaIngreso)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Activo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FechaRegistro)
-            </th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
+    }
+
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .employee-card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+        animation: fadeInUp 0.5s ease-in-out;
+    }
+
+        .employee-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+    .employee-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .action-icons {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        z-index: 2;
+    }
+
+        .action-icons button, .action-icons a {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: inherit;
+        }
+
+    .modal-content {
+        background-color: #1f1f1f;
+        color: white;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .btn-pulse {
+        animation: pulse 2s infinite;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white">
+            <i class="bi bi-people-fill me-2"></i>Empleados
+        </h2>
+        <a asp-action="Create" class="btn btn-success btn-pulse">
+            <i class="bi bi-person-plus-fill me-1"></i>Nuevo Empleado
+        </a>
+    </div>
+
+    <div class="employee-grid">
         @foreach (var item in Model)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Nombre)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Cedula)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Correo)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.Puesto)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.FechaIngreso)
-                </td>
-                <td>
-                    @if (item.Activo == true)
-                    {
-                        <span class="badge bg-success">Activo</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Inactivo</span>
-                    }
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.FechaRegistro)
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Details" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-info">Detalles</a>
-                    <a asp-action="Delete" asp-route-id="@item.EmpleadoId" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
-            </tr>
+            <div class="employee-card card">
+                <div class="action-icons">
+                    <button class="text-warning" title="Editar" onclick="abrirModalEditar(@item.EmpleadoId)">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="text-info" title="Detalles" onclick="abrirModalDetalles(@item.EmpleadoId)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <a asp-action="Delete" asp-route-id="@item.EmpleadoId" class="text-danger" title="Eliminar">
+                        <i class="bi bi-trash-fill"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">@item.Nombre</h5>
+                    <p class="card-text"><i class="bi bi-card-text me-1"></i>@item.Cedula</p>
+                    <p class="card-text"><i class="bi bi-envelope-fill me-1"></i>@item.Correo</p>
+                    <p class="card-text"><i class="bi bi-person-badge me-1"></i>@item.Puesto</p>
+                    <p class="card-text"><i class="bi bi-calendar-event me-1"></i>@(item.FechaIngreso?.ToString("dd/MM/yyyy") ?? "No especificado")</p>
+                    <p>
+                        <strong>Estado:</strong>
+                        @if (item.Activo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactivo</span>
+                        }
+                    </p>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditarEmpleado" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalEditarLabel">
+                    <i class="bi bi-pencil-square me-2"></i>Editar Empleado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="modalEditarContenido">
+                <!-- AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalles -->
+<div class="modal fade" id="modalDetallesEmpleado" tabindex="-1" aria-labelledby="modalDetallesLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalDetallesLabel">
+                    <i class="bi bi-info-circle me-2"></i>Detalles del Empleado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="modalDetallesContenido">
+                <!-- AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function abrirModalEditar(id) {
+            const modalBody = document.getElementById("modalEditarContenido");
+            modalBody.innerHTML = "<p class='text-center'>Cargando formulario...</p>";
+            const modal = new bootstrap.Modal(document.getElementById('modalEditarEmpleado'));
+            modal.show();
+
+            fetch(`/Empleados/Edit/${id}`)
+                .then(resp => resp.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+
+                    const form = modalBody.querySelector("form");
+                    if (form) {
+                        form.addEventListener("submit", function (e) {
+                            e.preventDefault();
+                            const formData = new FormData(form);
+                            fetch(form.action, {
+                                method: "POST",
+                                body: formData
+                            })
+                                .then(response => {
+                                    if (response.redirected) {
+                                        window.location.href = response.url;
+                                    } else {
+                                        return response.text();
+                                    }
+                                })
+                                .then(html => {
+                                    if (html) modalBody.innerHTML = html;
+                                });
+                        });
+                    }
+                });
+        }
+
+        function abrirModalDetalles(id) {
+            const modalBody = document.getElementById("modalDetallesContenido");
+            modalBody.innerHTML = "<p class='text-center'>Cargando detalles...</p>";
+            const modal = new bootstrap.Modal(document.getElementById('modalDetallesEmpleado'));
+            modal.show();
+
+            fetch(`/Empleados/Details/${id}`)
+                .then(resp => resp.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+                });
+        }
+    </script>
+}

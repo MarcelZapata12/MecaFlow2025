@@ -4,60 +4,75 @@
     ViewData["Title"] = "Crear Empleado";
 }
 
-<h1>Crear Empleado</h1>
+<div class="container py-5 animate__animated animate__fadeIn">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-white">
+            <i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Empleado
+        </h2>
+    </div>
 
-<h4>Nuevo Empleado</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Nombre" class="control-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Cedula" class="control-label"></label>
-                <input asp-for="Cedula" class="form-control" />
-                <span asp-validation-for="Cedula" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Correo" class="control-label"></label>
-                <input asp-for="Correo" class="form-control" type="email" />
-                <span asp-validation-for="Correo" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Puesto" class="control-label"></label>
-                <select asp-for="Puesto" class="form-control">
-                    <option value="">-- Seleccionar Puesto --</option>
-                    <option value="Mecánico">Mecánico</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Recepcionista">Recepcionista</option>
-                    <option value="Auxiliar">Auxiliar</option>
-                </select>
-                <span asp-validation-for="Puesto" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FechaIngreso" class="control-label"></label>
-                <input asp-for="FechaIngreso" class="form-control" type="date" />
-                <span asp-validation-for="FechaIngreso" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Activo" class="control-label">Estado</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" asp-for="Activo" id="activoCheckbox" checked />
-                    <label class="form-check-label" for="activoCheckbox">
-                        <span id="estadoTexto" class="badge bg-success">Activo</span>
-                    </label>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form asp-action="Create" class="bg-dark text-white p-4 rounded-4 shadow-lg animate__animated animate__fadeInUp">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label"></label>
+                    <input asp-for="Nombre" class="form-control form-control-lg rounded-pill" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
                 </div>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Crear" class="btn btn-primary" />
-                <a asp-action="Index" class="btn btn-secondary">Volver al Listado</a>
-            </div>
-        </form>
+
+                <div class="mb-3">
+                    <label asp-for="Cedula" class="form-label"></label>
+                    <input asp-for="Cedula" class="form-control form-control-lg rounded-pill" />
+                    <span asp-validation-for="Cedula" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Correo" class="form-label"></label>
+                    <input asp-for="Correo" class="form-control form-control-lg rounded-pill" type="email" />
+                    <span asp-validation-for="Correo" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Puesto" class="form-label"></label>
+                    <select asp-for="Puesto" class="form-select form-select-lg rounded-pill">
+                        <option value="">-- Seleccionar Puesto --</option>
+                        <option value="Mecánico">Mecánico</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Recepcionista">Recepcionista</option>
+                        <option value="Auxiliar">Auxiliar</option>
+                    </select>
+                    <span asp-validation-for="Puesto" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="FechaIngreso" class="form-label"></label>
+                    <input asp-for="FechaIngreso" class="form-control form-control-lg rounded-pill" type="date" />
+                    <span asp-validation-for="FechaIngreso" class="text-danger"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Activo" class="form-label d-block">Estado</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="Activo" id="activoCheckbox" checked />
+                        <label class="form-check-label" for="activoCheckbox">
+                            <span id="estadoTexto" class="badge"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success btn-lg rounded-pill px-4 shadow">
+                        <i class="bi bi-person-plus me-2"></i>Crear
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary btn-lg rounded-pill px-4 shadow">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al Listado
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -66,22 +81,22 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const checkbox = document.getElementById('activoCheckbox');
             const estadoTexto = document.getElementById('estadoTexto');
 
             function actualizarEstado() {
                 if (checkbox.checked) {
                     estadoTexto.textContent = 'Activo';
-                    estadoTexto.className = 'badge bg-success';
+                    estadoTexto.className = 'badge bg-success px-3 py-2';
                 } else {
                     estadoTexto.textContent = 'Inactivo';
-                    estadoTexto.className = 'badge bg-danger';
+                    estadoTexto.className = 'badge bg-danger px-3 py-2';
                 }
             }
 
             checkbox.addEventListener('change', actualizarEstado);
-            actualizarEstado(); // Inicializar el estado
+            actualizarEstado();
         });
     </script>
 }

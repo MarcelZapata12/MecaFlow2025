@@ -17,15 +17,13 @@ public partial class Vehiculo
     [StringLength(20)]
     public string Placa { get; set; } = null!;
 
-    [StringLength(50)]
-    public string? Marca { get; set; }
-
-    [StringLength(50)]
-    public string? Modelo { get; set; }
-
     public int? Anio { get; set; }
 
     public int ClienteId { get; set; }
+
+    public int MarcaId { get; set; }
+
+    public int ModeloId { get; set; }
 
 
     /*
@@ -45,6 +43,12 @@ public partial class Vehiculo
 
     [ValidateNever]
     public virtual Cliente Cliente { get; set; } = null!;
+
+    [ForeignKey("MarcaId")]
+    [ValidateNever]
+    public virtual Marca Marca { get; set; } = null!;
+
+    public virtual Modelo? Modelo { get; set; } = null;
 
     [InverseProperty("Vehiculo")]
     public virtual ICollection<Diagnostico> Diagnosticos { get; set; } = new List<Diagnostico>();
