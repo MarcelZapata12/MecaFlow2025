@@ -6,7 +6,7 @@
 
 <style>
     body {
-        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        background-color: #0f2027; /* ← fondo sólido */
         color: #f8f9fa;
     }
 
@@ -18,24 +18,28 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
 
-    .card i {
-        background-color: #0d6efd;
-        color: white;
-        padding: 20px;
-        border-radius: 50%;
-        margin-bottom: 15px;
-        font-size: 2rem;
-        transition: background 0.3s;
-    }
+        .card i {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.75rem auto; /* ← centrado horizontal + espacio abajo */
+        }
 
-    .card:hover i {
-        background-color: #6610f2;
-    }
+        .card:hover i {
+            background-color: #6610f2;
+        }
 
     .fade-in {
         animation: fadeIn 0.8s ease-in-out forwards;
@@ -47,6 +51,7 @@
             opacity: 0;
             transform: translateY(10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -56,10 +61,17 @@
     .text-muted {
         color: #adb5bd !important;
     }
+
+    .logo-panel {
+        margin-top: 2rem; /* separación del logo con la barra */
+        max-width: 200px;
+        filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+        border-radius: 10px;
+    }
 </style>
 
 <div class="text-center mb-5">
-    <img src="~/images/mecaFlowLogo.png" alt="MecaFlow" class="img-fluid" style="max-width: 200px; filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5)); border-radius: 10px;" />
+    <img src="~/images/logo-mecaflow.png" alt="MecaFlow" class="img-fluid mx-auto d-block rounded shadow" style="max-width: 200px;" />
     <h1 class="fw-bold display-4 mt-3">Panel Principal</h1>
     <p class="text-secondary fs-5">Accede a cada módulo del sistema con un solo clic</p>
 </div>
@@ -138,4 +150,3 @@
         </a>
     </div>
 </div>
-
