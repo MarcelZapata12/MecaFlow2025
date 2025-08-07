@@ -15,12 +15,16 @@
             var userRole = context.Session.GetString("UserRole");
             var userId = context.Session.GetString("UserId");
 
-            // Permitir acceso a Auth y Home sin verificación
-            if (path?.StartsWith("/auth") == true || path?.StartsWith("/home") == true || path == "/")
+            // Permitir acceso a Auth, Home y Chatbot
+            if (path?.StartsWith("/auth") == true ||
+                path?.StartsWith("/home") == true ||
+                path?.StartsWith("/chatbot") == true ||
+                path == "/")
             {
                 await _next(context);
                 return;
             }
+
 
             // Si no está autenticado, redirigir al login
             if (string.IsNullOrEmpty(userId))

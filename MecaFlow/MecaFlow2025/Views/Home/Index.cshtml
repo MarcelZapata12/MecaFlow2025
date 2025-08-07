@@ -18,24 +18,24 @@
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
 
-    .card i {
-        background-color: #0d6efd;
-        color: white;
-        padding: 20px;
-        border-radius: 50%;
-        margin-bottom: 15px;
-        font-size: 2rem;
-        transition: background 0.3s;
-    }
+        .card i {
+            background-color: #0d6efd;
+            color: white;
+            padding: 20px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            font-size: 2rem;
+            transition: background 0.3s;
+        }
 
-    .card:hover i {
-        background-color: #6610f2;
-    }
+        .card:hover i {
+            background-color: #6610f2;
+        }
 
     .fade-in {
         animation: fadeIn 0.8s ease-in-out forwards;
@@ -47,6 +47,7 @@
             opacity: 0;
             transform: translateY(10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -56,6 +57,24 @@
     .text-muted {
         color: #adb5bd !important;
     }
+
+    /* Estilo especial para la tarjeta del chatbot */
+    .card.bg-chatbot {
+        background-color: #1e3a57;
+        border-color: #2a4d7a;
+    }
+
+        .card.bg-chatbot:hover {
+            background-color: #254b75;
+        }
+
+        .card.bg-chatbot i {
+            background-color: #4e9af1;
+        }
+
+        .card.bg-chatbot:hover i {
+            background-color: #3a7bc8;
+        }
 </style>
 
 <div class="text-center mb-5">
@@ -137,5 +156,14 @@
             </div>
         </a>
     </div>
+    <!-- Nueva tarjeta del Chatbot -->
+    <div class="col">
+        <a asp-controller="Chatbot" asp-action="Index" class="text-decoration-none">
+            <div class="card h-100 text-center p-3 bg-chatbot">
+                <i class="bi bi-robot"></i>
+                <h5 class="card-title fw-semibold">Asistente Mecánico</h5>
+                <p class="card-text text-muted">Obtén respuestas rápidas sobre mecánica.</p>
+            </div>
+        </a>
+    </div>
 </div>
-
