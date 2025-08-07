@@ -15,25 +15,58 @@
     }
 
     @@keyframes gradient {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
     }
 
     @@keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     @@keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
 
     @@keyframes pulse {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
-        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+        }
     }
 
     .client-card {
@@ -47,10 +80,10 @@
         animation: fadeInUp 0.5s ease-in-out;
     }
 
-    .client-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
+        .client-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
 
     .client-grid {
         display: grid;
@@ -69,9 +102,9 @@
         transition: transform 0.2s ease;
     }
 
-    .card-footer a:hover, .card-footer button:hover {
-        transform: scale(1.2);
-    }
+        .card-footer a:hover, .card-footer button:hover {
+            transform: scale(1.2);
+        }
 
     .card-footer .icon-btn {
         background: none;
@@ -90,9 +123,9 @@
         z-index: 2;
     }
 
-    .action-icons form {
-        display: inline;
-    }
+        .action-icons form {
+            display: inline;
+        }
 
     .modal-content {
         background-color: #1f1f1f;
@@ -112,7 +145,7 @@
         </h2>
         <div class="d-flex align-items-center">
             <input id="clientSearch" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…" />
-            <a asp-action="Create" class="btn btn-primary btn-pulse">
+            <a href="#" class="btn btn-primary btn-pulse" onclick="loadCreateForm()">
                 <i class="bi bi-plus-circle me-1"></i>Nuevo Cliente
             </a>
         </div>
@@ -175,7 +208,7 @@
     </div>
 </div>
 
-<!-- Modal Delete Global -->
+<!-- Modal Delete -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -197,7 +230,7 @@
     </div>
 </div>
 
-<!-- Modal Edit Global -->
+<!-- Modal Edit -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -206,6 +239,21 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body" id="editModalBody">
+                <p class="text-center">Cargando...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Create -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createModalLabel">Nuevo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="createModalBody">
                 <p class="text-center">Cargando...</p>
             </div>
         </div>
@@ -244,6 +292,22 @@
             document.getElementById('deleteClienteId').value = clienteId;
             document.getElementById('deleteForm').action = `/Clientes/Delete/${clienteId}`;
             modal.show();
+        }
+
+        function loadCreateForm() {
+            const modalBody = document.getElementById("createModalBody");
+            modalBody.innerHTML = "<p class='text-center'>Cargando formulario...</p>";
+            const modal = new bootstrap.Modal(document.getElementById('createModal'));
+            modal.show();
+
+            fetch(`/Clientes/Create`)
+                .then(response => response.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+                })
+                .catch(err => {
+                    modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`;
+                });
         }
     </script>
 }
