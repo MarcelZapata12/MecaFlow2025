@@ -6,6 +6,7 @@ using QuestPDF.Infrastructure;                      // <<— IMPORTANTE: agrega es
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
 using MecaFlow2025.Middleware; // â† AGREGAR ESTE USING
+using MecaFlow2025.Services; // para ChatbotService
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +31,10 @@ builder.Services.AddDbContext<MecaFlowContext>(options =>
         builder.Configuration.GetConnectionString("MecaFlowConnection")
     )
 );
+
+builder.Services.AddScoped<ChatbotService>();
+
+builder.Services.AddScoped<ChatbotService>();
 
 var app = builder.Build();
 

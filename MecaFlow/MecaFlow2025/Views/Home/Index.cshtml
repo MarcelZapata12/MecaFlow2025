@@ -35,6 +35,11 @@
             width: 48px;
             height: 48px;
             margin: 0 auto 0.75rem auto; /* ← centrado horizontal + espacio abajo */
+            padding: 20px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            font-size: 2rem;
+            transition: background 0.3s;
         }
 
         .card:hover i {
@@ -68,6 +73,23 @@
         filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
         border-radius: 10px;
     }
+    /* Estilo especial para la tarjeta del chatbot */
+    .card.bg-chatbot {
+        background-color: #1e3a57;
+        border-color: #2a4d7a;
+    }
+
+        .card.bg-chatbot:hover {
+            background-color: #254b75;
+        }
+
+        .card.bg-chatbot i {
+            background-color: #4e9af1;
+        }
+
+        .card.bg-chatbot:hover i {
+            background-color: #3a7bc8;
+        }
 </style>
 
 <div class="text-center mb-5">
@@ -146,6 +168,16 @@
                 <i class="bi bi-list-task"></i>
                 <h5 class="card-title fw-semibold">Tareas</h5>
                 <p class="card-text text-muted">Ver y crear tareas sobre vehículos.</p>
+            </div>
+        </a>
+    </div>
+    <!-- Nueva tarjeta del Chatbot -->
+    <div class="col">
+        <a asp-controller="Chatbot" asp-action="Index" class="text-decoration-none">
+            <div class="card h-100 text-center p-3 bg-chatbot">
+                <i class="bi bi-robot"></i>
+                <h5 class="card-title fw-semibold">Asistente Mecánico</h5>
+                <p class="card-text text-muted">Obtén respuestas rápidas sobre mecánica.</p>
             </div>
         </a>
     </div>
