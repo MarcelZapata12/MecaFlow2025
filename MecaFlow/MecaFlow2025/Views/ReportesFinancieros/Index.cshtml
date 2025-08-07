@@ -1,36 +1,73 @@
-﻿@model IEnumerable<MecaFlow2025.Models.ReportesFinanciero>
+﻿@model IEnumerable<MecaFlow2025.Controllers.ReportesFinancierosController.ResumenVM>
+
 @{
-    ViewData["Title"] = "Reportes Financieros";
+    string alcance = ViewBag.Scope ?? "day";
+    string tituloEsp = ViewBag.TituloScope ?? alcance.ToUpper();   // DÍA | MES | AÑO
+    bool esDiario = alcance == "day";                           
+    ViewData["Title"] = $"Reportes Financieros — {tituloEsp}";
 }
 
-<h1>Reportes Financieros</h1>
-<p>
-    <a asp-action="Create" class="btn btn-success">Nuevo Reporte</a>
-</p>
+<h2 class="mb-4">@ViewData["Title"]</h2>
 
+<!-- Selector de alcance ---------->
+<div class="btn-group mb-3">
+    <a asp-action="Index" asp-route-scope="day"
+       class="btn btn-outline-primary @(alcance == "day" ? "active" : "")">
+        Diario
+    </a>
+    <a asp-action="Index" asp-route-scope="month"
+       class="btn btn-outline-primary @(alcance == "month" ? "active" : "")">
+        Mensual
+    </a>
+    <a asp-action="Index" asp-route-scope="year"
+       class="btn btn-outline-primary @(alcance == "year" ? "active" : "")">
+        Anual
+    </a>
+</div>
+
+<a asp-action="Create" class="btn btn-success mb-3 ms-2">Nuevo reporte</a>
+
+<!-- Tabla de resultados ----------->
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>Fecha</th>
-            <th>Ingresos</th>
-            <th>Gastos</th>
-            <th>Observaciones</th>
-            <th></th>
+            <th>Fecha / Período</th>
+            <th class="text-end">Ingresos&nbsp;₡</th>
+            <th class="text-end">Gastos&nbsp;₡</th>
+            <th class="text-end">Utilidad&nbsp;₡</th>
+            @* Sólo mostrar la columna de acciones cuando la vista es Diario *@
+            @if (esDiario)
+            {
+                <th style="width:165px"></th>
+            }
         </tr>
     </thead>
+
     <tbody>
         @foreach (var r in Model)
         {
             <tr>
-                <td>@r.Fecha.ToString("yyyy-MM-dd")</td>
-                <td>@r.TotalIngresos?.ToString("C")</td>
-                <td>@r.TotalGastos?.ToString("C")</td>
-                <td>@r.Observaciones</td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@r.ReporteId" class="btn btn-sm btn-info">Detalles</a>
-                    <a asp-action="Edit" asp-route-id="@r.ReporteId" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@r.ReporteId" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
+                <td>@r.Periodo</td>
+                <td class="text-end">@r.TotalIngresos.ToString("N2")</td>
+                <td class="text-end">@r.TotalGastos.ToString("N2")</td>
+                <td class="text-end fw-bold">@r.Utilidad.ToString("N2")</td>
+
+                @if (esDiario)
+                {
+                    <td class="text-end">
+                        <a asp-action="Details"
+                           asp-route-id="@r.ReporteId"
+                           class="btn btn-info btn-sm me-1">Detalles</a>
+
+                        <a asp-action="Edit"
+                           asp-route-id="@r.ReporteId"
+                           class="btn btn-primary btn-sm me-1">Editar</a>
+
+                        <a asp-action="Delete"
+                           asp-route-id="@r.ReporteId"
+                           class="btn btn-outline-danger btn-sm">Eliminar</a>
+                    </td>
+                }
             </tr>
         }
     </tbody>

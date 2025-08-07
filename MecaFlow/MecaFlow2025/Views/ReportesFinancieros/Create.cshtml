@@ -1,43 +1,47 @@
-﻿@model MecaFlow2025.Models.ReportesFinanciero
-@{
-    ViewData["Title"] = "Crear Reporte Financiero";
+﻿@{
+    ViewBag.Title = "Nuevo Reporte Financiero";
 }
 
-<h1>Crear Reporte Financiero</h1>
-<form asp-action="Create" method="post">
+<h2>@ViewBag.Title</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@err.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<form asp-action="Create" method="post" class="row g-3">
+    @* token antiforgery *@
     @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-    <div class="mb-3">
-        <label asp-for="Fecha" class="form-label"></label>
-        <input asp-for="Fecha" class="form-control" type="date" />
-        <span asp-validation-for="Fecha" class="text-danger"></span>
+    <div class="col-md-4">
+        <label class="form-label" for="FechaString">Fecha</label>
+        <input id="FechaString" name="FechaString" type="date" class="form-control" required />
     </div>
 
-    <div class="mb-3">
-        <label asp-for="TotalIngresos" class="form-label"></label>
-        <input asp-for="TotalIngresos" class="form-control" type="number" step="0.01" />
-        <span asp-validation-for="TotalIngresos" class="text-danger"></span>
+    <div class="col-md-4">
+        <label class="form-label" for="TotalIngresos">Total Ingresos</label>
+        <input id="TotalIngresos" name="TotalIngresos" type="number" step="0.01" class="form-control" />
     </div>
 
-    <div class="mb-3">
-        <label asp-for="TotalGastos" class="form-label"></label>
-        <input asp-for="TotalGastos" class="form-control" type="number" step="0.01" />
-        <span asp-validation-for="TotalGastos" class="text-danger"></span>
+    <div class="col-md-4">
+        <label class="form-label" for="TotalGastos">Total Gastos</label>
+        <input id="TotalGastos" name="TotalGastos" type="number" step="0.01" class="form-control" />
     </div>
 
-    <div class="mb-3">
-        <label asp-for="Observaciones" class="form-label"></label>
-        <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="Observaciones" class="text-danger"></span>
+    <div class="col-12">
+        <label class="form-label" for="Observaciones">Observaciones</label>
+        <textarea id="Observaciones" name="Observaciones" class="form-control"></textarea>
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary ms-2">Volver</a>
+    <div class="col-12">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </div>
 </form>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
