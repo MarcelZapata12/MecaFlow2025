@@ -1,88 +1,37 @@
 ﻿@model IEnumerable<MecaFlow2025.Models.Vehiculo>
+
 @{
     ViewData["Title"] = "Vehículos";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
     body {
-        background-color: #0f2027 !important;
-        color: #fff;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
     }
 
-
-    .vehiculos-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-
-    .vehiculo-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
-        animation: fadeIn 0.8s ease-in-out;
-    }
-
-    .vehiculo-card {
-        background-color: #1f1f1f;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        position: relative;
-    }
-
-        .vehiculo-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
         }
 
-        .vehiculo-card h5 {
-            color: #66ccff;
-            font-weight: bold;
+        50% {
+            background-position: 100% 50%;
         }
 
-    .vehiculo-info {
-        font-size: 0.95rem;
-        margin-bottom: 0.25rem;
-    }
-
-        .vehiculo-info i {
-            margin-right: 6px;
-            color: #aaa;
+        100% {
+            background-position: 0% 50%;
         }
-
-    .vehiculo-actions {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        display: flex;
-        gap: 0.75rem;
     }
 
-        .vehiculo-actions a {
-            font-size: 1.2rem;
-            color: white;
-            transition: transform 0.2s ease;
-        }
-
-            .vehiculo-actions a:hover {
-                transform: scale(1.3);
-            }
-
-    .form-control, .btn {
-        border-radius: 0.5rem;
-    }
-
-    @@keyframes fadeIn {
+    @@keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(20px);
         }
 
         to {
@@ -90,52 +39,278 @@
             transform: translateY(0);
         }
     }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13,110,253,.4);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(13,110,253,0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13,110,253,0);
+        }
+    }
+
+    .vehicle-card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
+        border-radius: 1rem;
+        transition: transform .3s ease, box-shadow .3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+        animation: fadeInUp .5s ease-in-out;
+    }
+
+        .vehicle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
+        }
+
+    .vehicle-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-control:focus {
+        background-color: #2c2c2c;
+        color: #fff;
+        border-color: #66afe9;
+        box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
+    }
+
+    .card-footer a, .card-footer button {
+        transition: transform .2s ease;
+    }
+
+        .card-footer a:hover, .card-footer button:hover {
+            transform: scale(1.2);
+        }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 1.25rem;
+        color: inherit;
+    }
+
+    .action-icons {
+        position: absolute;
+        top: .75rem;
+        right: 1rem;
+        display: flex;
+        gap: .75rem;
+        z-index: 2;
+    }
+
+        .action-icons form {
+            display: inline;
+        }
+
+    .modal-content {
+        background-color: #1f1f1f;
+        color: white;
+        animation: fadeIn .3s ease-in-out;
+    }
+
+    .btn-pulse {
+        animation: pulse 2s infinite;
+    }
 </style>
 
-<div class="container py-5">
-    <div class="vehiculos-header">
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="text-white">
-            <i class="bi bi-truck-front me-2"></i>Gestión de Vehículos
+            <i class="bi bi-truck-front me-2"></i>Vehículos
         </h2>
-        <a asp-action="Create" class="btn btn-success">
-            <i class="bi bi-plus-circle me-1"></i>Nuevo Vehículo
-        </a>
-    </div>
-
-    <form asp-action="Index" method="get" class="mb-4">
-        <div class="input-group">
-            <input type="text" name="filtroPlaca" class="form-control bg-dark text-white border-secondary" placeholder="Buscar por placa..." value="@ViewBag.FiltroPlaca" />
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-search"></i>
-            </button>
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-x-circle"></i>
+        <div class="d-flex align-items-center">
+            <input id="vehiculoSearch" type="search"
+                   class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
+                   placeholder="Buscar por placa, marca, modelo o cliente…" />
+            <a href="#" class="btn btn-primary btn-pulse" onclick="loadVehiculoCreate()">
+                <i class="bi bi-plus-circle me-1"></i>Nuevo Vehículo
             </a>
         </div>
-    </form>
+    </div>
 
-    <div class="vehiculo-grid">
+    <div id="vehiculosGrid" class="vehicle-grid">
         @foreach (var v in Model)
         {
-            <div class="vehiculo-card">
-                <div class="vehiculo-actions">
-                    <a asp-action="Details" asp-route-id="@v.VehiculoId" class="text-info" title="Ver detalles">
+            <div class="vehicle-card card p-3">
+                <div class="action-icons">
+                    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openVehiculoDetails(@v.VehiculoId)">
                         <i class="bi bi-eye"></i>
                     </a>
-                    <a asp-action="Edit" asp-route-id="@v.VehiculoId" class="text-warning" title="Editar">
+                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadVehiculoEdit(@v.VehiculoId)">
                         <i class="bi bi-pencil-square"></i>
                     </a>
-                    <a asp-action="Delete" asp-route-id="@v.VehiculoId" class="text-danger" title="Eliminar">
-                        <i class="bi bi-trash3"></i>
-                    </a>
+                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmVehiculoDelete(@v.VehiculoId)">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
                 </div>
-                <h5><i class="bi bi-upc-scan me-1"></i>@v.Placa</h5>
-                <div class="vehiculo-info"><i class="bi bi-building"></i><strong>Marca:</strong> @v.Marca?.Nombre</div>
-                <div class="vehiculo-info"><i class="bi bi-car-front-fill"></i><strong>Modelo:</strong> @v.Modelo?.Nombre</div>
-                <div class="vehiculo-info"><i class="bi bi-calendar3"></i><strong>Año:</strong> @v.Anio</div>
-                <div class="vehiculo-info"><i class="bi bi-person-fill"></i><strong>Cliente:</strong> @v.Cliente?.Nombre</div>
-                <div class="vehiculo-info"><i class="bi bi-clock-history"></i><strong>Registrado:</strong> @v.FechaRegistro?.ToString("dd/MM/yyyy")</div>
+
+                <h5 class="card-title" style="color:#66ccff;font-weight:700;">
+                    <i class="bi bi-upc-scan me-1"></i>@v.Placa
+                </h5>
+                <p class="card-text mb-1"><i class="bi bi-building me-1 text-secondary"></i><strong>Marca:</strong> @v.Marca?.Nombre</p>
+                <p class="card-text mb-1"><i class="bi bi-car-front-fill me-1 text-secondary"></i><strong>Modelo:</strong> @v.Modelo?.Nombre</p>
+                <p class="card-text mb-1"><i class="bi bi-calendar3 me-1 text-secondary"></i><strong>Año:</strong> @v.Anio</p>
+                <p class="card-text mb-1"><i class="bi bi-person-fill me-1 text-secondary"></i><strong>Cliente:</strong> @v.Cliente?.Nombre</p>
+                <p class="card-text small text-muted">
+                    <i class="bi bi-clock-history me-1"></i>
+                    @(v.FechaRegistro.HasValue ? v.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")
+                </p>
+            </div>
+
+            <!-- Modal Details (uno por item para carga simple; si prefieres uno único, lo cambio) -->
+            <div class="modal fade" id="vehiculoDetails-@v.VehiculoId" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Detalles del Vehículo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body" id="vehiculoDetailsBody-@v.VehiculoId">
+                            <p class="text-center">Cargando…</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         }
     </div>
 </div>
+
+<!-- Toast de éxito (igual que Clientes) -->
+<div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">¡Acción realizada con éxito!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+</div>
+
+<!-- Modales comunes (únicos) -->
+<div class="modal fade" id="vehiculoEdit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Editar Vehículo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="vehiculoEditBody"><p class="text-center">Cargando…</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="vehiculoCreate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Nuevo Vehículo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="vehiculoCreateBody"><p class="text-center">Cargando…</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="vehiculoDelete" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Confirmar eliminación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este vehículo?</p>
+                <form id="vehiculoDeleteForm" method="post">
+                    <input type="hidden" name="id" id="vehiculoDeleteId" />
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" onclick="submitVehiculoDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Búsqueda client-side (igual que Clientes)
+        document.getElementById('vehiculoSearch').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#vehiculosGrid .vehicle-card').forEach(function (card) {
+                const txt = card.innerText.toLowerCase();
+                card.style.display = txt.includes(q) ? '' : 'none';
+            });
+        });
+
+        // Crear
+        function loadVehiculoCreate() {
+            const modal = new bootstrap.Modal(document.getElementById('vehiculoCreate'));
+            const body = document.getElementById('vehiculoCreateBody');
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(`/Vehiculos/Create`)
+                .then(r => r.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
+        }
+
+        // Editar
+        function loadVehiculoEdit(id) {
+            const modal = new bootstrap.Modal(document.getElementById('vehiculoEdit'));
+            const body = document.getElementById('vehiculoEditBody');
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(`/Vehiculos/Edit/${id}`)
+                .then(r => r.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
+        }
+
+        // Detalles
+        function openVehiculoDetails(id) {
+            const modalId = `vehiculoDetails-${id}`;
+            const bodyId = `vehiculoDetailsBody-${id}`;
+            const modal = new bootstrap.Modal(document.getElementById(modalId));
+            const body = document.getElementById(bodyId);
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(`/Vehiculos/Details/${id}`)
+                .then(r => r.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
+        }
+
+        // Eliminar
+        function confirmVehiculoDelete(id) {
+            const modal = new bootstrap.Modal(document.getElementById('vehiculoDelete'));
+            document.getElementById('vehiculoDeleteId').value = id;
+            document.getElementById('vehiculoDeleteForm').action = `/Vehiculos/Delete/${id}`;
+            modal.show();
+        }
+        function submitVehiculoDelete() {
+            document.getElementById('vehiculoDeleteForm').submit();
+        }
+
+        // Toast de éxito (reutiliza el del DOM)
+        function showSuccessToast() {
+            new bootstrap.Toast(document.getElementById('toastSuccess')).show();
+        }
+    </script>
+}
