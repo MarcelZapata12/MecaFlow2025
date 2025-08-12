@@ -5,6 +5,7 @@
     decimal gastos = Model.TotalGastos ?? 0m;
     decimal utilidad = ingresos - gastos;
     string clsUtil = utilidad >= 0 ? "text-success" : "text-danger";
+    Layout = null;
 }
 
 <h2 class="mb-4">@ViewData["Title"]</h2>

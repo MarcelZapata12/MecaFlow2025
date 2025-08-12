@@ -222,6 +222,7 @@ namespace MecaFlow2025.Controllers
         }
 
         // Exportar a PDF
+        [HttpGet]
         public IActionResult ExportToPdf()
         {
             var data = _context.Diagnosticos
@@ -231,54 +232,107 @@ namespace MecaFlow2025.Controllers
                 .OrderByDescending(d => d.Fecha)
                 .ToList();
 
+            var headerBg = "#154360";
+            var headerFg = "#FFFFFF";
+            var altRow = "#F2F3F4";
+            var normRow = "#FFFFFF";
+
             var pdfBytes = Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Margin(20);
+                    page.Margin(30);
 
-                    page.Header().Element(header =>
+                    // HEADER con título y fecha
+                    page.Header().Row(row =>
                     {
-                        header
-                            .AlignCenter()
-                            .Text("Reporte de Diagnósticos")
-                            .FontSize(20)
-                            .Bold();
+                        row.RelativeItem().Column(col =>
+                        {
+                            col.Item().Text("MecaFlow Taller")
+                                      .FontSize(16).Bold().FontColor("#1A5276");
+                            col.Item().Text("Reporte de Diagnósticos")
+                                      .FontSize(22).Bold();
+                            col.Item().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}")
+                                      .FontSize(10).FontColor("#7D7D7D");
+                        });
+
+                        // Si quieres logo, descomenta y pon ruta válida
+                        // row.ConstantItem(80).Image("wwwroot/images/logo.png");
                     });
 
-                    page.Content().Table(table =>
+                    page.Content().PaddingVertical(15).Column(col =>
                     {
-                        table.ColumnsDefinition(columns =>
+                        // Resumen arriba (opcional)
+                        col.Item().Row(r =>
                         {
-                            columns.ConstantColumn(40);
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
+                            r.RelativeItem().Text($"Total diagnósticos: {data.Count}")
+                                            .SemiBold().FontColor("#2E86C1");
+                            if (data.Any())
+                                r.RelativeItem().AlignRight()
+                                    .Text($"Rango: {data.Min(x => x.Fecha):yyyy-MM-dd} a {data.Max(x => x.Fecha):yyyy-MM-dd}")
+                                    .FontColor("#7D7D7D");
                         });
 
-                        table.Header(header =>
+                        col.Item().Table(table =>
                         {
-                            header.Cell().Text("#").Bold();
-                            header.Cell().Text("Vehículo").Bold();
-                            header.Cell().Text("Fecha").Bold();
-                            header.Cell().Text("Detalle").Bold();
-                            header.Cell().Text("Empleado").Bold();
+                            table.ColumnsDefinition(c =>
+                            {
+                                c.ConstantColumn(40); // #
+                                c.RelativeColumn(3);  // Vehículo
+                                c.RelativeColumn(2);  // Fecha
+                                c.RelativeColumn(4);  // Detalle
+                                c.RelativeColumn(2);  // Empleado
+                            });
+
+                            // Encabezado con fondo
+                            table.Header(h =>
+                            {
+                                h.Cell().Background(headerBg).Padding(6).Text("#").FontColor(headerFg).Bold();
+                                h.Cell().Background(headerBg).Padding(6).Text("Vehículo").FontColor(headerFg).Bold();
+                                h.Cell().Background(headerBg).Padding(6).Text("Fecha").FontColor(headerFg).Bold();
+                                h.Cell().Background(headerBg).Padding(6).Text("Detalle").FontColor(headerFg).Bold();
+                                h.Cell().Background(headerBg).Padding(6).Text("Empleado").FontColor(headerFg).Bold();
+                            });
+
+                            bool alt = false;
+                            foreach (var d in data)
+                            {
+                                var bg = (alt = !alt) ? altRow : normRow;
+                                var veh = $"{d.Vehiculo?.Placa ?? "N/A"} - {d.Vehiculo?.Marca?.Nombre ?? "N/A"} {d.Vehiculo?.Modelo?.Nombre ?? ""}".Trim();
+
+                                table.Cell().Background(bg).Padding(6).Text(d.DiagnosticoId.ToString());
+                                table.Cell().Background(bg).Padding(6).Text(veh);
+                                table.Cell().Background(bg).Padding(6).Text(d.Fecha.ToString("yyyy-MM-dd"));
+                                table.Cell().Background(bg).Padding(6).Text(d.Detalle ?? "").WrapAnywhere();
+                                table.Cell().Background(bg).Padding(6).Text(d.Empleado?.Nombre ?? "N/A");
+                            }
+                        });
+                    });
+
+                    // FOOTER con tipografía y paginación
+                    page.Footer().Row(r =>
+                    {
+                        r.RelativeItem().AlignLeft().Text(t =>
+                        {
+                            t.DefaultTextStyle(x => x.FontSize(9).FontColor("#7D7D7D"));
+                            t.Span("MecaFlow • Reporte de Diagnósticos");
                         });
 
-                        foreach (var d in data)
+                        r.RelativeItem().AlignRight().Text(t =>
                         {
-                            table.Cell().Text(d.DiagnosticoId.ToString());
-                            table.Cell().Text($"{d.Vehiculo?.Placa ?? "N/A"} - {d.Vehiculo?.Marca?.Nombre ?? "N/A"} {d.Vehiculo?.Modelo?.Nombre ?? "N/A"}");
-                            table.Cell().Text(d.Fecha.ToString("yyyy-MM-dd"));
-                            table.Cell().Text(d.Detalle ?? "");
-                            table.Cell().Text(d.Empleado?.Nombre ?? "N/A");
-                        }
+                            t.DefaultTextStyle(x => x.FontSize(9).FontColor("#7D7D7D"));
+                            t.Span("Página ");
+                            t.CurrentPageNumber();
+                            t.Span(" / ");
+                            t.TotalPages();
+                        });
                     });
                 });
             }).GeneratePdf();
 
-            return File(pdfBytes, "application/pdf", "Diagnosticos.pdf");
+            var fileName = $"Diagnosticos_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
         }
+
     }
 }

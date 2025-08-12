@@ -1,74 +1,310 @@
 ﻿@model IEnumerable<MecaFlow2025.Controllers.ReportesFinancierosController.ResumenVM>
 
 @{
-    string alcance = ViewBag.Scope ?? "day";
-    string tituloEsp = ViewBag.TituloScope ?? alcance.ToUpper();   // DÍA | MES | AÑO
-    bool esDiario = alcance == "day";                           
+    string alcance = ViewBag.Scope ?? "day";                    // "day" | "month" | "year"
+    string tituloEsp = ViewBag.TituloScope ?? alcance.ToUpper(); // DÍA | MES | AÑO
+    bool esDiario = alcance == "day";
     ViewData["Title"] = $"Reportes Financieros — {tituloEsp}";
 }
 
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 
-<!-- Selector de alcance ---------->
-<div class="btn-group mb-3">
-    <a asp-action="Index" asp-route-scope="day"
-       class="btn btn-outline-primary @(alcance == "day" ? "active" : "")">
-        Diario
-    </a>
-    <a asp-action="Index" asp-route-scope="month"
-       class="btn btn-outline-primary @(alcance == "month" ? "active" : "")">
-        Mensual
-    </a>
-    <a asp-action="Index" asp-route-scope="year"
-       class="btn btn-outline-primary @(alcance == "year" ? "active" : "")">
-        Anual
-    </a>
-</div>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+    }
 
-<a asp-action="Create" class="btn btn-success mb-3 ms-2">Nuevo reporte</a>
+    .kpi-card {
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-<!-- Tabla de resultados ----------->
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Fecha / Período</th>
-            <th class="text-end">Ingresos&nbsp;₡</th>
-            <th class="text-end">Gastos&nbsp;₡</th>
-            <th class="text-end">Utilidad&nbsp;₡</th>
-            @* Sólo mostrar la columna de acciones cuando la vista es Diario *@
-            @if (esDiario)
-            {
-                <th style="width:165px"></th>
-            }
-        </tr>
-    </thead>
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
 
-    <tbody>
-        @foreach (var r in Model)
-        {
+    .card-title, .card-text {
+        color: white;
+    }
+
+    .btn {
+        border-radius: 0.75rem;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.8s ease-in-out forwards;
+        opacity: 0;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .table thead th {
+        color: #f8f9fa;
+    }
+</style>
+
+<div class="container mt-5 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-cash-coin text-warning"></i> Reportes Financieros — @tituloEsp
+        </h2>
+
+        <div class="d-flex align-items-center">
+            <!-- Selector de alcance -->
+            <div class="btn-group me-2">
+                <a asp-action="Index" asp-route-scope="day"
+                   class="btn btn-outline-info @(alcance == "day" ? "active" : "")">Diario</a>
+                <a asp-action="Index" asp-route-scope="month"
+                   class="btn btn-outline-info @(alcance == "month" ? "active" : "")">Mensual</a>
+                <a asp-action="Index" asp-route-scope="year"
+                   class="btn btn-outline-info @(alcance == "year" ? "active" : "")">Anual</a>
+            </div>
+
+            <!-- Export / Nuevo -->
+            <a asp-controller="ReportesFinancieros" asp-action="ExportToExcel" asp-route-scope="@alcance" class="btn btn-outline-success me-2">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
+            <a asp-controller="ReportesFinancieros" asp-action="ExportToPdf" asp-route-scope="@alcance" class="btn btn-outline-danger me-2">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+            <a href="javascript:void(0)" class="btn btn-success"
+               onclick="openModal('@Url.Action("Create","ReportesFinancieros")')">
+                <i class="bi bi-plus-circle-fill"></i> Nuevo Reporte
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    @{
+        var totalReportes = Model?.Count() ?? 0;
+        var totalIngresos = Model?.Sum(x => x.TotalIngresos) ?? 0m;
+        var totalGastos = Model?.Sum(x => x.TotalGastos) ?? 0m;
+        var totalUtilidad = Model?.Sum(x => x.Utilidad) ?? 0m;
+
+        // "Último período" por ordenamiento del label. Si tus labels son yyyy-MM-dd / yyyy-MM / yyyy, queda ok.
+        var ultimoPeriodo = Model?.OrderByDescending(x => x.Periodo)?.FirstOrDefault()?.Periodo ?? "-";
+    }
+
+    <div class="row text-white mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary shadow kpi-card text-center p-3">
+                <h5>Total Reportes</h5>
+                <h3 class="fw-bold">@totalReportes</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success shadow kpi-card text-center p-3">
+                <h5>Ingresos Totales</h5>
+                <h3 class="fw-bold">₡ @totalIngresos.ToString("N2")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning shadow kpi-card text-center p-3">
+                <h5>Gastos Totales</h5>
+                <h3 class="fw-bold">₡ @totalGastos.ToString("N2")</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark shadow kpi-card text-center p-3">
+                <h5>Utilidad Acumulada</h5>
+                <h3 class="fw-bold @(totalUtilidad >= 0 ? "text-success" : "text-danger")">₡ @totalUtilidad.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- (Opcional) Buscador simple por período o concepto -->
+    <form method="get" asp-action="Index" class="input-group mb-4">
+        <input type="hidden" name="scope" value="@alcance" />
+        <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Buscar por período o concepto...">
+        <button class="btn btn-outline-light" type="submit">
+            <i class="bi bi-search"></i>
+        </button>
+    </form>
+
+    <!-- Chart -->
+    <div class="card mb-4 shadow-sm fade-in">
+        <div class="card-body bg-dark rounded">
+            <canvas id="finChart" height="100"></canvas>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <table class="table table-dark table-striped table-hover text-center align-middle shadow fade-in">
+        <thead class="bg-gradient">
             <tr>
-                <td>@r.Periodo</td>
-                <td class="text-end">@r.TotalIngresos.ToString("N2")</td>
-                <td class="text-end">@r.TotalGastos.ToString("N2")</td>
-                <td class="text-end fw-bold">@r.Utilidad.ToString("N2")</td>
-
+                <th>Fecha / Período</th>
+                <th class="text-end">Ingresos&nbsp;₡</th>
+                <th class="text-end">Gastos&nbsp;₡</th>
+                <th class="text-end">Utilidad&nbsp;₡</th>
                 @if (esDiario)
                 {
-                    <td class="text-end">
-                        <a asp-action="Details"
-                           asp-route-id="@r.ReporteId"
-                           class="btn btn-info btn-sm me-1">Detalles</a>
-
-                        <a asp-action="Edit"
-                           asp-route-id="@r.ReporteId"
-                           class="btn btn-primary btn-sm me-1">Editar</a>
-
-                        <a asp-action="Delete"
-                           asp-route-id="@r.ReporteId"
-                           class="btn btn-outline-danger btn-sm">Eliminar</a>
-                    </td>
+                    <th>Acciones</th>
                 }
             </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr class="@(r.Utilidad >= 0 ? "" : "table-danger")">
+                    <td>@r.Periodo</td>
+                    <td class="text-end">@r.TotalIngresos.ToString("N2")</td>
+                    <td class="text-end">@r.TotalGastos.ToString("N2")</td>
+                    <td class="text-end fw-bold">@r.Utilidad.ToString("N2")</td>
+                    @if (esDiario)
+                    {
+                        <td>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-info me-1"
+                               onclick="openModal('@Url.Action("Details","ReportesFinancieros", new { id = r.ReporteId })')">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-warning me-1"
+                               onclick="openModal('@Url.Action("Edit","ReportesFinancieros", new { id = r.ReporteId })')">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-danger"
+                               onclick="openModal('@Url.Action("Delete","ReportesFinancieros", new { id = r.ReporteId })')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal centrado -->
+<div class="modal fade" id="modalReporte" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Gestión de Reporte</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalContent">
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @using System.Text.Json
+    <script>
+        function openModal(url) {
+            const modal = new bootstrap.Modal(document.getElementById('modalReporte'));
+            document.getElementById('modalContent').innerHTML =
+                '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('modalContent').innerHTML = html;
+                    modal.show();
+                });
         }
-    </tbody>
-</table>
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('finChart');
+            if (!ctx) return;
+
+            // Labels: período (día/mes/año). Datasets: ingresos, gastos, utilidad
+            const labels = @Html.Raw(JsonSerializer.Serialize(
+            Model.Select(m => m.Periodo).ToList()
+            ));
+
+            const ingresos = @Html.Raw(JsonSerializer.Serialize(
+            Model.Select(m => m.TotalIngresos).ToList()
+            ));
+
+            const gastos = @Html.Raw(JsonSerializer.Serialize(
+            Model.Select(m => m.TotalGastos).ToList()
+            ));
+
+            const utilidad = @Html.Raw(JsonSerializer.Serialize(
+            Model.Select(m => m.Utilidad).ToList()
+            ));
+
+            if (labels.length === 0) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Ingresos (₡)',
+                            data: ingresos,
+                            backgroundColor: 'rgba(25, 135, 84, 0.6)',   // verde
+                            borderColor: 'rgba(25, 135, 84, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Gastos (₡)',
+                            data: gastos,
+                            backgroundColor: 'rgba(220, 53, 69, 0.6)',   // rojo
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Utilidad (₡)',
+                            type: 'line',
+                            data: utilidad,
+                            fill: false,
+                            borderColor: 'rgba(13,110,253,1)',            // azul
+                            borderWidth: 2,
+                            tension: 0.25,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                // separadores de miles
+                                callback: function (value) {
+                                    try { return new Intl.NumberFormat('es-CR').format(value); }
+                                    catch { return value; }
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (ctx) {
+                                    const v = ctx.parsed.y ?? ctx.raw;
+                                    const n = (typeof v === 'number') ? v : parseFloat(v);
+                                    const sign = n < 0 ? '-' : '';
+                                    const abs = Math.abs(n);
+                                    const fmt = new Intl.NumberFormat('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(abs);
+                                    return `${ctx.dataset.label}: ${sign}₡ ${fmt}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}
