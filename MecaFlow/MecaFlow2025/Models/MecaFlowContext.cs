@@ -47,17 +47,19 @@ public partial class MecaFlowContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=DESKTOP-5LOR99L\\SQLEXPRESS01;Database=MecaFlowDB;Trusted_Connection=True;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=Marcel\\MSSQLSERVER01;Database=MecaFlowDB;Trusted_Connection=True;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Asistencia>(entity =>
         {
-            entity.HasKey(e => e.AsistenciaId).HasName("PK__Asistenc__72710FA52933811A");
+            entity.HasKey(e => e.AsistenciaId).HasName("PK__Asistenc__72710FA5...");
 
-            entity.HasOne(d => d.Empleado).WithMany(p => p.Asistencia)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Asistenci__Emple__440B1D61");
+            entity.HasOne(d => d.Empleado)
+                .WithMany(p => p.Asistencia)
+                .HasForeignKey(d => d.EmpleadoId)
+                .OnDelete(DeleteBehavior.Cascade)                        // ⬅️ AQUÍ la nueva actualizacion para eliminar en cascada
+                .HasConstraintName("FK_Asistencias_Empleados_Cascade");
         });
 
         modelBuilder.Entity<Cliente>(entity =>
