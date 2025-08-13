@@ -1,13 +1,9 @@
-
-using Microsoft.EntityFrameworkCore;                // necesario para UseSqlServer
-using MecaFlow2025.Models;                          // tu namespace del Context
-using QuestPDF.Infrastructure;                      // <<� IMPORTANTE: agrega esto
-
+﻿
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
-using MecaFlow2025.Middleware; // ← AGREGAR ESTE USING
-using MecaFlow2025.Services; // para ChatbotService
-
+using MecaFlow2025.Middleware;
+using MecaFlow2025.Services;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,9 +28,9 @@ builder.Services.AddDbContext<MecaFlowContext>(options =>
     )
 );
 
+// 4) Registrar servicios
 builder.Services.AddScoped<ChatbotService>();
-
-builder.Services.AddScoped<ChatbotService>();
+builder.Services.AddScoped<IEmailService, EmailService>(); // ← AGREGAR ESTA LÍNEA
 
 var app = builder.Build();
 
@@ -50,15 +46,15 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// 4) Usar sesiones
+// 5) Usar sesiones
 app.UseSession();
 
-// 5) Agregar middleware de autorización personalizado
-app.UseMiddleware<RoleAuthorizationMiddleware>(); // ← AGREGAR ESTA LÍNEA
+// 6) Agregar middleware de autorización personalizado
+app.UseMiddleware<RoleAuthorizationMiddleware>();
 
 app.UseAuthorization();
 
-// 6) Mapea tus controladores MVC - inicia en Register
+// 7) Mapear controladores MVC - inicia en Register
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Register}/{id?}");
