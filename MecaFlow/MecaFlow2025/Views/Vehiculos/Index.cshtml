@@ -259,7 +259,6 @@
         });
 
         // CREAR (carga en modal)
-
         function loadVehiculoCreate() {
             const modal = new bootstrap.Modal(document.getElementById('vehiculoCreate'));
             const body = document.getElementById('vehiculoCreateBody');
@@ -274,7 +273,6 @@
                 })
                 .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
         }
-
 
         // EDITAR (carga en modal)
         function loadVehiculoEdit(id) {
@@ -402,5 +400,49 @@
             const modelo = body?.querySelector('#ModeloId');
             if (modelo) modelo.innerHTML = '<option value="">-- Seleccione un modelo --</option>';
         }
+
+        // ======================================================
+        // SUBMIT AJAX del Create (mantiene el modal abierto con errores)
+        // ======================================================
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            const esCreateEnModal =
+                form.closest('#vehiculoCreateBody') &&
+                form.action.endsWith('/Vehiculos/Create');
+            if (!esCreateEnModal) return;
+
+            e.preventDefault();
+
+            const body = document.getElementById('vehiculoCreateBody');
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } // para que el controller devuelva PartialView/JSON
+            })
+            .then(async (r) => {
+                const ct = r.headers.get('content-type') || '';
+
+                // Éxito: JSON { success: true }
+                if (ct.includes('application/json')) {
+                    const data = await r.json();
+                    if (data.success) {
+                        const modalEl = document.getElementById('vehiculoCreate');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal?.hide();
+                        showSuccessToast();
+                        location.reload();
+                        return;
+                    }
+                }
+
+                // Errores de validación: llega HTML parcial -> reinyectar en el modal
+                const html = await r.text();
+                body.innerHTML = html;
+            })
+            .catch(() => {
+                body.innerHTML = `<div class="alert alert-danger">Error al guardar. Intenta de nuevo.</div>`;
+            });
+        });
     </script>
 }
