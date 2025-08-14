@@ -2,193 +2,72 @@
 @{
     ViewData["Title"] = "Nueva Factura";
     var hoy = (DateOnly)ViewBag.Hoy;
-    Layout = null;
+}
+<h1>Nueva Factura</h1>
+
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<form id="formFactura" asp-action="Create" asp-controller="Facturas" method="post">
+    @Html.AntiForgeryToken()
 
-<style>
-    body {
-        background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-        color: #f8f9fa;
-        animation: gradient 15s ease infinite;
-        background-size: 400% 400%;
-    }
+    <div asp-validation-summary="All" class="text-danger"></div>
 
-    @@keyframes gradient {
-        0% {
-            background-position: 0% 50%
-        }
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label asp-for="ClienteId" class="form-label">Cliente</label>
+            <select asp-for="ClienteId" class="form-select" asp-items="ViewBag.ClienteId">
+                <option value="">-- Seleccione --</option>
+            </select>
+            <span asp-validation-for="ClienteId" class="text-danger"></span>
+        </div>
 
-        50% {
-            background-position: 100% 50%
-        }
+        <div class="col-md-4">
+            <label asp-for="VehiculoId" class="form-label">Vehículo</label>
+            <select asp-for="VehiculoId" class="form-select" asp-items="ViewBag.VehiculoId" id="vehiculoSelect">
+                <option value="">-- Seleccione --</option>
+            </select>
+            <span asp-validation-for="VehiculoId" class="text-danger"></span>
+        </div>
 
-        100% {
-            background-position: 0% 50%
-        }
-    }
+        <div class="col-md-4">
+            <label class="form-label">Fecha</label>
+            <input class="form-control" value="@hoy.ToString("dd/MM/yyyy")" readonly />
+        </div>
 
-    .page-wrap {
-        padding: 2rem 0;
-    }
+        <div class="col-md-4">
+            <label asp-for="MontoTotal" class="form-label">Monto Total</label>
+            <input asp-for="MontoTotal" class="form-control" type="number" step="0.01" min="0" />
+            <span asp-validation-for="MontoTotal" class="text-danger"></span>
+        </div>
 
-    .header-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
+        <!-- ===== Método de pago (reemplaza Observaciones) ===== -->
+        <div class="col-md-4">
+            <label asp-for="Metodo" class="form-label">Método de pago</label>
+            <select asp-for="Metodo"
+                    class="form-select"
+                    asp-items="@(ViewData["Metodos"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList)">
+                <option value="">-- Seleccione --</option>
+            </select>
+            <span asp-validation-for="Metodo" class="text-danger"></span>
+        </div>
+        <!-- ==================================================== -->
 
-        .header-bar h2 {
-            margin: 0;
-        }
+        <div class="col-12">
+            <h5 class="mt-3">Tareas realizadas al vehículo</h5>
+            <div id="tareasContainer" class="card shadow-sm">
+                <div class="p-3 text-muted">Seleccione un vehículo para cargar sus tareas…</div>
+            </div>
+        </div>
 
-    .form-card {
-        background-color: #1f1f1f;
-        border: 1px solid #2c2c2c;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 8px 20px rgba(0,0,0,.25);
-        animation: fadeIn .3s ease-in-out;
-    }
-
-    .section-title {
-        font-weight: 600;
-        margin: .25rem 0 .75rem 0;
-        color: #cfe8ff;
-    }
-
-    .card-inner {
-        background: #161616;
-        border: 1px solid #2b2b2b;
-        border-radius: .75rem;
-    }
-
-    .form-control, .form-select {
-        background-color: #2a2a2a;
-        border: 1px solid #444;
-        color: #f8f9fa;
-    }
-
-        .form-control:focus, .form-select:focus {
-            background-color: #2a2a2a;
-            border-color: #66afe9;
-            box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
-        }
-
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #004085;
-        }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        border-color: #6c757d;
-    }
-
-        .btn-secondary:hover {
-            background-color: #565e64;
-            border-color: #4e555b;
-        }
-
-    .text-muted-aux {
-        color: #adb5bd;
-    }
-
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: scale(.98)
-        }
-
-        to {
-            opacity: 1;
-            transform: scale(1)
-        }
-    }
-</style>
-
-<div class="container page-wrap">
-    <div class="header-bar">
-        <h2 class="text-white"><i class="bi bi-receipt me-2"></i>Nueva Factura</h2>
+        <div class="col-12 mt-3">
+            <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar</button>
+            <a asp-action="Index" class="btn btn-secondary">Volver</a>
+        </div>
     </div>
-
-    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-    {
-        <div class="alert alert-danger">@err</div>
-    }
-
-    <div class="form-card">
-        <form id="formFactura" asp-action="Create" asp-controller="Facturas" method="post">
-            @Html.AntiForgeryToken()
-
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label asp-for="ClienteId" class="form-label fw-bold">Cliente</label>
-                    <select asp-for="ClienteId" class="form-select" asp-items="ViewBag.ClienteId">
-                        <option value="">-- Seleccione --</option>
-                    </select>
-                    <span asp-validation-for="ClienteId" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="VehiculoId" class="form-label fw-bold">Vehículo</label>
-                    <select asp-for="VehiculoId" class="form-select" asp-items="ViewBag.VehiculoId" id="vehiculoSelect">
-                        <option value="">-- Seleccione --</option>
-                    </select>
-                    <span asp-validation-for="VehiculoId" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Fecha</label>
-                    <input class="form-control" value="@hoy.ToString("dd/MM/yyyy")" readonly />
-                </div>
-
-                <div class="col-md-4">
-                    <label asp-for="MontoTotal" class="form-label fw-bold">Monto Total</label>
-                    <input asp-for="MontoTotal" class="form-control" type="number" step="0.01" min="0" />
-                    <span asp-validation-for="MontoTotal" class="text-danger"></span>
-                </div>
-
-                <!-- Método de pago -->
-                <div class="col-md-4">
-                    <label asp-for="Metodo" class="form-label fw-bold">Método de pago</label>
-                    <select asp-for="Metodo"
-                            class="form-select"
-                            asp-items="@(ViewData["Metodos"] as Microsoft.AspNetCore.Mvc.Rendering.SelectList)">
-                        <option value="">-- Seleccione --</option>
-                    </select>
-                    <span asp-validation-for="Metodo" class="text-danger"></span>
-                </div>
-            </div>
-
-            <div class="mt-4">
-                <div class="section-title"><i class="bi bi-list-check me-1"></i>Tareas realizadas al vehículo</div>
-                <div id="tareasContainer" class="card-inner">
-                    <div class="p-3 text-muted-aux">Seleccione un vehículo para cargar sus tareas…</div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-end mt-4">
-                <button type="submit" class="btn btn-primary me-2" id="btnGuardar">
-                    <i class="bi bi-save me-1"></i>Guardar
-                </button>
-                <a asp-action="Index" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left-circle me-1"></i>Volver
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -196,29 +75,17 @@
         const tareasDiv = document.getElementById('tareasContainer');
         const sel = document.getElementById('vehiculoSelect');
 
-        async function cargarTareas(vehiculoId) {
-            if (!vehiculoId) {
-                tareasDiv.innerHTML = '<div class="p-3 text-muted-aux">Seleccione un vehículo para cargar sus tareas…</div>';
+        async function cargarTareas(vehiculoId){
+            if(!vehiculoId){
+                tareasDiv.innerHTML = '<div class="p-3 text-muted">Seleccione un vehículo para cargar sus tareas…</div>';
                 return;
             }
-
-            // Construcción segura de la URL (evita problemas de comillas/escapes)
-            const baseUrl = '@Url.Action("TareasPorVehiculo", "Facturas")';
-            const url = new URL(baseUrl, window.location.origin);
-            url.searchParams.set('vehiculoId', vehiculoId);
-
-            try {
-                tareasDiv.innerHTML = '<div class="p-3 text-muted-aux">Cargando tareas…</div>';
-                const resp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const html = await resp.text();
-                tareasDiv.innerHTML = html;
-            } catch (err) {
-                console.error(err);
-                tareasDiv.innerHTML = '<div class="alert alert-danger m-2">No se pudieron cargar las tareas.</div>';
-            }
+            const resp = await fetch(`@Url.Action("TareasPorVehiculo", "Facturas")?vehiculoId=${vehiculoId}`);
+            const html = await resp.text();
+            tareasDiv.innerHTML = html;
         }
 
         sel.addEventListener('change', e => cargarTareas(e.target.value));
-        if (sel.value) cargarTareas(sel.value);
+        if(sel.value) cargarTareas(sel.value);
     </script>
 }
