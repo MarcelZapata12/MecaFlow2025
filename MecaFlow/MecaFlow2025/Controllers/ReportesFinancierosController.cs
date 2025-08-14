@@ -1,18 +1,20 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using MecaFlow2025.Attributes;
+using MecaFlow2025.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Infrastructure;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MecaFlow2025.Models;
-using ClosedXML.Excel;
-using QuestPDF.Fluent;
-using QuestPDF.Infrastructure;
 
 namespace MecaFlow2025.Controllers
 {
+    [AuthorizeRole("Administrador")]
     public class ReportesFinancierosController : Controller
     {
         private readonly MecaFlowContext _ctx;
