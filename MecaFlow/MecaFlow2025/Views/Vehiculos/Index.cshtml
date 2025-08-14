@@ -147,12 +147,11 @@
             <input id="vehiculoSearch" type="search"
                    class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
                    placeholder="Buscar por placa, marca, modelo o cliente…" />
-            @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
-                {
+            
     <a href="#" class="btn btn-primary btn-pulse" onclick="loadVehiculoCreate()">
         <i class="bi bi-plus-circle me-1"></i>Nuevo Vehículo
     </a>
-}
+
         </div>
     </div>
 
@@ -162,35 +161,37 @@
             <div class="vehicle-card card p-3">
                 <div class="action-icons">
 
-                    @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+@*                     @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
 {
     <a href="#" class="text-info icon-btn" title="Detalles" onclick="openVehiculoDetails(@v.VehiculoId)">
         <i class="bi bi-eye"></i>
     </a>
-}
+} *@
 
-                    @* <a href="#" class="text-info icon-btn" title="Detalles" onclick="openVehiculoDetails(@v.VehiculoId)">
+                    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openVehiculoDetails(@v.VehiculoId)">
                         <i class="bi bi-eye"></i>
-                    </a> *@
-                    @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+                    </a>
+                    @* @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
 {
     <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadVehiculoEdit(@v.VehiculoId)">
         <i class="bi bi-pencil-square"></i>
     </a>
-}
+    
+    }*@
 
-                    @* <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadVehiculoEdit(@v.VehiculoId)">
+
+                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadVehiculoEdit(@v.VehiculoId)">
                         <i class="bi bi-pencil-square"></i>
-                    </a> *@
-                    @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
+                    </a>
+                    @* @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
 {
     <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmVehiculoDelete(@v.VehiculoId)">
         <i class="bi bi-trash-fill"></i>
     </button>
-}
-                    @* <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmVehiculoDelete(@v.VehiculoId)">
+} *@
+                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmVehiculoDelete(@v.VehiculoId)">
                         <i class="bi bi-trash-fill"></i>
-                    </button> *@
+                    </button>
                 </div>
 
                 <h5 class="card-title" style="color:#66ccff;font-weight:700;">
