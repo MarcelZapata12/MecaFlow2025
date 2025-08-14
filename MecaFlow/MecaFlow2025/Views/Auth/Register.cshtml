@@ -1,245 +1,195 @@
 ﻿@model MecaFlow2025.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Registro";
+    Layout = "_Layout";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-
 <style>
-    /* Lienzo centrado a pantalla completa */
-    .auth-viewport {
-        min-height: calc(100vh - 120px); /* margen por header/footer del layout */
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
     }
 
-    /* Orbes decorativos suaves */
-    .orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(50px);
-        opacity: .25;
-        pointer-events: none;
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
 
-    .orb-1 {
-        width: 300px;
-        height: 300px;
-        background: #0d6efd;
-        top: 8%;
-        left: 10%;
-    }
-
-    .orb-2 {
-        width: 240px;
-        height: 240px;
-        background: #20c997;
-        bottom: 10%;
-        right: 15%;
-    }
-
-    .orb-3 {
-        width: 180px;
-        height: 180px;
-        background: #6f42c1;
-        top: 55%;
-        left: 35%;
-        opacity: .18;
-    }
-
-    /* Card “glass” */
-    .auth-card {
-        background: rgba(15, 15, 15, 0.85);
-        border: 1px solid rgba(255,255,255,.08);
-        backdrop-filter: blur(6px);
-        box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    .card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
         border-radius: 1rem;
-        overflow: hidden;
-        width: 100%;
-        max-width: 760px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .auth-header {
-        background: linear-gradient(90deg,#0d6efd, #0aa2c0);
-        color: #fff;
-        padding: 1rem 1.25rem;
-    }
-
-        .auth-header h3 {
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .auth-header small {
-            opacity: .95;
-        }
-
-    .auth-body {
-        padding: 1.25rem;
-        background-color: #121416;
-        color: #e9ecef;
-    }
-
-    .auth-footer {
-        padding: .85rem 1.25rem;
-        background: #0f1214;
-        color: #98a2ad;
-        border-top: 1px solid rgba(255,255,255,.06);
-    }
-
-    .form-label {
-        color: #cfe2ff;
-        font-weight: 600;
-    }
-
-    .input-group-text {
-        background: #1c1f23;
-        color: #adb5bd;
-        border-color: #2b3035;
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
 
     .form-control, .form-select {
-        background: #171a1d;
+        background-color: #2a2a2a;
+        border: 1px solid #444;
         color: #f8f9fa;
-        border-color: #2b3035;
     }
 
-        .form-control::placeholder {
-            color: #6c757d;
-        }
-
-        .form-control:focus, .form-select:focus {
-            background: #1a1d21;
-            color: #fff;
-            border-color: #66afe9;
-            box-shadow: 0 0 0 .2rem rgba(102,175,233,.2);
-        }
-
-    .btn-gradient {
-        background: linear-gradient(90deg,#0d6efd,#0aa2c0);
-        border: 0;
+    .form-control:focus, .form-select:focus {
+        background-color: #2a2a2a;
+        border-color: #66afe9;
+        color: #fff;
+        box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
     }
 
-        .btn-gradient:hover {
-            filter: brightness(1.05);
-        }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        transition: all 0.3s ease;
+    }
 
-    .toggle-eye {
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+
+    .btn i {
+        transition: transform 0.2s ease;
+    }
+
+    .btn:hover i {
+        transform: scale(1.2);
+    }
+
+    .toggle-password {
         cursor: pointer;
-        user-select: none;
+        color: #aaa;
+        position: absolute;
+        right: 15px;
+        top: 38px;
     }
 
-    .validation-summary-errors ul {
-        margin: 0 0 .75rem 1rem;
+    .position-relative {
+        position: relative;
     }
 </style>
 
-<div class="auth-viewport">
-    <!-- orbes decorativos -->
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center">
+    <div class="row w-100">
+        <div class="col-md-8 col-lg-6 col-xl-5 mx-auto">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4 rounded-top">
+                    <h2 class="mb-0">
+                        <i class="bi bi-person-plus-fill me-2"></i>
+                        Registro
+                    </h2>
+                    <p class="mb-0 opacity-75">Crear nueva cuenta</p>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
 
-    <div class="auth-card">
-        <div class="auth-header d-flex align-items-center gap-2">
-            <i class="bi bi-person-plus-fill fs-3"></i>
-            <div>
-                <h3>Registro</h3>
-                <small>Crear nueva cuenta</small>
+                    <form asp-action="Register" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label asp-for="Nombre" class="form-label fw-bold">
+                                    <i class="bi bi-person-fill me-1"></i>Nombre
+                                </label>
+                                <input asp-for="Nombre" class="form-control" placeholder="Ingrese su nombre" />
+                                <span asp-validation-for="Nombre" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Apellido" class="form-label fw-bold">
+                                    <i class="bi bi-person-fill me-1"></i>Apellido
+                                </label>
+                                <input asp-for="Apellido" class="form-control" placeholder="Ingrese su apellido" />
+                                <span asp-validation-for="Apellido" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label asp-for="Cedula" class="form-label fw-bold">
+                                    <i class="bi bi-card-text me-1"></i>Cédula
+                                </label>
+                                <input asp-for="Cedula" class="form-control" placeholder="123456789" />
+                                <span asp-validation-for="Cedula" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Telefono" class="form-label fw-bold">
+                                    <i class="bi bi-telephone-fill me-1"></i>Teléfono
+                                </label>
+                                <input asp-for="Telefono" class="form-control" placeholder="8888-8888" />
+                                <span asp-validation-for="Telefono" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Rol" class="form-label fw-bold">
+                                <i class="bi bi-award-fill me-1"></i>Rol
+                            </label>
+                            <select asp-for="Rol" class="form-select">
+                                <option value="">Seleccione un rol</option>
+                                <option value="Cliente">Cliente</option>
+                                <option value="Empleado">Empleado</option>
+                                <option value="Administrador">Administrador</option>
+                            </select>
+                            <span asp-validation-for="Rol" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Correo" class="form-label fw-bold">
+                                <i class="bi bi-envelope-fill me-1"></i>Correo Electrónico
+                            </label>
+                            <input asp-for="Correo" type="email" class="form-control" placeholder="ejemplo@correo.com" />
+                            <span asp-validation-for="Correo" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 position-relative">
+                            <label asp-for="Contrasena" class="form-label fw-bold">
+                                <i class="bi bi-lock-fill me-1"></i>Contraseña
+                            </label>
+                            <input asp-for="Contrasena" type="password" class="form-control" id="contrasenaInput" placeholder="Ingrese su contraseña" />
+                            <span class="toggle-password" data-target="#contrasenaInput">
+                                <i class="bi bi-eye"></i>
+                            </span>
+                            <span asp-validation-for="Contrasena" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ConfirmarContrasena" class="form-label fw-bold">
+                                <i class="bi bi-lock-fill me-1"></i>Confirmar Contraseña
+                            </label>
+                            <input asp-for="ConfirmarContrasena" type="password" class="form-control" placeholder="Confirme su contraseña" />
+                            <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-person-plus-fill me-2"></i>Registrarse
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-0">
+                            ¿Ya tienes una cuenta?
+                            <a asp-action="Login" class="text-primary text-decoration-none fw-bold">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Iniciar Sesión
+                            </a>
+                        </p>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="auth-body">
-            <!-- resumen de validaciones -->
-            <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
-
-            <form asp-action="Register" method="post" novalidate>
-                @Html.AntiForgeryToken()
-
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label asp-for="Nombre" class="form-label">Nombre</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input asp-for="Nombre" class="form-control" placeholder="Ingresa tu nombre" />
-                        </div>
-                        <span asp-validation-for="Nombre" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label asp-for="Apellido" class="form-label">Apellido</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
-                            <input asp-for="Apellido" class="form-control" placeholder="Ingresa tu apellido" />
-                        </div>
-                        <span asp-validation-for="Apellido" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label asp-for="Cedula" class="form-label">Cédula</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-card-text"></i></span>
-                            <input asp-for="Cedula" class="form-control" placeholder="123456789" />
-                        </div>
-                        <span asp-validation-for="Cedula" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label asp-for="Telefono" class="form-label">Teléfono</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                            <input asp-for="Telefono" class="form-control" placeholder="8888-8888" />
-                        </div>
-                        <span asp-validation-for="Telefono" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-12">
-                        <label asp-for="Correo" class="form-label">Correo Electrónico</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input asp-for="Correo" class="form-control" placeholder="ejemplo@correo.com" />
-                        </div>
-                        <span asp-validation-for="Correo" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label asp-for="Contrasena" class="form-label">Contraseña</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input asp-for="Contrasena" class="form-control" type="password" id="pwd" placeholder="Mínimo 6 caracteres" />
-                            <span class="input-group-text toggle-eye" data-target="#pwd">
-                                <i class="bi bi-eye"></i>
-                            </span>
-                        </div>
-                        <span asp-validation-for="Contrasena" class="text-danger small"></span>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label asp-for="ConfirmarContrasena" class="form-label">Confirmar Contraseña</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                            <input asp-for="ConfirmarContrasena" class="form-control" type="password" id="pwd2" placeholder="Repite tu contraseña" />
-                            <span class="input-group-text toggle-eye" data-target="#pwd2">
-                                <i class="bi bi-eye"></i>
-                            </span>
-                        </div>
-                        <span asp-validation-for="ConfirmarContrasena" class="text-danger small"></span>
-                    </div>
-                </div>
-
-                <div class="mt-4 d-grid">
-                    <button class="btn btn-gradient btn-lg">
-                        <i class="bi bi-person-plus me-1"></i> Registrarse
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <div class="auth-footer text-center">
-            ¿Ya tienes una cuenta?
-            <a asp-action="Login" class="link-primary text-decoration-underline">Iniciar Sesión</a>
         </div>
     </div>
 </div>
@@ -247,17 +197,16 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Toggle mostrar/ocultar contraseña
-        document.querySelectorAll('.toggle-eye').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = document.querySelector(btn.getAttribute('data-target'));
-                if (!target) return;
-                const isPwd = target.getAttribute('type') === 'password';
-                target.setAttribute('type', isPwd ? 'text' : 'password');
-                const icon = btn.querySelector('i');
-                icon.classList.toggle('bi-eye');
-                icon.classList.toggle('bi-eye-slash');
-                target.focus();
+        document.addEventListener("DOMContentLoaded", function () {
+            const passwordToggle = document.querySelector(".toggle-password");
+            const passwordInput = document.querySelector(passwordToggle.dataset.target);
+
+            passwordToggle.addEventListener("click", function () {
+                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+                passwordInput.setAttribute("type", type);
+                passwordToggle.innerHTML = type === "password"
+                    ? '<i class="bi bi-eye"></i>'
+                    : '<i class="bi bi-eye-slash"></i>';
             });
         });
     </script>

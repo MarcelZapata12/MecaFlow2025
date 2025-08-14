@@ -45,13 +45,6 @@
                     color: #ffffff;
                     text-decoration: none;
                 }
-
-
-
-        
-
-
-
     </style>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     @await RenderSectionAsync("Styles", required: false)
@@ -87,7 +80,7 @@
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-controller="Empleados" asp-action="Index"><i class="fas fa-user-tie"></i> Empleados</a></li>
                                         <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index"><i class="fas fa-user"></i> Clientes</a></li>
-                                       
+                                        <li><a class="dropdown-item" asp-controller="Usuarios" asp-action="Index"><i class="fas fa-users-cog"></i> Usuarios</a></li>
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown">
@@ -97,7 +90,7 @@
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-controller="Facturas" asp-action="Index"><i class="fas fa-file-invoice"></i> Facturas</a></li>
                                         <li><a class="dropdown-item" asp-controller="ReportesFinancieros" asp-action="Index"><i class="fas fa-chart-line"></i> Reportes Financieros</a></li>
-                                        
+                                        <li><a class="dropdown-item" asp-controller="CuentasClientes" asp-action="Index"><i class="fas fa-credit-card"></i> Cuentas Clientes</a></li>
                                     </ul>
                                 </li>
                             }
@@ -125,26 +118,25 @@
                                     <i class="fas fa-stethoscope"></i><span>Diagnósticos</span>
                                 </a>
                             </li>
-
-
-                            @if (RoleHelper.IsAdmin(Context))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link d-flex align-items-center gap-1" asp-controller="TareasVehiculo" asp-action="Index">
-                                        <span class="nav-icon-circle me-1"><i class="bi bi-list-task"></i></span>
-                                        <span>Tareas</span>
-                                    </a>
-                                </li>
-                            }
-
-
-
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-1" asp-controller="Chatbot" asp-action="Index">
                                     <i class="bi bi-robot"></i><span>Asistente Mecánico</span>
                                 </a>
                             </li>
-                           
+                            @if (RoleHelper.IsAdmin(Context))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cog"></i><span>Configuración</span>
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-controller="Marcas" asp-action="Index"><i class="fas fa-tag"></i> Marcas</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Modelos" asp-action="Index"><i class="fas fa-tags"></i> Modelos</a></li>
+                                        <li><a class="dropdown-item" asp-controller="TareasVehiculos" asp-action="Index"><i class="fas fa-tasks"></i> Tareas Vehículos</a></li>
+                                        <li><a class="dropdown-item" asp-controller="IngresosVehiculos" asp-action="Index"><i class="fas fa-sign-in-alt"></i> Ingresos Vehículos</a></li>
+                                    </ul>
+                                </li>
+                            }
                         }
                     </ul>
                     <ul class="navbar-nav ms-auto">
