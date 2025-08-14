@@ -1,9 +1,8 @@
-﻿using ClosedXML.Excel;
-using MecaFlow2025.Attributes;
-using MecaFlow2025.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using MecaFlow2025.Models;
+using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 using System.IO;
@@ -12,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace MecaFlow2025.Controllers
 {
-    [AuthorizeRole("Administrador", "Empleado")]
     public class DiagnosticosController : Controller
     {
         private readonly MecaFlowContext _context;

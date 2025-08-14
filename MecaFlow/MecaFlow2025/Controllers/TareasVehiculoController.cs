@@ -1,15 +1,13 @@
-﻿using MecaFlow2025.Attributes;
-using MecaFlow2025.Models;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using MecaFlow2025.Models;
 
 namespace MecaFlow2025.Controllers
 {
-    
     public class TareasVehiculoController : Controller
     {
         private readonly MecaFlowContext _ctx;

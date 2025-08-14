@@ -48,7 +48,7 @@ namespace MecaFlow2025.Controllers
             if (veh == null) return NotFound();
             return View(veh);
         }
-        [AuthorizeRole("Administrador", "Empleado")]
+
         // GET: Vehiculos/Create
         public IActionResult Create()
         {
