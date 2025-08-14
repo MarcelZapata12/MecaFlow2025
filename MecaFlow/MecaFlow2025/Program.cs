@@ -1,23 +1,24 @@
-
-using Microsoft.EntityFrameworkCore;                // necesario para UseSqlServer
-using MecaFlow2025.Models;                          // tu namespace del Context
-using QuestPDF.Infrastructure;                      // <<� IMPORTANTE: agrega esto
-
+﻿
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
-using MecaFlow2025.Middleware; // ← AGREGAR ESTE USING
-using MecaFlow2025.Services; // para ChatbotService
-
+using MecaFlow2025.Middleware;
+using MecaFlow2025.Services;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
+using MecaFlow2025.Models;
+using MecaFlow2025.Middleware;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar QuestPDF para usar la licencia Community (gratis para proyectos educativos)
+// QuestPDF: licencia Community
 QuestPDF.Settings.License = LicenseType.Community;
 
-// 1) Agrega MVC
+// MVC
 builder.Services.AddControllersWithViews();
 
-// 2) Configurar sesiones
+// Sesiones
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -25,20 +26,18 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// 3) Registra tu DbContext con la cadena de conexión de appsettings.json
+// DbContext (connection string en appsettings.json)
 builder.Services.AddDbContext<MecaFlowContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("MecaFlowConnection")
-    )
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MecaFlowConnection"))
 );
 
+// 4) Registrar servicios
 builder.Services.AddScoped<ChatbotService>();
-
-builder.Services.AddScoped<ChatbotService>();
+builder.Services.AddScoped<IEmailService, EmailService>(); // ← AGREGAR ESTA LÍNEA
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -48,19 +47,37 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// ----- Localizaci�n: es-CR (Col�n costarricense) -----
+var cr = new CultureInfo("es-CR");
+CultureInfo.DefaultThreadCurrentCulture = cr;
+CultureInfo.DefaultThreadCurrentUICulture = cr;
+
+var locOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("es-CR")
+    .AddSupportedCultures("es-CR")
+    .AddSupportedUICultures("es-CR");
+
+app.UseRequestLocalization(locOptions);
+// ------------------------------------------------------
+
 app.UseRouting();
 
-// 4) Usar sesiones
+// 5) Usar sesiones
 app.UseSession();
 
-// 5) Agregar middleware de autorización personalizado
-app.UseMiddleware<RoleAuthorizationMiddleware>(); // ← AGREGAR ESTA LÍNEA
+// 6) Agregar middleware de autorización personalizado
+app.UseSession();
+
+// Middleware de autorizaci�n por roles (tu custom)
+app.UseMiddleware<RoleAuthorizationMiddleware>();
 
 app.UseAuthorization();
 
-// 6) Mapea tus controladores MVC - inicia en Register
+// 7) Mapear controladores MVC - inicia en Register
+// Ruta por defecto (como la ten�as)
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Register}/{id?}");
+    pattern: "{controller=Auth}/{action=Register}/{id?}"
+);
 
 app.Run();

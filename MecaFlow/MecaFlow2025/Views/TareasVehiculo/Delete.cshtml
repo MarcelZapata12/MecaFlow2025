@@ -1,0 +1,37 @@
+﻿@model MecaFlow2025.Models.TareasVehiculo
+@{
+    ViewData["Title"] = "Eliminar Tarea";
+}
+
+<h1>Eliminar</h1>
+<hr />
+
+<h5>¿Confirma eliminar esta tarea?</h5>
+
+<dl class="row">
+    <dt class="col-sm-3">Tarea</dt>
+    <dd class="col-sm-9">@Model.TareaId</dd>
+
+    <dt class="col-sm-3">Placa</dt>
+    <dd class="col-sm-9">@Model.Vehiculo?.Placa</dd>
+
+    <dt class="col-sm-3">Sector</dt>
+    <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.Sector) ? Model.Sector : "-")</dd>
+
+    <dt class="col-sm-3">Descripción</dt>
+    <dd class="col-sm-9">@Model.Descripcion</dd>
+
+    <dt class="col-sm-3">Fecha registro</dt>
+    <dd class="col-sm-9">@Model.FechaRegistro?.ToString("dd/MM/yyyy")</dd>
+
+
+    <dt class="col-sm-3">Estado</dt>
+    <dd class="col-sm-9">@(Model.Realizada ? "Realizada" : "Pendiente")</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="TareaId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

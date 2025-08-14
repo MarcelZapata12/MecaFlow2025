@@ -45,6 +45,9 @@ public partial class MecaFlowContext : DbContext
     public DbSet<Marca> Marcas { get; set; }
     public DbSet<Modelo> Modelos { get; internal set; }
 
+    public virtual DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=DESKTOP-5LOR99L\\SQLEXPRESS01;Database=MecaFlowDB;Trusted_Connection=True;TrustServerCertificate=True;");
@@ -53,11 +56,13 @@ public partial class MecaFlowContext : DbContext
     {
         modelBuilder.Entity<Asistencia>(entity =>
         {
-            entity.HasKey(e => e.AsistenciaId).HasName("PK__Asistenc__72710FA52933811A");
+            entity.HasKey(e => e.AsistenciaId).HasName("PK_Asistenc_72710FA5...");
 
-            entity.HasOne(d => d.Empleado).WithMany(p => p.Asistencia)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Asistenci__Emple__440B1D61");
+            entity.HasOne(d => d.Empleado)
+                .WithMany(p => p.Asistencia)
+                .HasForeignKey(d => d.EmpleadoId)
+                .OnDelete(DeleteBehavior.Cascade)                        
+                .HasConstraintName("FK_Asistencias_Empleados_Cascade");
         });
 
         modelBuilder.Entity<Cliente>(entity =>
@@ -131,6 +136,22 @@ public partial class MecaFlowContext : DbContext
         modelBuilder.Entity<Permiso>(entity =>
         {
             entity.HasKey(e => e.PermisoId).HasName("PK__Permisos__96E0C7236BECEC39");
+        });
+
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(e => e.TokenId).HasName("PK__Password__E3A57E4A__________");
+
+            entity.Property(e => e.FechaCreacion).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.Usado).HasDefaultValue(false);
+
+            entity.HasOne(d => d.Usuario).WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK__PasswordR__Usuar__________");
+
+            entity.HasIndex(e => e.Token).HasDatabaseName("IX_PasswordResetTokens_Token");
+            entity.HasIndex(e => e.UsuarioId).HasDatabaseName("IX_PasswordResetTokens_UsuarioId");
         });
 
         modelBuilder.Entity<ReportesFinanciero>(entity =>
