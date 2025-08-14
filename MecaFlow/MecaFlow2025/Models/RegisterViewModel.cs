@@ -22,8 +22,7 @@ namespace MecaFlow2025.Models
         [RegularExpression(@"^[0-9-\s\(\)\+]+$", ErrorMessage = "El teléfono solo puede contener números, espacios, paréntesis, guiones y el símbolo +")]
         public string Telefono { get; set; } = null!;
 
-        [Required(ErrorMessage = "El rol es obligatorio")]
-        public string Rol { get; set; } = null!;
+        // ✅ Eliminado: Rol (ya no se muestra ni se valida en el registro)
 
         [Required(ErrorMessage = "El correo electrónico es obligatorio")]
         [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido")]

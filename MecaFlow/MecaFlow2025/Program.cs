@@ -1,14 +1,10 @@
-﻿
+﻿using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
 using MecaFlow2025.Middleware;
 using MecaFlow2025.Services;
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
-using MecaFlow2025.Models;
-using MecaFlow2025.Middleware;
 using QuestPDF.Infrastructure;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,9 +27,9 @@ builder.Services.AddDbContext<MecaFlowContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("MecaFlowConnection"))
 );
 
-// 4) Registrar servicios
+// Servicios
 builder.Services.AddScoped<ChatbotService>();
-builder.Services.AddScoped<IEmailService, EmailService>(); // ← AGREGAR ESTA LÍNEA
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 
@@ -47,7 +43,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-// ----- Localizaci�n: es-CR (Col�n costarricense) -----
+// ----- Localización: es-CR -----
 var cr = new CultureInfo("es-CR");
 CultureInfo.DefaultThreadCurrentCulture = cr;
 CultureInfo.DefaultThreadCurrentUICulture = cr;
@@ -58,26 +54,25 @@ var locOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures("es-CR");
 
 app.UseRequestLocalization(locOptions);
-// ------------------------------------------------------
+// --------------------------------
 
 app.UseRouting();
 
-// 5) Usar sesiones
-app.UseSession();
+app.UseSession(); // ← una sola vez
 
-// 6) Agregar middleware de autorización personalizado
-app.UseSession();
-
-// Middleware de autorizaci�n por roles (tu custom)
+// Middleware de autorización por roles (custom)
 app.UseMiddleware<RoleAuthorizationMiddleware>();
 
 app.UseAuthorization();
 
-// 7) Mapear controladores MVC - inicia en Register
-// Ruta por defecto (como la ten�as)
+// Rutas: raíz y default -> Auth/Login
+app.MapControllerRoute(
+    name: "root",
+    pattern: "",
+    defaults: new { controller = "Auth", action = "Login" });
+
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Register}/{id?}"
-);
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();
