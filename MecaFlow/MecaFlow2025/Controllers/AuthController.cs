@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
+using MecaFlow2025.Services;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,10 +10,12 @@ namespace MecaFlow2025.Controllers
     public class AuthController : Controller
     {
         private readonly MecaFlowContext _context;
+        private readonly IEmailService _emailService;
 
-        public AuthController(MecaFlowContext context)
+        public AuthController(MecaFlowContext context, IEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // GET: Auth/Register
@@ -185,6 +188,134 @@ namespace MecaFlow2025.Controllers
             return View(model);
         }
 
+        // GET: Auth/ForgotPassword
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        // POST: Auth/ForgotPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var usuario = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.Correo == model.Email);
+
+                if (usuario != null)
+                {
+                    // Invalidar todos los tokens anteriores para este usuario
+                    var tokensAnteriores = await _context.PasswordResetTokens
+                        .Where(t => t.UsuarioId == usuario.UsuarioId && !t.Usado)
+                        .ToListAsync();
+
+                    foreach (var token in tokensAnteriores)
+                    {
+                        token.Usado = true;
+                    }
+
+                    // Generar nuevo token
+                    var resetToken = GenerateResetToken();
+                    var passwordResetToken = new PasswordResetToken
+                    {
+                        UsuarioId = usuario.UsuarioId,
+                        Token = resetToken,
+                        FechaCreacion = DateTime.Now,
+                        FechaExpiracion = DateTime.Now.AddHours(1), // Token válido por 1 hora
+                        Usado = false
+                    };
+
+                    _context.PasswordResetTokens.Add(passwordResetToken);
+                    await _context.SaveChangesAsync();
+
+                    // Generar enlace de restablecimiento
+                    var resetLink = Url.Action("ResetPassword", "Auth",
+                        new { token = resetToken }, Request.Scheme);
+
+                    try
+                    {
+                        // Enviar correo
+                        await _emailService.SendPasswordResetEmailAsync(model.Email, resetLink);
+
+                        TempData["SuccessMessage"] = "Se ha enviado un correo con las instrucciones para restablecer tu contraseña. Revisa tu bandeja de entrada.";
+                    }
+                    catch (Exception ex)
+                    {
+                        TempData["ErrorMessage"] = "Hubo un error al enviar el correo. Por favor, inténtalo de nuevo más tarde.";
+                        // Log del error (opcional)
+                        // _logger.LogError(ex, "Error al enviar correo de restablecimiento");
+                    }
+                }
+                else
+                {
+                    // Por seguridad, no revelar si el correo existe o no
+                    TempData["SuccessMessage"] = "Si el correo electrónico está registrado, recibirás las instrucciones para restablecer tu contraseña.";
+                }
+            }
+
+            return View(model);
+        }
+
+        // GET: Auth/ResetPassword
+        public async Task<IActionResult> ResetPassword(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var passwordResetToken = await _context.PasswordResetTokens
+                .Include(t => t.Usuario)
+                .FirstOrDefaultAsync(t => t.Token == token);
+
+            if (passwordResetToken == null || !passwordResetToken.IsValid())
+            {
+                ViewBag.IsExpiredToken = true;
+                return View();
+            }
+
+            var model = new ResetPasswordViewModel
+            {
+                Token = token
+            };
+
+            return View(model);
+        }
+
+        // POST: Auth/ResetPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var passwordResetToken = await _context.PasswordResetTokens
+                    .Include(t => t.Usuario)
+                    .FirstOrDefaultAsync(t => t.Token == model.Token);
+
+                if (passwordResetToken == null || !passwordResetToken.IsValid())
+                {
+                    ViewBag.IsExpiredToken = true;
+                    return View(model);
+                }
+
+                // Actualizar la contraseña del usuario
+                passwordResetToken.Usuario.PasswordHash = HashPassword(model.NewPassword);
+
+                // Marcar el token como usado
+                passwordResetToken.Usado = true;
+
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.";
+                return RedirectToAction("Login");
+            }
+
+            return View(model);
+        }
+
         // GET: Auth/Logout
         public IActionResult Logout()
         {
@@ -207,6 +338,17 @@ namespace MecaFlow2025.Controllers
         {
             var hashedPassword = HashPassword(password);
             return hashedPassword == hash;
+        }
+
+        // Método para generar token de restablecimiento
+        private string GenerateResetToken()
+        {
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                var bytes = new byte[32];
+                rng.GetBytes(bytes);
+                return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+            }
         }
 
         public IActionResult AccessDenied()
