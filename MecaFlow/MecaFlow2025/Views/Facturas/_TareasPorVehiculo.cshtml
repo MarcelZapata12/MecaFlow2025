@@ -1,0 +1,85 @@
+﻿@model IEnumerable<MecaFlow2025.Models.TareasVehiculo>
+
+<style>
+    /* Estilos locales: si ya tienes algo global en site.css, puedes moverlos allá */
+    .tareas-wrap {
+        background: #161616;
+        border: 1px solid #2b2b2b;
+        border-radius: .75rem;
+    }
+
+    .tareas-table {
+        color: #f8f9fa;
+        border-color: #2b2b2b;
+    }
+
+        .tareas-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #1e1e1e;
+            color: #cfe8ff;
+            border-bottom: 1px solid #2b2b2b;
+        }
+
+        .tareas-table tbody tr:hover {
+            background: #1f1f1f;
+        }
+
+        .tareas-table td, .tareas-table th {
+            white-space: nowrap;
+        }
+
+        .tareas-table .desc {
+            white-space: normal;
+        }
+
+    .badge-dark-ok {
+        background-color: #198754;
+    }
+    /* success */
+    .badge-dark-warn {
+        background-color: #ffc107;
+        color: #222;
+    }
+    /* warning legible */
+</style>
+
+@if (Model == null || !Model.Any())
+{
+    <div class="p-3 text-muted">No hay tareas registradas para este vehículo.</div>
+}
+else
+{
+    <div class="tareas-wrap">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tareas-table">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width:70px">#</th>
+                        <th style="width:130px">Fecha</th>
+                        <th style="width:160px">Sector</th>
+                        <th class="w-100">Descripción</th>
+                        <th class="text-center" style="width:130px">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model)
+                    {
+                        <tr>
+                            <td class="text-center">@t.TareaId</td>
+                            <td>@t.FechaRegistro?.ToString("dd/MM/yyyy")</td>
+                            <td>@(string.IsNullOrWhiteSpace(t.Sector) ? "—" : t.Sector)</td>
+                            <td class="desc">@t.Descripcion</td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill @(t.Realizada ? "badge-dark-ok" : "badge-dark-warn")">
+                                    @(t.Realizada ? "Realizada" : "Pendiente")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
