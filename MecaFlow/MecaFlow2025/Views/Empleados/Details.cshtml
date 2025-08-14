@@ -1,33 +1,139 @@
 ﻿@model MecaFlow2025.Models.Empleado
 @{
+    ViewData["Title"] = "Detalles del Empleado";
     Layout = null;
 }
 
-<div class="p-4 bg-dark text-white rounded-4 shadow">
-    <h4 class="mb-3 fw-bold text-info">
-        <i class="bi bi-info-circle me-2"></i>Detalles del Empleado
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+    /* === Mismo look & feel que Clientes === */
+    body {
+        background: linear-gradient(135deg, #141414, #1f1f1f, #141414);
+        background-size: 400% 400%;
+        animation: gradient 12s ease infinite;
+        color: #f8f9fa;
+    }
+
+    /* No tocamos header/footer del modal externo
+           (queremos que se vea igual que el de Clientes) */
+
+    .modal-form-container {
+        background-color: rgba(31, 31, 31, 0.95);
+        border-radius: 1rem;
+        padding: 2rem;
+        animation: fadeInUp 0.4s ease-in-out;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        /* Tamaño y centrado como en Clientes */
+        max-width: 420px;
+        margin: 0 auto;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        background: linear-gradient(90deg, #00d4ff, #00ffa3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+    }
+
+    .dl-horizontal dt {
+        font-weight: 700;
+        color: #adb5bd;
+    }
+
+    .dl-horizontal dd {
+        margin-bottom: 0.75rem;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        transition: transform 0.2s ease;
+    }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+        }
+
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .modal-form-container {
+            max-width: 100%;
+            padding: 1.25rem;
+        }
+    }
+</style>
+
+<div class="modal-form-container">
+    <h4 class="modal-title mb-3">
+        <i class="bi bi-info-circle-fill me-2 text-info"></i>
+        Detalles del Empleado
     </h4>
 
-    <p><strong>Nombre:</strong> @Model.Nombre</p>
-    <p><strong>Cédula:</strong> @Model.Cedula</p>
-    <p><strong>Correo:</strong> @Model.Correo</p>
-    <p><strong>Puesto:</strong> @Model.Puesto</p>
-    <p><strong>Fecha de Ingreso:</strong> @(Model.FechaIngreso?.ToString("dd/MM/yyyy") ?? "No especificado")</p>
-    <p>
-        <strong>Estado:</strong>
-        @if (Model.Activo)
-        {
-            <span class="badge bg-success">Activo</span>
-        }
-        else
-        {
-            <span class="badge bg-danger">Inactivo</span>
-        }
-    </p>
+    <dl class="row dl-horizontal">
+        <dt class="col-sm-5">Nombre</dt>
+        <dd class="col-sm-7">@Model.Nombre</dd>
 
-    <div class="text-end mt-4">
-        <button class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
-            <i class="bi bi-x-circle me-1"></i>Cerrar
+        <dt class="col-sm-5">Cédula</dt>
+        <dd class="col-sm-7">@Model.Cedula</dd>
+
+        <dt class="col-sm-5">Correo</dt>
+        <dd class="col-sm-7">@Model.Correo</dd>
+
+        <dt class="col-sm-5">Puesto</dt>
+        <dd class="col-sm-7">@Model.Puesto</dd>
+
+        <dt class="col-sm-5">Fecha de Ingreso</dt>
+        <dd class="col-sm-7">
+            @(Model.FechaIngreso.HasValue
+                        ? Model.FechaIngreso.Value.ToString("dd/MM/yyyy")
+                        : "—")
+        </dd>
+
+        <dt class="col-sm-5">Estado</dt>
+        <dd class="col-sm-7">
+            @if (Model.Activo)
+            {
+                <span class="badge bg-success">Activo</span>
+            }
+            else
+            {
+                <span class="badge bg-danger">Inactivo</span>
+            }
+        </dd>
+    </dl>
+
+    <div class="d-flex justify-content-end mt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i> Cerrar
         </button>
     </div>
 </div>

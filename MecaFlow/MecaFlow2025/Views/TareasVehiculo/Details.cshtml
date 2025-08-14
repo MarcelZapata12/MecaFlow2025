@@ -118,19 +118,6 @@
         </dl>
 
         <div class="btn-group mt-4 d-flex flex-wrap gap-2">
-            <a asp-action="Edit" asp-route-id="@Model.TareaId" class="btn btn-warning">
-                <i class="bi bi-pencil-square me-1"></i>Editar
-            </a>
-
-            <!-- Toggle estado (opcional; usa tu acción existente) -->
-            <form asp-action="ToggleRealizada" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="id" value="@Model.TareaId" />
-                <button type="submit" class="btn @(Model.Realizada ? "btn-outline-warning" : "btn-success")">
-                    <i class="bi @(Model.Realizada ? "bi-arrow-counterclockwise" : "bi-check2-circle") me-1"></i>
-                    @(Model.Realizada ? "Marcar pendiente" : "Marcar realizada")
-                </button>
-            </form>
 
             <a asp-action="Index" class="btn btn-outline-light ms-2">
                 <i class="bi bi-arrow-left me-1"></i>Volver

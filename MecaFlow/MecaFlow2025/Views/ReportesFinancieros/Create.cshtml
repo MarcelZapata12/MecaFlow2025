@@ -1,49 +1,66 @@
-﻿@{
-    ViewBag.Title = "Nuevo Reporte Financiero";
-    Layout = null;
+﻿@model MecaFlow2025.Models.ReportesFinanciero
 
+<!-- Modal Create Reporte Financiero -->
+<div class="modal fade" id="createReporteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content card-dark">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title m-0">➕ Crear Reporte Financiero</h2>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="card-body">
+        <form asp-action="Create" method="post" class="form-dark">
+          @Html.AntiForgeryToken()
+          <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+          <div class="mb-3">
+            <label asp-for="Fecha" class="form-label"></label>
+            <input asp-for="Fecha" class="form-control" type="date" />
+            <span asp-validation-for="Fecha" class="text-danger"></span>
+          </div>
+
+          <div class="mb-3">
+            <label asp-for="TotalIngresos" class="form-label"></label>
+            <input asp-for="TotalIngresos" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="TotalIngresos" class="text-danger"></span>
+          </div>
+
+          <div class="mb-3">
+            <label asp-for="TotalGastos" class="form-label"></label>
+            <input asp-for="TotalGastos" class="form-control" type="number" step="0.01" />
+            <span asp-validation-for="TotalGastos" class="text-danger"></span>
+          </div>
+
+          <div class="mb-3">
+            <label asp-for="Observaciones" class="form-label"></label>
+            <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Observaciones" class="text-danger"></span>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-soft">💾 Guardar</button>
+            <button type="button" class="btn btn-outline-light btn-soft" data-bs-dismiss="modal">✖ Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Styles{
+  <style>
+    .card-dark{background:#111827;color:#F9FAFB;border:1px solid #1F2937;border-radius:18px;box-shadow:0 20px 40px rgba(0,0,0,.35)}
+    .card-dark .card-header{background:transparent;border-bottom:1px solid #1F2937;padding:16px 20px}
+    .card-dark .card-title{font-size:1.25rem;font-weight:700;letter-spacing:.2px}
+    .form-dark .form-label{color:#E5E7EB;font-weight:600;margin-bottom:.35rem;font-size:.95rem}
+    .form-dark .form-control,.form-dark .form-select{background:#0B1220;color:#F3F4F6;border:1px solid #334155;border-radius:12px;padding:.7rem .9rem}
+    .form-dark .form-control::placeholder{color:#9CA3AF}
+    .form-dark .form-control:focus,.form-dark .form-select:focus{background:#0B1220;color:#FFF;border-color:#60A5FA;box-shadow:0 0 0 .2rem rgba(96,165,250,.25)}
+    .form-dark .form-select{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='%23E5E7EB' viewBox='0 0 16 16'%3e%3cpath d='M3 6l5 5 5-5H3z'/%3e%3c/svg%3e")}
+    .btn-soft{border-radius:12px;padding:.7rem 1rem;font-weight:600}
+    .btn-outline-light{color:#E5E7EB;border-color:#475569;background:transparent}
+    .btn-outline-light:hover{background:#1F2937;color:#FFF;border-color:#64748B}
+    .gap-2{gap:.5rem}
+  </style>
 }
-
-<h2>@ViewBag.Title</h2>
-
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger">
-        <ul>
-            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <li>@err.ErrorMessage</li>
-            }
-        </ul>
-    </div>
-}
-
-<form asp-action="Create" method="post" class="row g-3">
-    @* token antiforgery *@
-    @Html.AntiForgeryToken()
-
-    <div class="col-md-4">
-        <label class="form-label" for="FechaString">Fecha</label>
-        <input id="FechaString" name="FechaString" type="date" class="form-control" required />
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label" for="TotalIngresos">Total Ingresos</label>
-        <input id="TotalIngresos" name="TotalIngresos" type="number" step="0.01" class="form-control" />
-    </div>
-
-    <div class="col-md-4">
-        <label class="form-label" for="TotalGastos">Total Gastos</label>
-        <input id="TotalGastos" name="TotalGastos" type="number" step="0.01" class="form-control" />
-    </div>
-
-    <div class="col-12">
-        <label class="form-label" for="Observaciones">Observaciones</label>
-        <textarea id="Observaciones" name="Observaciones" class="form-control"></textarea>
-    </div>
-
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-    </div>
-</form>

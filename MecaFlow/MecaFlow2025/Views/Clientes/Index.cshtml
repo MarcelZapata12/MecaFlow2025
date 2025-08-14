@@ -16,56 +16,56 @@
 
     @@keyframes gradient {
         0% {
-            background-position: 0% 50%;
+            background-position: 0% 50%
         }
 
         50% {
-            background-position: 100% 50%;
+            background-position: 100% 50%
         }
 
         100% {
-            background-position: 0% 50%;
+            background-position: 0% 50%
         }
     }
 
     @@keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(20px)
         }
 
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0)
         }
     }
 
     @@keyframes fadeIn {
         from {
             opacity: 0;
-            transform: scale(0.95);
+            transform: scale(.95)
         }
 
         to {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1)
         }
     }
 
     @@keyframes pulse {
         0% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+            box-shadow: 0 0 0 0 rgba(13,110,253,.4)
         }
 
         70% {
             transform: scale(1.05);
-            box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+            box-shadow: 0 0 0 10px rgba(13,110,253,0)
         }
 
         100% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+            box-shadow: 0 0 0 0 rgba(13,110,253,0)
         }
     }
 
@@ -74,15 +74,15 @@
         border: 1px solid #2c2c2c;
         color: white;
         border-radius: 1rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform .3s ease, box-shadow .3s ease;
         margin-bottom: 1rem;
         position: relative;
-        animation: fadeInUp 0.5s ease-in-out;
+        animation: fadeInUp .5s ease-in-out;
     }
 
         .client-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
         }
 
     .client-grid {
@@ -95,18 +95,10 @@
         background-color: #2c2c2c;
         color: #fff;
         border-color: #66afe9;
-        box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
+        box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
     }
 
-    .card-footer a, .card-footer button {
-        transition: transform 0.2s ease;
-    }
-
-        .card-footer a:hover, .card-footer button:hover {
-            transform: scale(1.2);
-        }
-
-    .card-footer .icon-btn {
+    .icon-btn {
         background: none;
         border: none;
         padding: 0;
@@ -116,21 +108,17 @@
 
     .action-icons {
         position: absolute;
-        top: 0.75rem;
+        top: .75rem;
         right: 1rem;
         display: flex;
-        gap: 0.75rem;
+        gap: .75rem;
         z-index: 2;
     }
-
-        .action-icons form {
-            display: inline;
-        }
 
     .modal-content {
         background-color: #1f1f1f;
         color: white;
-        animation: fadeIn 0.3s ease-in-out;
+        animation: fadeIn .3s ease-in-out;
     }
 
     .btn-pulse {
@@ -139,59 +127,72 @@
 </style>
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+
+    <!-- 🔔 Alertas de servidor -->
+    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-white">
             <i class="bi bi-people-fill me-2"></i>Clientes
         </h2>
         <div class="d-flex align-items-center">
-            <input id="clientSearch" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…" />
-            <a href="#" class="btn btn-primary btn-pulse" onclick="loadCreateForm()">
+            <input id="clientSearch" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…">
+            <a href="#" class="btn btn-primary btn-pulse" onclick="loadClienteCreate()">
                 <i class="bi bi-plus-circle me-1"></i>Nuevo Cliente
             </a>
         </div>
     </div>
 
+    <!-- Grid de tarjetas -->
     <div id="clientsGrid" class="client-grid">
         @foreach (var c in Model)
         {
-            <div class="client-card card">
+            <div id="cliente-@c.ClienteId" class="client-card card p-3">
                 <div class="action-icons">
-                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadEditForm(@c.ClienteId)">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#modalDetails-@c.ClienteId" class="text-info icon-btn" title="Detalles">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmDelete(@c.ClienteId)">
+                    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openClienteDetails(@c.ClienteId)"><i class="bi bi-eye"></i></a>
+                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadClienteEdit(@c.ClienteId)"><i class="bi bi-pencil-square"></i></a>
+                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmClienteDelete(@c.ClienteId)">
                         <i class="bi bi-trash-fill"></i>
                     </button>
                 </div>
-                <div class="card-body">
-                    <h5 class="card-title">@c.Nombre</h5>
-                    <p class="card-text text-truncate"><i class="bi bi-envelope-fill me-1"></i>@c.Correo</p>
-                    <p class="card-text text-truncate"><i class="bi bi-telephone-fill me-1"></i>@c.Telefono</p>
-                    <p class="card-text"><i class="bi bi-geo-alt-fill me-1"></i>@c.Direccion</p>
-                    <p class="card-text small text-muted">
-                        <i class="bi bi-calendar-check me-1"></i>
-                        @(c.FechaRegistro.HasValue ? c.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")
-                    </p>
-                </div>
+
+                <h5 class="card-title" style="color:#66ccff;font-weight:700;">
+                    <i class="bi bi-person-circle me-1"></i>@c.Nombre
+                </h5>
+
+                <p class="card-text mb-1"><i class="bi bi-envelope-fill me-1 text-secondary"></i>@c.Correo</p>
+                <p class="card-text mb-1"><i class="bi bi-telephone-fill me-1 text-secondary"></i>@c.Telefono</p>
+                <p class="card-text mb-1"><i class="bi bi-geo-alt-fill me-1 text-secondary"></i>@c.Direccion</p>
+                <p class="card-text small text-muted">
+                    <i class="bi bi-calendar-check me-1"></i>
+                    @(c.FechaRegistro.HasValue? c.FechaRegistro.Value.ToString("dd/MM/yyyy") : "—")
+                </p>
             </div>
 
             <!-- Modal Details -->
-            <div class="modal fade" id="modalDetails-@c.ClienteId" tabindex="-1" aria-labelledby="modalDetailsLabel-@c.ClienteId" aria-hidden="true">
+            <div class="modal fade" id="clienteDetails-@c.ClienteId" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="modalDetailsLabel-@c.ClienteId">Detalles del Cliente</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <h5 class="modal-title">Detalles del Cliente</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body">
-                            <p><strong>Nombre:</strong> @c.Nombre</p>
-                            <p><strong>Correo:</strong> @c.Correo</p>
-                            <p><strong>Teléfono:</strong> @c.Telefono</p>
-                            <p><strong>Dirección:</strong> @c.Direccion</p>
-                            <p><strong>Registrado el:</strong> @(c.FechaRegistro.HasValue ? c.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")</p>
+                        <div class="modal-body" id="clienteDetailsBody-@c.ClienteId">
+                            <p class="text-center">Cargando…</p>
                         </div>
                     </div>
                 </div>
@@ -208,53 +209,39 @@
     </div>
 </div>
 
-<!-- Modal Delete -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<!-- Modales comunes -->
+<div class="modal fade" id="clienteEdit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Editar Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="clienteEditBody"><p class="text-center">Cargando…</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="clienteCreate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Nuevo Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="clienteCreateBody"><p class="text-center">Cargando…</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="clienteDelete" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmar eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title">Confirmar eliminación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
                 <p>¿Estás seguro de que deseas eliminar este cliente?</p>
-            </div>
-            <div class="modal-footer">
-                <form id="deleteForm" method="post">
-                    <input type="hidden" name="id" id="deleteClienteId" />
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                <form id="clienteDeleteForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="clienteDeleteId" />
                 </form>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Edit -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Editar Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body" id="editModalBody">
-                <p class="text-center">Cargando...</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Create -->
-<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="createModalLabel">Nuevo Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body" id="createModalBody">
-                <p class="text-center">Cargando...</p>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" onclick="submitClienteDelete()">Eliminar</button>
             </div>
         </div>
     </div>
@@ -262,52 +249,172 @@
 
 @section Scripts {
     <script>
+        /* ===========================
+           Búsqueda rápida
+           =========================== */
         document.getElementById('clientSearch').addEventListener('input', function () {
-            var q = this.value.toLowerCase();
-            document.querySelectorAll('#clientsGrid .card').forEach(function (card) {
-                var txt = card.querySelector('.card-title').innerText.toLowerCase() +
-                    ' ' + Array.from(card.querySelectorAll('.card-text')).map(e => e.innerText.toLowerCase()).join(' ');
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#clientsGrid .client-card').forEach(function (card) {
+                const txt = card.innerText.toLowerCase();
                 card.style.display = txt.includes(q) ? '' : 'none';
             });
         });
 
-        function loadEditForm(clienteId) {
-            const modalBody = document.getElementById("editModalBody");
-            modalBody.innerHTML = "<p class='text-center'>Cargando formulario...</p>";
-            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+        /* ===========================
+           CREATE (modal + AJAX nativo)
+           =========================== */
+        function loadClienteCreate() {
+            const modalEl = document.getElementById('clienteCreate');
+            const modal   = new bootstrap.Modal(modalEl);
+            const body    = document.getElementById('clienteCreateBody');
+
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
             modal.show();
 
-            fetch(`/Clientes/Edit/${clienteId}`)
-                .then(response => response.text())
-                .then(html => {
-                    modalBody.innerHTML = html;
-                })
-                .catch(err => {
-                    modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`;
-                });
+            fetch('/Clientes/Create')
+              .then(r => r.text())
+              .then(html => { body.innerHTML = html; hookCreateForm(); })
+              .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
         }
 
-        function confirmDelete(clienteId) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            document.getElementById('deleteClienteId').value = clienteId;
-            document.getElementById('deleteForm').action = `/Clientes/Delete/${clienteId}`;
-            modal.show();
+        function hookCreateForm() {
+            const form = document.querySelector('#clienteCreateBody form');
+            if (!form) return;
+
+            // Quita handlers previos si recargamos el HTML
+            form.addEventListener('submit', onCreateSubmit, { once: true });
         }
 
-        function loadCreateForm() {
-            const modalBody = document.getElementById("createModalBody");
-            modalBody.innerHTML = "<p class='text-center'>Cargando formulario...</p>";
-            const modal = new bootstrap.Modal(document.getElementById('createModal'));
+        async function onCreateSubmit(e) {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const fd   = new FormData(form);
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' } // <- importante
+                });
+
+                const ct = res.headers.get('content-type') || '';
+
+                if (ct.includes('application/json')) {
+                    // ✅ Éxito
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('clienteCreate'));
+                    if (modal) modal.hide();
+                    location.reload(); // O inyecta la nueva card si prefieres
+                    return;
+                }
+
+                // ❌ Errores de validación -> HTML con ModelState
+                const html = await res.text();
+                const body = document.getElementById('clienteCreateBody');
+                body.innerHTML = html;
+                hookCreateForm(); // reenganchar tras re-render
+            } catch {
+                document.getElementById('clienteCreateBody').innerHTML =
+                  `<div class="alert alert-danger">No se pudo enviar el formulario.</div>`;
+            }
+        }
+
+        /* ===========================
+           EDIT (modal + AJAX nativo)
+           =========================== */
+        function loadClienteEdit(id) {
+            const modalEl = document.getElementById('clienteEdit');
+            const modal   = new bootstrap.Modal(modalEl);
+            const body    = document.getElementById('clienteEditBody');
+
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
             modal.show();
 
-            fetch(`/Clientes/Create`)
-                .then(response => response.text())
-                .then(html => {
-                    modalBody.innerHTML = html;
-                })
-                .catch(err => {
-                    modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`;
+            fetch(`/Clientes/Edit/${id}`)
+              .then(r => r.text())
+              .then(html => { body.innerHTML = html; hookEditForm(); })
+              .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
+        }
+
+        function hookEditForm() {
+            const form = document.querySelector('#clienteEditBody form');
+            if (!form) return;
+            form.addEventListener('submit', onEditSubmit, { once: true });
+        }
+
+        async function onEditSubmit(e) {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const fd   = new FormData(form);
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: fd,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
+
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('clienteEdit'));
+                    if (modal) modal.hide();
+                    location.reload();
+                    return;
+                }
+
+                const html = await res.text();
+                const body = document.getElementById('clienteEditBody');
+                body.innerHTML = html;
+                hookEditForm();
+            } catch {
+                document.getElementById('clienteEditBody').innerHTML =
+                  `<div class="alert alert-danger">No se pudo enviar el formulario.</div>`;
+            }
+        }
+
+        /* ===========================
+           DETALLES
+           =========================== */
+        function openClienteDetails(id) {
+            const modalId = `clienteDetails-${id}`;
+            const bodyId  = `clienteDetailsBody-${id}`;
+            const modal   = new bootstrap.Modal(document.getElementById(modalId));
+            const body    = document.getElementById(bodyId);
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(`/Clientes/Details/${id}`)
+                .then(r => r.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
+        }
+
+        /* ===========================
+           ELIMINAR
+           =========================== */
+        function confirmClienteDelete(id) {
+            const modal = new bootstrap.Modal(document.getElementById('clienteDelete'));
+            document.getElementById('clienteDeleteId').value = id;
+            document.getElementById('clienteDeleteForm').action = `/Clientes/Delete/${id}`;
+            modal.show();
+        }
+        function submitClienteDelete() {
+            document.getElementById('clienteDeleteForm').submit();
+        }
+
+        /* ===========================
+           TOAST
+           =========================== */
+        function showSuccessToast() {
+            new bootstrap.Toast(document.getElementById('toastSuccess')).show();
+        }
+
+        // Mostrar toast si hay Success en TempData
+        @{
+            if (TempData["Success"] is string)
+            {
+                <text>showSuccessToast();</text>
+            }
+
         }
     </script>
 }

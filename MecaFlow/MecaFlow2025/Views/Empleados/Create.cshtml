@@ -2,84 +2,160 @@
 
 @{
     ViewData["Title"] = "Crear Empleado";
+    Layout = null; // render limpio dentro del modal
 }
 
-<div class="container py-5 animate__animated animate__fadeIn">
-    <div class="text-center mb-4">
-        <h2 class="fw-bold text-white">
-            <i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Empleado
-        </h2>
-    </div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <form asp-action="Create" class="bg-dark text-white p-4 rounded-4 shadow-lg animate__animated animate__fadeInUp">
-                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
+        color: #f8f9fa;
+    }
 
-                <div class="mb-3">
-                    <label asp-for="Nombre" class="form-label"></label>
-                    <input asp-for="Nombre" class="form-control form-control-lg rounded-pill" />
-                    <span asp-validation-for="Nombre" class="text-danger"></span>
-                </div>
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
 
-                <div class="mb-3">
-                    <label asp-for="Cedula" class="form-label"></label>
-                    <input asp-for="Cedula" class="form-control form-control-lg rounded-pill" />
-                    <span asp-validation-for="Cedula" class="text-danger"></span>
-                </div>
+        50% {
+            background-position: 100% 50%;
+        }
 
-                <div class="mb-3">
-                    <label asp-for="Correo" class="form-label"></label>
-                    <input asp-for="Correo" class="form-control form-control-lg rounded-pill" type="email" />
-                    <span asp-validation-for="Correo" class="text-danger"></span>
-                </div>
+        100% {
+            background-position: 0% 50%;
+        }
+    }
 
-                <div class="mb-3">
-                    <label asp-for="Puesto" class="form-label"></label>
-                    <select asp-for="Puesto" class="form-select form-select-lg rounded-pill">
-                        <option value="">-- Seleccionar Puesto --</option>
-                        <option value="Mecánico">Mecánico</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Administrador">Administrador</option>
-                        <option value="Recepcionista">Recepcionista</option>
-                        <option value="Auxiliar">Auxiliar</option>
-                    </select>
-                    <span asp-validation-for="Puesto" class="text-danger"></span>
-                </div>
+    .form-container {
+        background-color: #1f1f1f;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 0 15px rgba(0,0,0,.3);
+        animation: fadeInUp .6s ease-in-out;
+        max-width: 600px;
+        margin: 4rem auto;
+    }
 
-                <div class="mb-3">
-                    <label asp-for="FechaIngreso" class="form-label"></label>
-                    <input asp-for="FechaIngreso" class="form-control form-control-lg rounded-pill" type="date" />
-                    <span asp-validation-for="FechaIngreso" class="text-danger"></span>
-                </div>
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
-                <div class="mb-4">
-                    <label asp-for="Activo" class="form-label d-block">Estado</label>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" asp-for="Activo" id="activoCheckbox" checked />
-                        <label class="form-check-label" for="activoCheckbox">
-                            <span id="estadoTexto" class="badge"></span>
-                        </label>
-                    </div>
-                </div>
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-success btn-lg rounded-pill px-4 shadow">
-                        <i class="bi bi-person-plus me-2"></i>Crear
-                    </button>
-                    <a asp-action="Index" class="btn btn-secondary btn-lg rounded-pill px-4 shadow">
-                        <i class="bi bi-arrow-left me-2"></i>Volver al Listado
-                    </a>
-                </div>
-            </form>
+    h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .form-control, .form-select {
+        background-color: #2c2c2c;
+        color: #fff;
+        border: 1px solid #444;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #2c2c2c;
+            border-color: #66afe9;
+            box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
+        }
+
+    .btn-primary {
+        background-color: #0d6efd;
+        border: none;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+    }
+</style>
+
+<div class="form-container">
+    <h1><i class="bi bi-person-plus-fill me-2"></i>Crear Empleado</h1>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Nombre" class="form-label fw-bold">Nombre</label>
+            <input asp-for="Nombre" class="form-control" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
         </div>
-    </div>
+
+        <div class="mb-3">
+            <label asp-for="Cedula" class="form-label fw-bold">Cédula</label>
+            <input asp-for="Cedula" class="form-control" />
+            <span asp-validation-for="Cedula" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Correo" class="form-label fw-bold">Correo</label>
+            <input asp-for="Correo" class="form-control" type="email" />
+            <span asp-validation-for="Correo" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Puesto" class="form-label fw-bold">Puesto</label>
+            <select asp-for="Puesto" class="form-select">
+                <option value="">— Seleccione puesto —</option>
+                <option value="Mecánico">Mecánico</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Administrador">Administrador</option>
+                <option value="Recepcionista">Recepcionista</option>
+                <option value="Auxiliar">Auxiliar</option>
+            </select>
+            <span asp-validation-for="Puesto" class="text-danger"></span>
+        </div>
+
+        @* Campo oculto con la fecha actual *@
+        <input type="hidden" asp-for="FechaIngreso" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+
+        <div class="mb-4">
+            <label class="form-label fw-bold d-block">Estado</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" asp-for="Activo" id="activoCheckbox" checked />
+                <label class="form-check-label" for="activoCheckbox">
+                    <span id="estadoTexto" class="badge"></span>
+                </label>
+            </div>
+            <span asp-validation-for="Activo" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-circle me-1"></i>Guardar
+            </button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
+            </button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const checkbox = document.getElementById('activoCheckbox');
