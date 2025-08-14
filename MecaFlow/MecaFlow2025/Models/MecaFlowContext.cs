@@ -56,11 +56,13 @@ public partial class MecaFlowContext : DbContext
     {
         modelBuilder.Entity<Asistencia>(entity =>
         {
-            entity.HasKey(e => e.AsistenciaId).HasName("PK__Asistenc__72710FA52933811A");
+            entity.HasKey(e => e.AsistenciaId).HasName("PK_Asistenc_72710FA5...");
 
-            entity.HasOne(d => d.Empleado).WithMany(p => p.Asistencia)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Asistenci__Emple__440B1D61");
+            entity.HasOne(d => d.Empleado)
+                .WithMany(p => p.Asistencia)
+                .HasForeignKey(d => d.EmpleadoId)
+                .OnDelete(DeleteBehavior.Cascade)                        
+                .HasConstraintName("FK_Asistencias_Empleados_Cascade");
         });
 
         modelBuilder.Entity<Cliente>(entity =>

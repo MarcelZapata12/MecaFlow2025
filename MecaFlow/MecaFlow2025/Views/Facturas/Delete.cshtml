@@ -1,0 +1,50 @@
+﻿@model MecaFlow2025.Models.Factura
+@using System.Globalization
+
+@{
+    ViewData["Title"] = $"Eliminar Factura #{Model.FacturaId}";
+    var cr = new CultureInfo("es-CR");
+}
+
+<h1>Eliminar Factura #@Model.FacturaId</h1>
+
+<div class="alert alert-warning">
+    <strong>¿Estás seguro de que deseas eliminar esta factura?</strong> Esta acción no se puede deshacer.
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">Fecha</label>
+        <input class="form-control" value="@Model.Fecha.ToString("dd/MM/yyyy")" readonly />
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Cliente</label>
+        <input class="form-control" value="@Model.Cliente?.Nombre" readonly />
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Vehículo</label>
+        <input class="form-control"
+               value="@(Model.Vehiculo?.Placa + (Model.Cliente != null ? $" — {Model.Cliente.Nombre}" : ""))"
+               readonly />
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Monto Total</label>
+        <input class="form-control" value="@Model.MontoTotal.ToString("C", cr)" readonly />
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Método de pago</label>
+        <input class="form-control" value="@Model.Metodo" readonly />
+    </div>
+
+</div>
+
+<form asp-action="Delete" method="post" class="mt-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.FacturaId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Cancelar</a>
+</form>

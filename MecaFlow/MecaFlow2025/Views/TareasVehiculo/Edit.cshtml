@@ -1,24 +1,22 @@
 ﻿@model MecaFlow2025.Models.TareasVehiculo
 @{
-    ViewData["Title"] = "Crear Tarea";
+    ViewData["Title"] = "Editar Tarea";
 }
 
-<h1>Crear Tarea</h1>
+<h1>Editar Tarea</h1>
 <hr />
 
 <div class="row">
     <div class="col-md-8 col-lg-6">
-        <form asp-action="Create" method="post">
+        <form asp-action="Edit" asp-route-id="@Model.TareaId" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="TareaId" />
 
             <div asp-validation-summary="All" class="text-danger"></div>
 
             <div class="mb-3">
                 <label asp-for="VehiculoId" class="form-label">Vehículo</label>
-                @* VALUE = VehiculoId (int), TEXT = Placa *@
-                <select asp-for="VehiculoId" class="form-select" asp-items="@(ViewBag.VehiculoId as SelectList)">
-                    <option value="">— Selecciona un vehículo —</option>
-                </select>
+                <select asp-for="VehiculoId" class="form-select" asp-items="@(ViewBag.VehiculoId as SelectList)"></select>
                 <span asp-validation-for="VehiculoId" class="text-danger"></span>
             </div>
 
@@ -36,14 +34,14 @@
                 <span asp-validation-for="Descripcion" class="text-danger"></span>
             </div>
 
-            @* FechaRegistro se asigna en el servidor (DateTime.Now) *@
+            @* Sin campo FechaRegistro (solo lectura en Details) *@
 
             <div class="form-check mb-3">
                 <input asp-for="Realizada" class="form-check-input" />
                 <label asp-for="Realizada" class="form-check-label">Realizada</label>
             </div>
 
-            <button type="submit" class="btn btn-primary">Guardar</button>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
             <a asp-action="Index" class="btn btn-secondary">Volver</a>
         </form>
     </div>

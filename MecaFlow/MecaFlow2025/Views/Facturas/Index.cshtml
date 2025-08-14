@@ -1,0 +1,50 @@
+﻿@model IEnumerable<MecaFlow2025.Models.Factura>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Facturas";
+    var cr = new CultureInfo("es-CR");
+}
+<h1>Facturas</h1>
+
+@if (TempData["Ok"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success">@ok</div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<p><a asp-action="Create" class="btn btn-primary">Nueva Factura</a></p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Método de pago</th>
+            <th>Monto Total</th>
+            <th class="text-end">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr id="factura-@item.FacturaId">
+                <td>@item.FacturaId</td>
+                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
+                <td>@item.Cliente?.Nombre</td>
+                <td>@item.Vehiculo?.Placa</td>
+                <td>@(string.IsNullOrWhiteSpace(item.Metodo) ? "-" : item.Metodo)</td> @* NUEVO *@
+                <td>@item.MontoTotal.ToString("C", cr)</td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@item.FacturaId" class="btn btn-sm btn-info">Detalles</a>
+                    <a asp-action="Edit" asp-route-id="@item.FacturaId" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@item.FacturaId" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
