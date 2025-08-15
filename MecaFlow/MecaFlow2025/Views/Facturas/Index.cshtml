@@ -4,47 +4,381 @@
     ViewData["Title"] = "Facturas";
     var cr = new CultureInfo("es-CR");
 }
-<h1>Facturas</h1>
 
-@if (TempData["Ok"] is string ok && !string.IsNullOrWhiteSpace(ok))
-{
-    <div class="alert alert-success">@ok</div>
-}
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger">@err</div>
-}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-<p><a asp-action="Create" class="btn btn-primary">Nueva Factura</a></p>
+<style>
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: #f8f9fa;
+        background-size: 400% 400%;
+        background-position: 0% 50%;
+    }
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Vehículo</th>
-            <th>Método de pago</th>
-            <th>Monto Total</th>
-            <th class="text-end">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
+    .factura-card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
+        border-radius: 1rem;
+        transition: transform .3s ease, box-shadow .3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+        .factura-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
+        }
+
+    .facturas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-control:focus {
+        background-color: #2c2c2c;
+        color: #fff;
+        border-color: #66afe9;
+        box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
+    }
+
+    .card-footer a, .card-footer button {
+        transition: transform .2s ease;
+    }
+
+        .card-footer a:hover, .card-footer button:hover {
+            transform: scale(1.2);
+        }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 1.25rem;
+        color: inherit;
+    }
+
+    .action-icons {
+        position: absolute;
+        top: .75rem;
+        right: 1rem;
+        display: flex;
+        gap: .75rem;
+        z-index: 2;
+    }
+
+        .action-icons form {
+            display: inline;
+        }
+
+    .modal-content {
+        background-color: #1f1f1f;
+        color: white;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white">
+            <i class="bi bi-receipt me-2"></i>Facturas
+        </h2>
+        <div class="d-flex align-items-center">
+            <input id="facturaSearch" type="search"
+                   class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
+                   placeholder="Buscar por cliente, vehículo o método de pago…" />
+
+            <a href="#" class="btn btn-primary" onclick="loadFacturaCreate()">
+                <i class="bi bi-plus-circle me-1"></i>Nueva Factura
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Ok"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+        <div class="alert alert-success">@ok</div>
+    }
+    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+    {
+        <div class="alert alert-danger">@err</div>
+    }
+
+    <div id="facturasGrid" class="facturas-grid">
         @foreach (var item in Model)
         {
-            <tr id="factura-@item.FacturaId">
-                <td>@item.FacturaId</td>
-                <td>@item.Fecha.ToString("dd/MM/yyyy")</td>
-                <td>@item.Cliente?.Nombre</td>
-                <td>@item.Vehiculo?.Placa</td>
-                <td>@(string.IsNullOrWhiteSpace(item.Metodo) ? "-" : item.Metodo)</td> @* NUEVO *@
-                <td>@item.MontoTotal.ToString("C", cr)</td>
-                <td class="text-end">
-                    <a asp-action="Details" asp-route-id="@item.FacturaId" class="btn btn-sm btn-info">Detalles</a>
-                    <a asp-action="Edit" asp-route-id="@item.FacturaId" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@item.FacturaId" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
-            </tr>
+            <div class="factura-card card p-3">
+                <div class="action-icons">
+                    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openFacturaDetails(@item.FacturaId)">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadFacturaEdit(@item.FacturaId)">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmFacturaDelete(@item.FacturaId)">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
+
+                <h5 class="card-title" style="color:#66ccff;font-weight:700;">
+                    <i class="bi bi-hash me-1"></i>Factura #@item.FacturaId
+                </h5>
+                <p class="card-text mb-1"><i class="bi bi-calendar3 me-1 text-secondary"></i><strong>Fecha:</strong> @item.Fecha.ToString("dd/MM/yyyy")</p>
+                <p class="card-text mb-1"><i class="bi bi-person-fill me-1 text-secondary"></i><strong>Cliente:</strong> @item.Cliente?.Nombre</p>
+                <p class="card-text mb-1"><i class="bi bi-car-front-fill me-1 text-secondary"></i><strong>Vehículo:</strong> @item.Vehiculo?.Placa</p>
+                <p class="card-text mb-1"><i class="bi bi-credit-card me-1 text-secondary"></i><strong>Método:</strong> @(string.IsNullOrWhiteSpace(item.Metodo) ? "-" : item.Metodo)</p>
+                <p class="card-text mb-1"><i class="bi bi-currency-dollar me-1 text-secondary"></i><strong>Total:</strong> @item.MontoTotal.ToString("C", cr)</p>
+            </div>
+
+            <!-- Modal Details (uno por item) -->
+            <div class="modal fade" id="facturaDetails-@item.FacturaId" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Detalles de la Factura</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body" id="facturaDetailsBody-@item.FacturaId">
+                            <p class="text-center">Cargando…</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+<!-- Toast de éxito -->
+<div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">¡Acción realizada con éxito!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+</div>
+
+<!-- Modales comunes -->
+<div class="modal fade" id="facturaEdit" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Editar Factura</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="facturaEditBody"><p class="text-center">Cargando…</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="facturaCreate" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Nueva Factura</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="facturaCreateBody"><p class="text-center">Cargando…</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="facturaDelete" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Confirmar eliminación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar esta factura?</p>
+                <form id="facturaDeleteForm" method="post">
+                    <input type="hidden" name="id" id="facturaDeleteId" />
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" onclick="submitFacturaDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Búsqueda client-side
+        document.getElementById('facturaSearch').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#facturasGrid .factura-card').forEach(function (card) {
+                const txt = card.innerText.toLowerCase();
+                card.style.display = txt.includes(q) ? '' : 'none';
+            });
+        });
+
+        // Crear
+        function loadFacturaCreate() {
+            const modal = new bootstrap.Modal(document.getElementById('facturaCreate'));
+            const body = document.getElementById('facturaCreateBody');
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(/Facturas/Create, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(r => r.text())
+                .then(html => {
+                    body.innerHTML = html;
+                    setupCreateForm();
+                })
+                .catch(() => { body.innerHTML = <div class="alert alert-danger">Error al cargar el formulario</div>; });
+        }
+
+        // Configurar formulario de creación para AJAX
+        function setupCreateForm() {
+            const form = document.querySelector('#facturaCreateBody form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => {
+                        if (r.headers.get('content-type')?.includes('application/json')) {
+                            return r.json();
+                        }
+                        return r.text();
+                    })
+                    .then(result => {
+                        if (typeof result === 'object' && result.success) {
+                            // Éxito - cerrar modal y recargar página
+                            bootstrap.Modal.getInstance(document.getElementById('facturaCreate')).hide();
+                            showSuccessToast();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            // Error - mostrar formulario con errores
+                            document.getElementById('facturaCreateBody').innerHTML = result;
+                            setupCreateForm(); // Reconfigurar el formulario
+                        }
+                    })
+                    .catch(() => {
+                        document.getElementById('facturaCreateBody').innerHTML = <div class="alert alert-danger">Error al procesar la solicitud</div>;
+                    });
+                });
+            }
+        }
+
+        // Editar
+        function loadFacturaEdit(id) {
+            const modal = new bootstrap.Modal(document.getElementById('facturaEdit'));
+            const body = document.getElementById('facturaEditBody');
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(/Facturas/Edit/${id}, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(r => r.text())
+                .then(html => {
+                    body.innerHTML = html;
+                    setupEditForm();
+                })
+                .catch(() => { body.innerHTML = <div class="alert alert-danger">Error al cargar el formulario</div>; });
+        }
+
+        // Configurar formulario de edición para AJAX
+        function setupEditForm() {
+            const form = document.querySelector('#facturaEditBody form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(form);
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => {
+                        if (r.headers.get('content-type')?.includes('application/json')) {
+                            return r.json();
+                        }
+                        return r.text();
+                    })
+                    .then(result => {
+                        if (typeof result === 'object' && result.success) {
+                            // Éxito - cerrar modal y recargar página
+                            bootstrap.Modal.getInstance(document.getElementById('facturaEdit')).hide();
+                            showSuccessToast();
+                            setTimeout(() => window.location.reload(), 1000);
+                        } else {
+                            // Error - mostrar formulario con errores
+                            document.getElementById('facturaEditBody').innerHTML = result;
+                            setupEditForm(); // Reconfigurar el formulario
+                        }
+                    })
+                    .catch(() => {
+                        document.getElementById('facturaEditBody').innerHTML = <div class="alert alert-danger">Error al procesar la solicitud</div>;
+                    });
+                });
+            }
+        }
+
+        // Detalles
+        function openFacturaDetails(id) {
+            const modalId = facturaDetails-${id};
+            const bodyId = facturaDetailsBody-${id};
+            const modal = new bootstrap.Modal(document.getElementById(modalId));
+            const body = document.getElementById(bodyId);
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(/Facturas/Details/${id}, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(r => r.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = <div class="alert alert-danger">Error al cargar detalles</div>; });
+        }
+
+        // Eliminar
+        function confirmFacturaDelete(id) {
+            const modal = new bootstrap.Modal(document.getElementById('facturaDelete'));
+            document.getElementById('facturaDeleteId').value = id;
+            document.getElementById('facturaDeleteForm').action = /Facturas/Delete/${id};
+            modal.show();
+        }
+
+        function submitFacturaDelete() {
+            const form = document.getElementById('facturaDeleteForm');
+            const formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('facturaDelete')).hide();
+                    showSuccessToast();
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            })
+            .catch(() => {
+                alert('Error al eliminar la factura');
+            });
+        }
+
+        // Toast de éxito
+        function showSuccessToast() {
+            new bootstrap.Toast(document.getElementById('toastSuccess')).show();
+        }
+    </script>
+}
