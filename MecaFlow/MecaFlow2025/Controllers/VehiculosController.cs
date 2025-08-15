@@ -25,46 +25,48 @@ namespace MecaFlow2025.Controllers
                 .Include(v => v.Marca)
                 .Include(v => v.Modelo)
                 .ToListAsync();
+
             if (!string.IsNullOrWhiteSpace(filtroPlaca))
             {
-                lista = lista.Where(v => v.Placa.Contains(filtroPlaca, StringComparison.OrdinalIgnoreCase)).ToList();
+                lista = lista
+                    .Where(v => v.Placa.Contains(filtroPlaca, System.StringComparison.OrdinalIgnoreCase))
+                    .ToList();
             }
 
             ViewBag.FiltroPlaca = filtroPlaca;
-
             return View(lista);
         }
-
 
         // GET: Vehiculos/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
+
             var veh = await _context.Vehiculos
                 .Include(v => v.Cliente)
                 .Include(v => v.Marca)
                 .Include(v => v.Modelo)
                 .FirstOrDefaultAsync(v => v.VehiculoId == id);
+
             if (veh == null) return NotFound();
             return View(veh);
         }
+
         [AuthorizeRole("Administrador", "Empleado")]
         // GET: Vehiculos/Create
         public IActionResult Create()
         {
-            // Construimos el dropdown de clientes
+            // Dropdown de clientes
             ViewBag.Clientes = new SelectList(
                 _context.Clientes.OrderBy(c => c.Nombre),
                 "ClienteId", "Nombre");
-            // Construimos el dropdown de marcas
-            ViewBag.Marcas = new SelectList(
-                _context.Marcas.OrderBy(m => m.Nombre),
-                "MarcaId", "Nombre");
+
+            // Dropdown de marcas (sin duplicar asignación)
             ViewBag.Marcas = new SelectList(
                 _context.Marcas.OrderBy(m => m.Nombre).ToList(),
-                "MarcaId",   // propiedad que se usará como value
-                "Nombre"     // propiedad que se usará como texto visible
-    );
+                "MarcaId",   // value
+                "Nombre"     // texto
+            );
 
             return View();
         }
@@ -74,30 +76,41 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Create(
             [Bind("Placa,Anio,ClienteId,MarcaId,ModeloId")] Vehiculo vehiculo)
         {
-            if (ModelState.IsValid)
+            // Validación de placa duplicada (case-insensitive)
+            bool placaExiste = await _context.Vehiculos
+                .AnyAsync(v => v.Placa.ToLower() == vehiculo.Placa.ToLower());
+
+            if (placaExiste)
+                ModelState.AddModelError(nameof(Vehiculo.Placa), "Ya existe un vehículo registrado con esta placa.");
+
+            if (!ModelState.IsValid)
             {
-                _context.Add(vehiculo);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Recargar dropdowns
+                ViewBag.Clientes = new SelectList(
+                    _context.Clientes.OrderBy(c => c.Nombre),
+                    "ClienteId", "Nombre", vehiculo.ClienteId);
+
+                ViewBag.Marcas = new SelectList(
+                    _context.Marcas.OrderBy(m => m.Nombre),
+                    "MarcaId", "Nombre", vehiculo.MarcaId);
+
+                // Si vino por AJAX, devolver el parcial para re-renderizar dentro del modal
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return PartialView("Create", vehiculo);
+
+                // Fallback no-AJAX
+                return View(vehiculo);
             }
-            ViewBag.Clientes = new SelectList(
-                _context.Clientes.OrderBy(c => c.Nombre),
-                "ClienteId", "Nombre",
-                vehiculo.ClienteId);
 
-            ViewBag.Marcas = new SelectList(
-                _context.Marcas.OrderBy(m => m.Nombre),
-                "MarcaId", "Nombre",
-                vehiculo.MarcaId);
+            _context.Add(vehiculo);
+            await _context.SaveChangesAsync();
 
-            ViewBag.Marcas = new SelectList(
-                _context.Marcas.OrderBy(m => m.Nombre).ToList(),
-                "MarcaId",
-                "Nombre",
-                vehiculo.MarcaId);
+            // Respuesta AJAX: JSON para cerrar modal y recargar lista
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return Json(new { success = true });
 
-
-            return View(vehiculo);
+            // Fallback no-AJAX
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Vehiculos/Edit/5
@@ -156,24 +169,20 @@ namespace MecaFlow2025.Controllers
                 }
             }
 
-            // ⚠️ Si ModelState no es válido, volver a cargar los dropdowns con selección actual
-
+            // Si ModelState no es válido, volver a cargar dropdowns
             ViewBag.Clientes = new SelectList(
                 _context.Clientes.OrderBy(c => c.Nombre),
-                "ClienteId", "Nombre",
-                vehiculo.ClienteId);
+                "ClienteId", "Nombre", vehiculo.ClienteId);
 
             ViewBag.Marcas = new SelectList(
                 _context.Marcas.OrderBy(m => m.Nombre),
-                "MarcaId", "Nombre",
-                vehiculo.MarcaId);
+                "MarcaId", "Nombre", vehiculo.MarcaId);
 
             ViewBag.Modelos = new SelectList(
                 _context.Modelos
                     .Where(m => m.MarcaId == vehiculo.MarcaId)
                     .OrderBy(m => m.Nombre),
-                "ModeloId", "Nombre",
-                vehiculo.ModeloId);
+                "ModeloId", "Nombre", vehiculo.ModeloId);
 
             return View(vehiculo);
         }
@@ -182,11 +191,13 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
+
             var veh = await _context.Vehiculos
                 .Include(v => v.Cliente)
                 .Include(v => v.Marca)
                 .Include(v => v.Modelo)
                 .FirstOrDefaultAsync(v => v.VehiculoId == id);
+
             if (veh == null) return NotFound();
             return View(veh);
         }
@@ -195,29 +206,70 @@ namespace MecaFlow2025.Controllers
         [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var veh = await _context.Vehiculos.FindAsync(id);
-            if (veh != null)
+            var veh = await _context.Vehiculos.FirstOrDefaultAsync(v => v.VehiculoId == id);
+            if (veh == null)
+                return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
+                    ? Json(new { success = false, message = "El vehículo no existe." })
+                    : NotFound();
+
+            // Verifica dependencias (ajusta según tu modelo)
+            bool tieneDependencias =
+                await _context.Diagnosticos.AnyAsync(d => d.VehiculoId == id) ||
+                await _context.Facturas.AnyAsync(f => f.VehiculoId == id) ||
+                await _context.IngresosVehiculos.AnyAsync(i => i.VehiculoId == id) ||
+                await _context.TareasVehiculos.AnyAsync(t => t.VehiculoId == id);
+
+            if (tieneDependencias)
             {
-                _context.Vehiculos.Remove(veh);
-                await _context.SaveChangesAsync();
+                var msg = "No se puede eliminar: el vehículo tiene registros asociados (Diagnósticos/Facturas/Ingresos/Tareas).";
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = msg });
+
+                TempData["Error"] = msg;
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+
+            _context.Vehiculos.Remove(veh);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = true });
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException)
+            {
+                var msg = "No se pudo eliminar el vehículo por referencias existentes.";
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    return Json(new { success = false, message = msg });
+
+                TempData["Error"] = msg;
+                return RedirectToAction(nameof(Index));
+            }
         }
 
+        // ========= NUEVO: Marca -> Modelo (JSON) =========
+        // GET: Vehiculos/GetModelosPorMarca?marcaId=123
         [HttpGet]
-        public JsonResult GetModelosPorMarca(int marcaId)
+        public async Task<IActionResult> GetModelosPorMarca(int marcaId)
         {
-            var modelos = _context.Modelos
+            if (marcaId <= 0)
+                return BadRequest("marcaId inválido.");
+
+            var modelos = await _context.Modelos
                 .Where(m => m.MarcaId == marcaId)
                 .OrderBy(m => m.Nombre)
-                .Select(m => new {
+                .Select(m => new
+                {
                     modeloId = m.ModeloId,
                     nombre = m.Nombre
                 })
-                .ToList();
+                .ToListAsync();
 
-            return Json(modelos);
+            return Ok(modelos); // 200 JSON
         }
-
     }
 }

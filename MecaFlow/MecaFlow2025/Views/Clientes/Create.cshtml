@@ -2,102 +2,168 @@
 
 @{
     ViewData["Title"] = "Crear Cliente";
-    Layout = null;
+    Layout = null; // render limpio en modal
 }
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
     body {
-        background-color: transparent;
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
         color: #f8f9fa;
     }
 
-    .modal-form-container {
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    .form-container {
         background-color: #1f1f1f;
-        border-radius: 1rem;
         padding: 2rem;
-        animation: fadeIn 0.3s ease-in-out;
+        border-radius: 1rem;
+        box-shadow: 0 0 15px rgba(0,0,0,.3);
+        animation: fadeInUp .6s ease-in-out;
+        max-width: 600px;
+        margin: 4rem auto;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #ffffff;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
     .form-control, .form-select {
-        background-color: #2a2a2a;
+        background-color: #2c2c2c;
+        color: #fff;
         border: 1px solid #444;
-        color: #f8f9fa;
     }
 
-    .form-control:focus, .form-select:focus {
-        background-color: #2a2a2a;
-        border-color: #66afe9;
-        box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
-    }
+        .form-control:focus, .form-select:focus {
+            background-color: #2c2c2c;
+            border-color: #66afe9;
+            box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
+        }
 
     .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
-        border-color: #004085;
+        background-color: #0d6efd;
+        border: none;
     }
 
     .btn-secondary {
         background-color: #6c757d;
-        border-color: #6c757d;
-    }
-
-    .btn-secondary:hover {
-        background-color: #565e64;
-        border-color: #4e555b;
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
+        border: none;
     }
 </style>
 
-<div class="modal-form-container">
-    <form asp-action="Create" method="post">
+<div class="form-container">
+    <h1><i class="bi bi-person-plus-fill me-2"></i>Crear Cliente</h1>
+
+    <!--
+      Nota: este form será interceptado por hookCreateForm() en Index.cshtml,
+      que hace POST por fetch y maneja HTML (errores) o JSON (éxito).
+    -->
+    <form asp-action="Create" method="post" id="clienteCreateForm">
         @Html.AntiForgeryToken()
+
+        <!-- Resumen de validación del servidor -->
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+        <!-- Nombre -->
         <div class="mb-3">
             <label asp-for="Nombre" class="form-label fw-bold">Nombre</label>
-            <input asp-for="Nombre" class="form-control" />
+            <input asp-for="Nombre"
+                   class="form-control"
+                   required
+                   maxlength="100"
+                   autocomplete="name"
+                   placeholder="Ej.: Juan Pérez" />
             <span asp-validation-for="Nombre" class="text-danger"></span>
         </div>
 
+        <!-- Correo -->
         <div class="mb-3">
             <label asp-for="Correo" class="form-label fw-bold">Correo</label>
-            <input asp-for="Correo" class="form-control" />
+            <input asp-for="Correo"
+                   class="form-control"
+                   type="email"
+                   required
+                   maxlength="100"
+                   autocomplete="email"
+                   placeholder="usuario@dominio.com"
+                   pattern="^[^&#64;\s]+&#64;[^&#64;\s]+\.com$" />
+            <small class="text-muted">Debe contener &#64; y terminar en .com</small>
             <span asp-validation-for="Correo" class="text-danger"></span>
         </div>
 
+        <!-- Teléfono -->
         <div class="mb-3">
             <label asp-for="Telefono" class="form-label fw-bold">Teléfono</label>
-            <input asp-for="Telefono" class="form-control" />
+            <input asp-for="Telefono"
+                   class="form-control"
+                   required
+                   maxlength="20"
+                   inputmode="numeric"
+                   autocomplete="tel"
+                   placeholder="Solo números (8 a 12 dígitos)"
+                   pattern="^\d{8,12}$" />
             <span asp-validation-for="Telefono" class="text-danger"></span>
         </div>
 
+        <!-- Dirección / Provincia -->
         <div class="mb-3">
             <label asp-for="Direccion" class="form-label fw-bold">Dirección</label>
-            <select asp-for="Direccion" class="form-select" asp-items="ViewBag.Provincias">
-                <option value="">-- Seleccione provincia --</option>
+            <select asp-for="Direccion"
+                    class="form-select"
+                    asp-items="ViewBag.Provincias"
+                    required>
+                <option value="">— Seleccione provincia —</option>
             </select>
             <span asp-validation-for="Direccion" class="text-danger"></span>
         </div>
 
-        <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-primary me-2">
-                <i class="bi bi-plus-circle me-1"></i>Crear
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-circle me-1"></i>Guardar
             </button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
                 <i class="bi bi-x-lg me-1"></i>Cancelar
             </button>
         </div>
     </form>
 </div>
-
-@section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-}

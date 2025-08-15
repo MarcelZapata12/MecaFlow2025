@@ -11,17 +11,28 @@ public partial class Cliente
     [Key]
     public int ClienteId { get; set; }
 
-    [StringLength(100)]
-    public string Nombre { get; set; } = null!;
+    [Required(ErrorMessage = "El nombre es obligatorio.")]
+    [StringLength(100, ErrorMessage = "Máximo 100 caracteres.")]
+    [RegularExpression(@"^[A-Za-zÁÉÍÓÚÑáéíóúñ ]+$",
+        ErrorMessage = "El nombre solo debe contener letras y espacios.")]
+    public string Nombre { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "El correo es obligatorio.")]
     [StringLength(100)]
-    public string? Correo { get; set; }
+    [EmailAddress(ErrorMessage = "Formato de correo inválido.")]
+    [RegularExpression(@"^[^@\s]+@[^@\s]+\.com$",
+        ErrorMessage = "El correo debe contener @ y terminar en .com.")]
+    public string Correo { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "El teléfono es obligatorio.")]
     [StringLength(20)]
-    public string? Telefono { get; set; }
+    [RegularExpression(@"^\d{8,12}$",
+        ErrorMessage = "El teléfono debe tener solo números (8 a 12 dígitos).")]
+    public string Telefono { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "La dirección/provincia es obligatoria.")]
     [StringLength(200)]
-    public string? Direccion { get; set; }
+    public string Direccion { get; set; } = string.Empty;
 
     [Column(TypeName = "datetime")]
     public DateTime? FechaRegistro { get; set; }

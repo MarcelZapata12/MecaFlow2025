@@ -147,11 +147,10 @@
             <input id="vehiculoSearch" type="search"
                    class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
                    placeholder="Buscar por placa, marca, modelo o cliente…" />
-            
-    <a href="#" class="btn btn-primary btn-pulse" onclick="loadVehiculoCreate()">
-        <i class="bi bi-plus-circle me-1"></i>Nuevo Vehículo
-    </a>
 
+            <a href="#" class="btn btn-primary btn-pulse" onclick="loadVehiculoCreate()">
+                <i class="bi bi-plus-circle me-1"></i>Nuevo Vehículo
+            </a>
         </div>
     </div>
 
@@ -160,35 +159,12 @@
         {
             <div class="vehicle-card card p-3">
                 <div class="action-icons">
-
-@*                     @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
-{
-    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openVehiculoDetails(@v.VehiculoId)">
-        <i class="bi bi-eye"></i>
-    </a>
-} *@
-
                     <a href="#" class="text-info icon-btn" title="Detalles" onclick="openVehiculoDetails(@v.VehiculoId)">
                         <i class="bi bi-eye"></i>
                     </a>
-                    @* @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
-{
-    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadVehiculoEdit(@v.VehiculoId)">
-        <i class="bi bi-pencil-square"></i>
-    </a>
-    
-    }*@
-
-
                     <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadVehiculoEdit(@v.VehiculoId)">
                         <i class="bi bi-pencil-square"></i>
                     </a>
-                    @* @if (User.IsInRole("Administrador") || User.IsInRole("Empleado"))
-{
-    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmVehiculoDelete(@v.VehiculoId)">
-        <i class="bi bi-trash-fill"></i>
-    </button>
-} *@
                     <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmVehiculoDelete(@v.VehiculoId)">
                         <i class="bi bi-trash-fill"></i>
                     </button>
@@ -203,11 +179,11 @@
                 <p class="card-text mb-1"><i class="bi bi-person-fill me-1 text-secondary"></i><strong>Cliente:</strong> @v.Cliente?.Nombre</p>
                 <p class="card-text small text-muted">
                     <i class="bi bi-clock-history me-1"></i>
-                    @(v.FechaRegistro.HasValue ? v.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")
+                    @(v.FechaRegistro.HasValue? v.FechaRegistro.Value.ToString("dd/MM/yyyy") : "")
                 </p>
             </div>
 
-            <!-- Modal Details (uno por item para carga simple; si prefieres uno único, lo cambio) -->
+            <!-- Modal Details (uno por item) -->
             <div class="modal fade" id="vehiculoDetails-@v.VehiculoId" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -225,7 +201,7 @@
     </div>
 </div>
 
-<!-- Toast de éxito (igual que Clientes) -->
+<!-- Toast de éxito -->
 <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
         <div class="toast-body">¡Acción realizada con éxito!</div>
@@ -233,7 +209,7 @@
     </div>
 </div>
 
-<!-- Modales comunes (únicos) -->
+<!-- Modales comunes -->
 <div class="modal fade" id="vehiculoEdit" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -272,7 +248,8 @@
 
 @section Scripts {
     <script>
-        // Búsqueda client-side (igual que Clientes)
+
+        // BÚSQUEDA CLIENT-SIDE
         document.getElementById('vehiculoSearch').addEventListener('input', function () {
             const q = this.value.toLowerCase();
             document.querySelectorAll('#vehiculosGrid .vehicle-card').forEach(function (card) {
@@ -281,7 +258,7 @@
             });
         });
 
-        // Crear
+        // CREAR (carga en modal)
         function loadVehiculoCreate() {
             const modal = new bootstrap.Modal(document.getElementById('vehiculoCreate'));
             const body = document.getElementById('vehiculoCreateBody');
@@ -290,11 +267,14 @@
 
             fetch(`/Vehiculos/Create`)
                 .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
+                .then(html => {
+                    body.innerHTML = html;
+                    initCreateDefaults();
+                })
                 .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
         }
 
-        // Editar
+        // EDITAR (carga en modal)
         function loadVehiculoEdit(id) {
             const modal = new bootstrap.Modal(document.getElementById('vehiculoEdit'));
             const body = document.getElementById('vehiculoEditBody');
@@ -307,7 +287,7 @@
                 .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
         }
 
-        // Detalles
+        // DETALLES (carga en modal por ítem)
         function openVehiculoDetails(id) {
             const modalId = `vehiculoDetails-${id}`;
             const bodyId = `vehiculoDetailsBody-${id}`;
@@ -322,20 +302,147 @@
                 .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
         }
 
-        // Eliminar
+        // =======================
+        // ELIMINAR (AJAX + mensaje en modal)
+        // =======================
         function confirmVehiculoDelete(id) {
             const modal = new bootstrap.Modal(document.getElementById('vehiculoDelete'));
+            const form  = document.getElementById('vehiculoDeleteForm');
+            const body  = document.querySelector('#vehiculoDelete .modal-body');
+
+            const oldAlert = body.querySelector('.alert');
+            if (oldAlert) oldAlert.remove();
+
             document.getElementById('vehiculoDeleteId').value = id;
-            document.getElementById('vehiculoDeleteForm').action = `/Vehiculos/Delete/${id}`;
+            form.action = `/Vehiculos/Delete/${id}`;
             modal.show();
         }
+
         function submitVehiculoDelete() {
-            document.getElementById('vehiculoDeleteForm').submit();
+            const form = document.getElementById('vehiculoDeleteForm');
+            const body = document.querySelector('#vehiculoDelete .modal-body');
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const modalEl = document.getElementById('vehiculoDelete');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal?.hide();
+                    showSuccessToast();
+                    location.reload();
+                } else {
+                    const old = body.querySelector('.alert'); if (old) old.remove();
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-warning';
+                    alert.textContent = data.message || 'No se pudo eliminar el vehículo.';
+                    body.prepend(alert);
+                }
+            })
+            .catch(() => {
+                const old = body.querySelector('.alert'); if (old) old.remove();
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger';
+                alert.textContent = 'Ocurrió un error al intentar eliminar.';
+                body.prepend(alert);
+            });
         }
 
-        // Toast de éxito (reutiliza el del DOM)
+        // =======================
+        // TOAST ÉXITO
+        // =======================
         function showSuccessToast() {
             new bootstrap.Toast(document.getElementById('toastSuccess')).show();
         }
+
+        // ======================================================
+        // DELEGACIÓN: Marca -> Modelo para formularios en modales
+        // ======================================================
+        document.addEventListener('change', async function (e) {
+            const el = e.target;
+            if (!(el instanceof HTMLElement)) return;
+            if (el.id !== 'MarcaId') return;
+
+            const contenedor = el.closest('.modal-form-container') || document;
+            const modeloSel = contenedor.querySelector('#ModeloId');
+            if (!modeloSel) return;
+
+            modeloSel.innerHTML = '<option value="">-- Seleccione un modelo --</option>';
+
+            const marcaId = el.value;
+            if (!marcaId) return;
+
+            try {
+                const res = await fetch(`/Vehiculos/GetModelosPorMarca?marcaId=${encodeURIComponent(marcaId)}`);
+                if (!res.ok) throw new Error('Respuesta no válida');
+                const data = await res.json();
+
+                for (const m of data) {
+                    const opt = document.createElement('option');
+                    opt.value = (m.modeloId ?? m.ModeloId ?? m.id);
+                    opt.textContent = (m.nombre ?? m.Nombre ?? '—');
+                    modeloSel.appendChild(opt);
+                }
+            } catch {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Error al cargar modelos';
+                modeloSel.appendChild(opt);
+            }
+        });
+
+        function initCreateDefaults() {
+            const body = document.getElementById('vehiculoCreateBody');
+            const modelo = body?.querySelector('#ModeloId');
+            if (modelo) modelo.innerHTML = '<option value="">-- Seleccione un modelo --</option>';
+        }
+
+        // ======================================================
+        // SUBMIT AJAX del Create (mantiene el modal abierto con errores)
+        // ======================================================
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            const esCreateEnModal =
+                form.closest('#vehiculoCreateBody') &&
+                form.action.endsWith('/Vehiculos/Create');
+            if (!esCreateEnModal) return;
+
+            e.preventDefault();
+
+            const body = document.getElementById('vehiculoCreateBody');
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' } // para que el controller devuelva PartialView/JSON
+            })
+            .then(async (r) => {
+                const ct = r.headers.get('content-type') || '';
+
+                // Éxito: JSON { success: true }
+                if (ct.includes('application/json')) {
+                    const data = await r.json();
+                    if (data.success) {
+                        const modalEl = document.getElementById('vehiculoCreate');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        modal?.hide();
+                        showSuccessToast();
+                        location.reload();
+                        return;
+                    }
+                }
+
+                // Errores de validación: llega HTML parcial -> reinyectar en el modal
+                const html = await r.text();
+                body.innerHTML = html;
+            })
+            .catch(() => {
+                body.innerHTML = `<div class="alert alert-danger">Error al guardar. Intenta de nuevo.</div>`;
+            });
+        });
     </script>
 }

@@ -79,13 +79,10 @@
             <dd class="col-sm-9">@Model.Cliente.Nombre</dd>
 
             <dt class="col-sm-3 details-label">Fecha de Registro</dt>
-            <dd class="col-sm-9">@Model.FechaRegistro?.ToString("dd/MM/yyyy HH:mm")</dd>
+            <dd class="col-sm-9">@Model.FechaRegistro?.ToString("dd/MM/yyyy")</dd>
         </dl>
 
         <div class="btn-group mt-4">
-            <a asp-action="Edit" asp-route-id="@Model.VehiculoId" class="btn btn-warning">
-                <i class="bi bi-pencil-square me-1"></i>Editar
-            </a>
             <a asp-action="Index" class="btn btn-outline-light ms-2">
                 <i class="bi bi-arrow-left me-1"></i>Volver
             </a>

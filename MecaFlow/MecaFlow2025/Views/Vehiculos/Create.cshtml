@@ -121,36 +121,6 @@
 </div>
 
 @section Scripts {
+    <!-- Solo validación unobtrusive; sin JS de Marca→Modelo aquí -->
     <partial name="_ValidationScriptsPartial" />
-    <script>
-        // Dropdown dependiente Marca -> Modelo (sin jQuery)
-        const marcaSel = document.getElementById('MarcaId');
-        const modeloSel = document.getElementById('ModeloId');
-
-        marcaSel?.addEventListener('change', async function () {
-            const marcaId = this.value;
-            modeloSel.innerHTML = '<option value="">-- Seleccione un modelo --</option>';
-
-            if (!marcaId) return;
-
-            try {
-                const res = await fetch(`/Vehiculos/GetModelosPorMarca?marcaId=${encodeURIComponent(marcaId)}`);
-                if (!res.ok) throw new Error('Error al cargar modelos');
-                const data = await res.json();
-
-                // data esperado: [{ modeloId: 1, nombre: "Civic" }, ...]
-                data.forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m.modeloId ?? m.ModeloId ?? m.id; // tolerante al nombre de propiedad
-                    opt.textContent = m.nombre ?? m.Nombre;
-                    modeloSel.appendChild(opt);
-                });
-            } catch (e) {
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = 'Error al cargar modelos';
-                modeloSel.appendChild(opt);
-            }
-        });
-    </script>
 }
