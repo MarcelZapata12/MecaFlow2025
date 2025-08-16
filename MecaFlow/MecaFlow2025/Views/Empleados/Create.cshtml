@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Crear Empleado";
-    Layout = null; // render limpio dentro del modal
+    Layout = null; // render limpio en modal
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -94,31 +94,55 @@
 <div class="form-container">
     <h1><i class="bi bi-person-plus-fill me-2"></i>Crear Empleado</h1>
 
-    <form asp-action="Create" method="post">
+    <!--
+      Nota: este form será interceptado por hookCreateForm() en Index.cshtml,
+      que hace POST por fetch y maneja HTML (errores) o JSON (éxito).
+    -->
+    <form asp-action="Create" asp-controller="Empleados" method="post" id="empleadoCreateForm">
         @Html.AntiForgeryToken()
+
+        <!-- Resumen de validación del servidor -->
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+        <!-- Nombre -->
         <div class="mb-3">
             <label asp-for="Nombre" class="form-label fw-bold">Nombre</label>
-            <input asp-for="Nombre" class="form-control" />
+            <input asp-for="Nombre"
+                   class="form-control"
+                   required
+                   maxlength="100"
+                   autocomplete="name"
+                   placeholder="Ej.: Juan Pérez" />
             <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+
+        <!-- Correo -->
+        <div class="mb-3">
+            <label asp-for="Correo" class="form-label fw-bold">Correo</label>
+            <input asp-for="Correo"
+                   class="form-control"
+                   required
+                   maxlength="100"
         </div>
 
         <div class="mb-3">
             <label asp-for="Cedula" class="form-label fw-bold">Cédula</label>
-            <input asp-for="Cedula" class="form-control" />
+            <input asp-for="Cedula"
+                   class="form-control"
+                   required
+                   maxlength="20"
+                   inputmode="numeric"
+                   placeholder="Solo números (9 a 12 dígitos)"
+                   pattern="^\d{9,12}$" />
             <span asp-validation-for="Cedula" class="text-danger"></span>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Correo" class="form-label fw-bold">Correo</label>
-            <input asp-for="Correo" class="form-control" type="email" />
-            <span asp-validation-for="Correo" class="text-danger"></span>
-        </div>
-
+        <!-- Puesto -->
         <div class="mb-3">
             <label asp-for="Puesto" class="form-label fw-bold">Puesto</label>
-            <select asp-for="Puesto" class="form-select">
+            <select asp-for="Puesto"
+                    class="form-select"
+                    required>
                 <option value="">— Seleccione puesto —</option>
                 <option value="Mecánico">Mecánico</option>
                 <option value="Supervisor">Supervisor</option>
@@ -129,18 +153,10 @@
             <span asp-validation-for="Puesto" class="text-danger"></span>
         </div>
 
-        @* Campo oculto con la fecha actual *@
-        <input type="hidden" asp-for="FechaIngreso" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-
-        <div class="mb-4">
-            <label class="form-label fw-bold d-block">Estado</label>
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" asp-for="Activo" id="activoCheckbox" checked />
-                <label class="form-check-label" for="activoCheckbox">
-                    <span id="estadoTexto" class="badge"></span>
-                </label>
-            </div>
-            <span asp-validation-for="Activo" class="text-danger"></span>
+        <!-- Activo -->
+        <div class="mb-3 form-check">
+            <input asp-for="Activo" class="form-check-input" />
+            <label asp-for="Activo" class="form-check-label fw-bold">Activo</label>
         </div>
 
         <div class="d-flex justify-content-between">
@@ -153,26 +169,3 @@
         </div>
     </form>
 </div>
-
-@section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const checkbox = document.getElementById('activoCheckbox');
-            const estadoTexto = document.getElementById('estadoTexto');
-
-            function actualizarEstado() {
-                if (checkbox.checked) {
-                    estadoTexto.textContent = 'Activo';
-                    estadoTexto.className = 'badge bg-success px-3 py-2';
-                } else {
-                    estadoTexto.textContent = 'Inactivo';
-                    estadoTexto.className = 'badge bg-danger px-3 py-2';
-                }
-            }
-
-            checkbox.addEventListener('change', actualizarEstado);
-            actualizarEstado();
-        });
-    </script>
-}
