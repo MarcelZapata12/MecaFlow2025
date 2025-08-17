@@ -8,45 +8,39 @@
     Layout = null;
 }
 
-<h2 class="mb-4">@ViewData["Title"]</h2>
+<h2 class="mb-3">@ViewData["Title"]</h2>
 
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <dl class="row mb-0">
+            <dt class="col-sm-4">Fecha</dt>
+            <dd class="col-sm-8">@Model.Fecha.ToString("dd-MM-yyyy")</dd>
 
-            <dt class="col-sm-3">Fecha</dt>
-            <dd class="col-sm-9">
-                @Model.Fecha.ToString("dd-MM-yyyy")
+            <dt class="col-sm-4">Total Ingresos ₡</dt>
+            <dd class="col-sm-8 text-success">
+                @(Model.TotalIngresos.HasValue? ingresos.ToString("N2") : "—")
             </dd>
 
-            <dt class="col-sm-3">Total Ingresos ₡</dt>
-            <dd class="col-sm-9 text-success">
-                @(Model.TotalIngresos.HasValue
-                                ? ingresos.ToString("N2")
-                                : "—")
+            <dt class="col-sm-4">Total Gastos ₡</dt>
+            <dd class="col-sm-8 text-danger">
+                @(Model.TotalGastos.HasValue? gastos.ToString("N2") : "—")
             </dd>
 
-            <dt class="col-sm-3">Total Gastos ₡</dt>
-            <dd class="col-sm-9 text-danger">
-                @(Model.TotalGastos.HasValue
-                                ? gastos.ToString("N2")
-                                : "—")
-            </dd>
-
-            <dt class="col-sm-3">Utilidad ₡</dt>
-            <dd class="col-sm-9 fw-bold">
+            <dt class="col-sm-4">Utilidad ₡</dt>
+            <dd class="col-sm-8 fw-bold">
                 <span class="@clsUtil">@utilidad.ToString("N2")</span>
             </dd>
 
-            <dt class="col-sm-3">Observaciones</dt>
-            <dd class="col-sm-9">
+            <dt class="col-sm-4">Observaciones</dt>
+            <dd class="col-sm-8">
                 @(string.IsNullOrWhiteSpace(Model.Observaciones)
                                 ? "— Sin observaciones —"
                                 : Model.Observaciones)
             </dd>
-
         </dl>
     </div>
 </div>
 
-<a asp-action="Index" class="btn btn-secondary">Volver</a>
+<div class="d-flex gap-2">
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>

@@ -42,13 +42,19 @@ namespace MecaFlow2025.Controllers
 
             if (factura == null) return NotFound();
 
-            // (Si ya no quieres tareas aquí, borra este bloque)
             var tareas = await _ctx.TareasVehiculos
                 .Where(t => t.VehiculoId == factura.VehiculoId)
                 .OrderByDescending(t => t.FechaRegistro)
                 .ToListAsync();
 
             ViewBag.Tareas = tareas;
+
+            // Si es una llamada AJAX, devolver vista parcial
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView(factura);
+            }
+
             return View(factura);
         }
 
@@ -58,6 +64,13 @@ namespace MecaFlow2025.Controllers
             await CargarSelects();
             ViewData["Metodos"] = MetodosSelect();
             ViewBag.Hoy = DateOnly.FromDateTime(DateTime.Now);
+
+            // Si es una llamada AJAX, devolver vista parcial
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView();
+            }
+
             return View();
         }
 
@@ -93,12 +106,16 @@ namespace MecaFlow2025.Controllers
 
             if (!ModelState.IsValid)
             {
-                TempData["Error"] = string.Join(" | ",
-                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
-
                 await CargarSelects(factura.ClienteId, factura.VehiculoId);
                 ViewData["Metodos"] = MetodosSelect(factura.Metodo);
                 ViewBag.Hoy = factura.Fecha;
+
+                // Si es AJAX, devolver vista parcial con errores
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return PartialView(factura);
+                }
+
                 return View(factura);
             }
 
@@ -106,6 +123,13 @@ namespace MecaFlow2025.Controllers
             await _ctx.SaveChangesAsync();
 
             TempData["Ok"] = "Factura creada correctamente.";
+
+            // Si es AJAX, devolver JSON para indicar éxito
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = true, message = "Factura creada correctamente." });
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -120,6 +144,13 @@ namespace MecaFlow2025.Controllers
 
             await CargarSelects(factura.ClienteId, factura.VehiculoId);
             ViewData["Metodos"] = MetodosSelect(factura.Metodo);
+
+            // Si es una llamada AJAX, devolver vista parcial
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView(factura);
+            }
+
             return View(factura);
         }
 
@@ -155,6 +186,13 @@ namespace MecaFlow2025.Controllers
                 dto.Fecha = factura.Fecha;
                 await CargarSelects(dto.ClienteId, dto.VehiculoId);
                 ViewData["Metodos"] = MetodosSelect(dto.Metodo);
+
+                // Si es AJAX, devolver vista parcial con errores
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return PartialView(dto);
+                }
+
                 return View(dto);
             }
 
@@ -166,6 +204,13 @@ namespace MecaFlow2025.Controllers
 
             await _ctx.SaveChangesAsync();
             TempData["Ok"] = "Factura actualizada correctamente.";
+
+            // Si es AJAX, devolver JSON para indicar éxito
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = true, message = "Factura actualizada correctamente." });
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -180,6 +225,13 @@ namespace MecaFlow2025.Controllers
                 .FirstOrDefaultAsync(m => m.FacturaId == id);
 
             if (factura == null) return NotFound();
+
+            // Si es una llamada AJAX, devolver vista parcial
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView(factura);
+            }
+
             return View(factura);
         }
 
@@ -194,6 +246,15 @@ namespace MecaFlow2025.Controllers
                 _ctx.Facturas.Remove(factura);
                 await _ctx.SaveChangesAsync();
             }
+
+            TempData["Ok"] = "Factura eliminada correctamente.";
+
+            // Si es AJAX, devolver JSON para indicar éxito
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = true, message = "Factura eliminada correctamente." });
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

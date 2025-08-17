@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using MecaFlow2025.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace MecaFlow2025.Controllers
 {
@@ -28,5 +29,6 @@ namespace MecaFlow2025.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
     }
 }

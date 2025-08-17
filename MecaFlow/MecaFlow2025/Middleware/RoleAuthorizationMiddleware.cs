@@ -1,4 +1,6 @@
-﻿namespace MecaFlow2025.Middleware
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace MecaFlow2025.Middleware
 {
     public class RoleAuthorizationMiddleware
     {
@@ -11,29 +13,42 @@
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var path = context.Request.Path.Value?.ToLower();
-            var userRole = context.Session.GetString("UserRole");
-            var userId = context.Session.GetString("UserId");
-
-            // Permitir acceso a Auth, Home y Chatbot
-            if (path?.StartsWith("/auth") == true ||
-                path?.StartsWith("/home") == true ||
-                path?.StartsWith("/chatbot") == true ||
-                path == "/")
+            // 0) Respetar [AllowAnonymous]
+            var endpoint = context.GetEndpoint();
+            if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
             {
                 await _next(context);
                 return;
             }
 
+            var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+            var userId = context.Session.GetString("UserId");
+            var userRole = context.Session.GetString("UserRole");
 
-            // Si no está autenticado, redirigir al login
+            // 1) Rutas públicas y estáticos (SIN /home)
+            if (path == "/" ||
+                path.StartsWith("/auth") ||
+                path.StartsWith("/acercanosotros") ||
+                path.StartsWith("/css/") ||
+                path.StartsWith("/js/") ||
+                path.StartsWith("/lib/") ||
+                path.StartsWith("/images/") ||
+                path.StartsWith("/favicon") ||
+                path == "/robots.txt" ||
+                path == "/sitemap.xml")
+            {
+                await _next(context);
+                return;
+            }
+
+            // 2) Si no hay sesión, enviar a Login
             if (string.IsNullOrEmpty(userId))
             {
                 context.Response.Redirect("/Auth/Login");
                 return;
             }
 
-            // Verificar permisos según el rol
+            // 3) Chequeo de permisos por rol
             if (!HasPermission(path, userRole))
             {
                 context.Response.Redirect("/Auth/AccessDenied");
@@ -48,11 +63,10 @@
             if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(userRole))
                 return false;
 
-            // Administradores tienen acceso a todo
-            if (userRole == "Administrador")
-                return true;
+            // Admin: acceso total
+            if (userRole == "Administrador") return true;
 
-            // Empleados: Asistencias, Diagnosticos, Vehiculos, Pagos
+            // Empleado
             if (userRole == "Empleado")
             {
                 return path.Contains("/asistencias") ||
@@ -61,7 +75,7 @@
                        path.Contains("/pagos");
             }
 
-            // Clientes: solo Diagnosticos y Vehiculos
+            // Cliente
             if (userRole == "Cliente")
             {
                 return path.Contains("/diagnosticos") ||

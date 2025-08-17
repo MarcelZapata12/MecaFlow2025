@@ -1,0 +1,184 @@
+﻿@{
+    ViewData["Title"] = "Acerca de nosotros";
+}
+
+@section Styles {
+    <style>
+        /* Estilos locales que respetan tu tema oscuro */
+        .about-hero {
+            background: linear-gradient(to right, #003973, #005AA7);
+            border-radius: 1rem;
+        }
+
+        .about-card {
+            background-color: #0b1220; /* gris azulado oscuro, como tus modales */
+            color: #e5e7eb;
+            border: 1px solid #334155;
+            border-radius: 1rem;
+        }
+
+            .about-card .card-title {
+                color: #ffffff;
+                font-weight: 700;
+            }
+
+        .about-badge {
+            display: inline-block;
+            padding: .15rem .6rem;
+            border-radius: 999px;
+            background: #0f2027;
+            border: 1px solid #334155;
+            color: #e5e7eb;
+        }
+
+        .about-link {
+            color: #e5e7eb;
+            text-decoration: none;
+        }
+
+            .about-link:hover {
+                color: #ffffff;
+                text-decoration: underline;
+            }
+
+        .icon-pill {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #0f2027;
+            border: 1px solid #334155;
+        }
+    </style>
+}
+
+<div class="container my-5">
+
+    <!-- Hero -->
+    <div class="about-hero text-white p-4 p-md-5 mb-5 shadow-sm">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+            <div class="icon-pill"><i class="bi bi-wrench-adjustable"></i></div>
+            <div>
+                <h1 class="fw-bold mb-1">Acerca de nosotros</h1>
+                <p class="mb-0">
+                    Centro integral automotriz con amplia experiencia en carrocería, pintura y servicios especializados.
+                    Enfocados en calidad, tiempos de entrega y una atención cercana.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiénes somos / Horarios -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card about-card h-100 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-3"><i class="bi bi-building me-2"></i>Quiénes somos</h3>
+                    <p class="mb-3">
+                        Somos un taller con servicios desde enderezado y pintura hasta mecánica y estética
+                        automotriz. Trabajamos con procesos y equipos profesionales para asegurar acabados de alto nivel.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="about-badge">Enderezado y pintura</span>
+                        <span class="about-badge">Pintura automotriz</span>
+                        <span class="about-badge">Mecánica</span>
+                        <span class="about-badge">Detailing / Wraps / PPF</span>
+                        <span class="about-badge">Aire acondicionado</span>
+                        <span class="about-badge">Avalúos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horarios -->
+        <div class="col-lg-6">
+            <div class="card about-card h-100 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-3"><i class="bi bi-clock-history me-2"></i>Horarios</h3>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped align-middle mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="text-nowrap">Lunes a Viernes</th>
+                                    <td>7:00 a. m. – 5:00 p. m.</td>
+                                </tr>
+                                <tr>
+                                    <th>Sábado</th>
+                                    <td>Cerrado</td>
+                                </tr>
+                                <tr>
+                                    <th>Domingo</th>
+                                    <td>Cerrado</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-secondary d-block mt-2">* Sujeto a cambios en feriados.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contacto / Mapa -->
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card about-card h-100 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="card-title mb-3"><i class="bi bi-telephone-outbound me-2"></i>Contacto</h3>
+
+                    <div class="mb-3">
+                        <div class="text-secondary text-uppercase small">Teléfono</div>
+                        <a class="about-link" href="tel:+50660527657">+506 6052 7657</a>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-secondary text-uppercase small">WhatsApp</div>
+                        <a class="about-link" href="https://wa.me/50660527657" target="_blank" rel="noopener">+506 6052 7657</a>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-secondary text-uppercase small">Correo</div>
+                        <a class="about-link" href="mailto:tallerhiburt@gmail.com" rel="noopener">
+                            tallerhiburt@gmail.com
+                        </a>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <div class="text-secondary text-uppercase small">Dirección</div>
+                        <div>Barrio del carmen, Puriscal, <br />San José, Costa Rica.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-primary btn-sm" target="_blank" rel="noopener"
+                           href="https://www.google.com/maps?q=Grupo+Tecnomotriz+Zapote">
+                            <i class="bi bi-geo-alt-fill me-1"></i>Google Maps
+                        </a>
+                        <a class="btn btn-outline-primary btn-sm" target="_blank" rel="noopener"
+                           href="https://www.waze.com/ul?q=Grupo%20Tecnomotriz%20Zapote">
+                            <i class="bi bi-signpost-2-fill me-1"></i>Waze
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mini mapa -->
+        <div class="col-lg-7">
+            <div class="card about-card h-100 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="ratio ratio-16x9 rounded">
+                        <iframe title="Ubicación del taller"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                src="https://www.google.com/maps?q=Grupo+Tecnomotriz+Zapote&output=embed">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

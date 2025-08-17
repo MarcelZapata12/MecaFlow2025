@@ -16,61 +16,60 @@
 
     @@keyframes gradient {
         0% {
-            background-position: 0% 50%;
+            background-position: 0% 50%
         }
 
         50% {
-            background-position: 100% 50%;
+            background-position: 100% 50%
         }
 
         100% {
-            background-position: 0% 50%;
+            background-position: 0% 50%
         }
     }
 
     @@keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(20px)
         }
 
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0)
         }
     }
 
     @@keyframes fadeIn {
         from {
             opacity: 0;
-            transform: scale(0.95);
+            transform: scale(.95)
         }
 
         to {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1)
         }
     }
 
     @@keyframes pulse {
         0% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(13,110,253,.4);
+            box-shadow: 0 0 0 0 rgba(13,110,253,.4)
         }
 
         70% {
             transform: scale(1.05);
-            box-shadow: 0 0 0 10px rgba(13,110,253,0);
+            box-shadow: 0 0 0 10px rgba(13,110,253,0)
         }
 
         100% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(13,110,253,0);
+            box-shadow: 0 0 0 0 rgba(13,110,253,0)
         }
     }
 
-    /* Tarjetas */
-    .employee-card {
+    .empleado-card {
         background-color: #1f1f1f;
         border: 1px solid #2c2c2c;
         color: white;
@@ -81,12 +80,12 @@
         animation: fadeInUp .5s ease-in-out;
     }
 
-        .employee-card:hover {
+        .empleado-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0,0,0,.3);
         }
 
-    .employee-grid {
+    .empleado-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 1rem;
@@ -125,69 +124,94 @@
     .btn-pulse {
         animation: pulse 2s infinite;
     }
+
+    .empty-results {
+        color: #9ca3af;
+        padding: .75rem 0;
+    }
 </style>
 
 <div class="container py-4">
+
+    <!-- 🔔 Alertas de servidor -->
+    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-white">
             <i class="bi bi-people-fill me-2"></i>Empleados
         </h2>
         <div class="d-flex align-items-center">
-            <input id="empleadoSearch" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre, cédula o correo…">
-            <a href="#" class="btn btn-primary btn-pulse" onclick="loadEmpleadoCreate()">
-                <i class="bi bi-person-plus-fill me-1"></i>Nuevo Empleado
-            </a>
+            <input id="txtBuscar" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…">
+            <button class="btn btn-primary btn-pulse" id="btn-create" data-url="@Url.Action("Create", "Empleados")">
+                <i class="bi bi-plus-circle me-1"></i>Nuevo Empleado
+            </button>
         </div>
     </div>
 
     <!-- Grid de tarjetas -->
-    <div id="empleadosGrid" class="employee-grid">
-        @foreach (var e in Model)
+    <div id="cardsContainer" class="empleado-grid">
+        @if (Model != null && Model.Any())
         {
-            <div class="employee-card card p-3">
-                <div class="action-icons">
-                    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openEmpleadoDetails(@e.EmpleadoId)">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadEmpleadoEdit(@e.EmpleadoId)">
-                        <i class="bi bi-pencil-square"></i>
-                    </a>
-                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmEmpleadoDelete(@e.EmpleadoId)">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </div>
+            foreach (var e in Model.OrderBy(x => x.Nombre))
+            {
+                var ingreso = e.FechaIngreso.HasValue ? e.FechaIngreso.Value.ToString("dd/MM/yyyy") : "—";
+                var registro = e.FechaRegistro.HasValue ? e.FechaRegistro.Value.ToString("dd/MM/yyyy") : "—";
 
-                <h5 class="card-title" style="color:#66ccff;font-weight:700;">
-                    <i class="bi bi-person-badge me-1"></i>@e.Nombre
-                </h5>
-
-                <p class="card-text mb-1"><i class="bi bi-card-text me-1 text-secondary"></i>@e.Cedula</p>
-                <p class="card-text mb-1"><i class="bi bi-envelope-fill me-1 text-secondary"></i>@e.Correo</p>
-                <p class="card-text mb-1"><i class="bi bi-briefcase me-1 text-secondary"></i>@e.Puesto</p>
-                <p class="card-text small text-muted">
-                    <i class="bi bi-calendar-event me-1"></i>
-                    @(e.FechaIngreso.HasValue? e.FechaIngreso.Value.ToString("dd/MM/yyyy") : "—")
-                    &nbsp;•&nbsp;
-                    <strong>Estado:</strong>
-                    @(e.Activo ? "Activo" : "Inactivo")
-                </p>
-            </div>
-
-            <!-- Modal Details por empleado -->
-            <div class="modal fade" id="empleadoDetails-@e.EmpleadoId" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Detalles del Empleado</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body" id="empleadoDetailsBody-@e.EmpleadoId">
-                            <p class="text-center">Cargando…</p>
-                        </div>
+                <div class="empleado-card card p-3"
+                     data-nombre="@((e.Nombre ?? "").ToLower())"
+                     data-correo="@((e.Correo ?? "").ToLower())">
+                    <div class="action-icons">
+                        <button type="button" class="text-info icon-btn btn-details"
+                                title="Detalles"
+                                data-url="@Url.Action("Details", "Empleados", new { id = e.EmpleadoId })">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="text-warning icon-btn btn-edit"
+                                title="Editar"
+                                data-url="@Url.Action("Edit", "Empleados", new { id = e.EmpleadoId })">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button type="button" class="icon-btn text-danger btn-delete"
+                                title="Eliminar"
+                                data-url="@Url.Action("Delete", "Empleados", new { id = e.EmpleadoId })">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
                     </div>
+
+                    <h5 class="card-title" style="color:#66ccff;font-weight:700;">
+                        <i class="bi bi-person-circle me-1"></i>@e.Nombre
+                    </h5>
+
+                    <p class="card-text mb-1"><i class="bi bi-envelope-fill me-1 text-secondary"></i>@e.Correo</p>
+                    <p class="card-text mb-1"><i class="bi bi-credit-card-2-front me-1 text-secondary"></i>@e.Cedula</p>
+                    <p class="card-text mb-1"><i class="bi bi-briefcase-fill me-1 text-secondary"></i>@(string.IsNullOrWhiteSpace(e.Puesto) ? "—" : e.Puesto)</p>
+                    <p class="card-text small text-muted">
+                        <i class="bi bi-calendar-check me-1"></i>
+                        @(string.IsNullOrEmpty(registro) ? ingreso : registro)
+                    </p>
+                    <span class="position-absolute bottom-0 end-0 m-3 @(e.Activo ? "badge-soft" : "badge-soft-off")" style="background-color: @(e.Activo ? "rgba(16,185,129,.15)" : "rgba(239,68,68,.12)"); color: @(e.Activo ? "#34d399" : "#f87171"); border: 1px solid @(e.Activo ? "rgba(16,185,129,.25)" : "rgba(239,68,68,.25)"); padding:.25rem .5rem; border-radius:.5rem; font-weight:700; font-size:.78rem;">
+                        @(e.Activo ? "Activo" : "Inactivo")
+                    </span>
                 </div>
-            </div>
+            }
+        }
+        else
+        {
+            <div class="empty-results">No hay empleados registrados.</div>
         }
     </div>
 </div>
@@ -200,109 +224,116 @@
     </div>
 </div>
 
-<!-- Modales comunes (Editar / Crear / Eliminar) -->
-<div class="modal fade" id="empleadoEdit" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<!-- Modales comunes -->
+<div class="modal fade" id="modalCrud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Editar Empleado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body" id="empleadoEditBody"><p class="text-center">Cargando…</p></div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="empleadoCreate" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Nuevo Empleado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body" id="empleadoCreateBody"><p class="text-center">Cargando…</p></div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="empleadoDelete" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Confirmar eliminación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar este empleado?</p>
-                <form id="empleadoDeleteForm" method="post">
-                    <input type="hidden" name="id" id="empleadoDeleteId" />
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-danger" onclick="submitEmpleadoDelete()">Eliminar</button>
-            </div>
+            <div class="modal-header"><h5 class="modal-title" id="modalCrudTitle">...</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body" id="modalCrudBody"><p class="text-center">Cargando…</p></div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
-        // Búsqueda en vivo
-        document.getElementById('empleadoSearch').addEventListener('input', function () {
+        /* ===========================
+           Búsqueda rápida
+           =========================== */
+        document.getElementById('txtBuscar').addEventListener('input', function () {
             const q = this.value.toLowerCase();
-            document.querySelectorAll('#empleadosGrid .employee-card').forEach(function (card) {
+            document.querySelectorAll('#cardsContainer .empleado-card').forEach(function (card) {
                 const txt = card.innerText.toLowerCase();
                 card.style.display = txt.includes(q) ? '' : 'none';
             });
         });
 
-        // Crear
-        function loadEmpleadoCreate() {
-            const modal = new bootstrap.Modal(document.getElementById('empleadoCreate'));
-            const body = document.getElementById('empleadoCreateBody');
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+        /* ===========================
+           MODALES (jQuery + AJAX)
+           =========================== */
+        const modalEl = document.getElementById('modalCrud');
+        const modal = new bootstrap.Modal(modalEl);
+        const modalBody = document.getElementById('modalCrudBody');
+        const modalTitle = document.getElementById('modalCrudTitle');
+
+        function openModal(url, title){
+            modalTitle.innerText = title;
+            modalBody.innerHTML = "<p class='text-center'>Cargando…</p>";
             modal.show();
 
-            fetch(`/Empleados/Create`)
-                .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
-                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
+            fetch(url)
+              .then(r => r.text())
+              .then(html => {
+                  modalBody.innerHTML = html;
+                  hookAjaxForm();
+              })
+              .catch(() => {
+                  modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el contenido.</div>`;
+              });
         }
 
-        // Editar
-        function loadEmpleadoEdit(id) {
-            const modal = new bootstrap.Modal(document.getElementById('empleadoEdit'));
-            const body = document.getElementById('empleadoEditBody');
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
-            modal.show();
+        function hookAjaxForm(){
+            const form = modalBody.querySelector("form");
+            if (!form) return;
 
-            fetch(`/Empleados/Edit/${id}`)
-                .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
-                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
+            form.addEventListener("submit", async function(ev){
+                ev.preventDefault();
+                const fd = new FormData(form);
+
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+
+                    const ct = res.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        const resp = await res.json();
+                        if (resp && resp.ok) {
+                            modal.hide();
+                            location.reload();
+                        } else if (resp && resp.error) {
+                            modalBody.prepend(`<div class="alert alert-danger ajax-alert">${resp.error}</div>`);
+                        }
+                    } else {
+                        const html = await res.text();
+                        modalBody.innerHTML = html;
+                        hookAjaxForm();
+                    }
+                } catch {
+                    modalBody.innerHTML = `<div class="alert alert-danger">Ocurrió un error inesperado.</div>`;
+                }
+            });
         }
 
-        // Detalles (modal por tarjeta)
-        function openEmpleadoDetails(id) {
-            const modalId = `empleadoDetails-${id}`;
-            const bodyId = `empleadoDetailsBody-${id}`;
-            const modal = new bootstrap.Modal(document.getElementById(modalId));
-            const body = document.getElementById(bodyId);
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
-            modal.show();
+        document.getElementById("btn-create").addEventListener("click", function(){
+            openModal(this.dataset.url, "Nuevo Empleado");
+        });
+        document.addEventListener("click", function(event){
+            const target = event.target.closest(".btn-edit, .btn-details, .btn-delete");
+            if (target){
+                let title = "";
+                if (target.classList.contains("btn-edit")) title = "Editar Empleado";
+                else if (target.classList.contains("btn-details")) title = "Detalle de Empleado";
+                else if (target.classList.contains("btn-delete")) title = "Eliminar Empleado";
+                openModal(target.dataset.url, title);
+            }
+        });
 
-            fetch(`/Empleados/Details/${id}`)
-                .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
-                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
-        }
-
-        // Eliminar
-        function confirmEmpleadoDelete(id) {
-            const modal = new bootstrap.Modal(document.getElementById('empleadoDelete'));
-            document.getElementById('empleadoDeleteId').value = id;
-            document.getElementById('empleadoDeleteForm').action = `/Empleados/Delete/${id}`;
-            modal.show();
-        }
-        function submitEmpleadoDelete() {
-            document.getElementById('empleadoDeleteForm').submit();
-        }
-
-        // Toast
+        /* ===========================
+           TOAST
+           =========================== */
         function showSuccessToast() {
             new bootstrap.Toast(document.getElementById('toastSuccess')).show();
+        }
+
+        // Mostrar toast si hay Success en TempData
+        @{
+                    if (TempData["Success"] is string)
+                    {
+                                <text>showSuccessToast();</text>
+                    }
         }
     </script>
 }

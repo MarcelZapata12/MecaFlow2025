@@ -79,20 +79,46 @@ namespace MecaFlow2025.Controllers
 
         // --------------------------- CREATE ---------------------------
         // GET
-        public IActionResult Create() => View();
-
-        // POST
-        [HttpPost, ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string FechaString,
-                                                decimal? TotalIngresos,
-                                                decimal? TotalGastos,
-                                                string? Observaciones)
+        // --------------------------- CREATE ---------------------------
+        // GET (para modal)
+        [HttpGet]
+        public IActionResult Create()
         {
+            // Devolver la vista como PARCIAL para el modal
+            return PartialView("Create");
+        }
+
+        // POST (amigable con modal + robusto con comas/puntos)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(
+            string FechaString,
+            decimal? TotalIngresos,
+            decimal? TotalGastos,
+            string? Observaciones)
+        {
+            // Fecha en formato yyyy-MM-dd (type="date")
             if (!DateOnly.TryParseExact(FechaString, "yyyy-MM-dd", null,
                                         DateTimeStyles.None, out var fecha))
             {
                 ModelState.AddModelError("FechaString", "Fecha inválida");
-                return View();
+                // Re-mostrar la parcial con mensajes en el modal
+                return PartialView("Create");
+            }
+
+            // Fallback por si el binder no pudo parsear por cultura (., ,)
+            if (TotalIngresos is null && Request.Form.TryGetValue("TotalIngresos", out var ingRaw))
+            {
+                if (decimal.TryParse(ingRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out var inv))
+                    TotalIngresos = inv;
+                else if (decimal.TryParse(ingRaw, NumberStyles.Any, CultureInfo.CurrentCulture, out var cur))
+                    TotalIngresos = cur;
+            }
+            if (TotalGastos is null && Request.Form.TryGetValue("TotalGastos", out var gasRaw))
+            {
+                if (decimal.TryParse(gasRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out var inv))
+                    TotalGastos = inv;
+                else if (decimal.TryParse(gasRaw, NumberStyles.Any, CultureInfo.CurrentCulture, out var cur))
+                    TotalGastos = cur;
             }
 
             var registro = new ReportesFinanciero
@@ -105,16 +131,34 @@ namespace MecaFlow2025.Controllers
 
             _ctx.Add(registro);
             await _ctx.SaveChangesAsync();
+
+            // Si vino por AJAX (modal), devolver 204 para que tu JS cierre el modal y recargue.
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return NoContent(); // 204
+
+            // Fallback navegación normal
             return RedirectToAction(nameof(Index));
         }
 
+
         // --------------------------- EDIT ---------------------------
+        // GET: /ReportesFinancieros/Edit/5
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var reg = await _ctx.ReportesFinancieros.FindAsync(id);
-            return reg is null ? NotFound() : View(reg);
+            var reg = await _ctx.ReportesFinancieros
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(r => r.ReporteId == id);
+            if (reg is null) return NotFound();
+
+            // Para el <input type="date"> en la vista
+            ViewBag.FechaString = reg.Fecha.ToString("yyyy-MM-dd");
+
+            // Devolver parcial para el modal
+            return PartialView("Edit", reg);
         }
 
+        // POST: /ReportesFinancieros/Edit
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,
                                               string FechaString,
@@ -129,16 +173,26 @@ namespace MecaFlow2025.Controllers
                                         DateTimeStyles.None, out var fecha))
             {
                 ModelState.AddModelError("FechaString", "Fecha inválida");
-                return View(reg);
+
+                // Mantener lo que el usuario escribió si falló la fecha
+                ViewBag.FechaString = FechaString;
+                reg.TotalIngresos = TotalIngresos ?? reg.TotalIngresos;
+                reg.TotalGastos = TotalGastos ?? reg.TotalGastos;
+                reg.Observaciones = Observaciones ?? reg.Observaciones;
+
+                return PartialView("Edit", reg);
             }
 
             reg.Fecha = fecha;
-            reg.TotalIngresos = TotalIngresos;
-            reg.TotalGastos = TotalGastos;
-            reg.Observaciones = Observaciones;
+            // ⬇⬇ Clave: si llegan null (por cultura/coma-punto o sin cambios), conserva el valor actual
+            reg.TotalIngresos = TotalIngresos ?? reg.TotalIngresos;
+            reg.TotalGastos = TotalGastos ?? reg.TotalGastos;
+            reg.Observaciones = Observaciones; // si la dejas vacía, se guarda vacío intencionalmente
 
             await _ctx.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            // Pensado para fetch() dentro del modal: no recarga toda la página
+            return NoContent(); // 204
         }
 
         // --------------------------- DETAILS ---------------------------
@@ -152,21 +206,33 @@ namespace MecaFlow2025.Controllers
         }
 
         // --------------------------- DELETE ---------------------------
+        // GET: /ReportesFinancieros/Delete/5
+        [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var reg = await _ctx.ReportesFinancieros.FindAsync(id);
-            return reg is null ? NotFound() : View(reg);
+            var reg = await _ctx.ReportesFinancieros
+                                .AsNoTracking()
+                                .FirstOrDefaultAsync(r => r.ReporteId == id);
+            if (reg is null) return NotFound();
+
+            // devolver parcial para el modal
+            return PartialView("Delete", reg);
         }
 
         [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var reg = await _ctx.ReportesFinancieros.FindAsync(id);
-            if (reg is not null)
-            {
-                _ctx.Remove(reg);
-                await _ctx.SaveChangesAsync();
-            }
+            if (reg is null) return NotFound();
+
+            _ctx.Remove(reg);
+            await _ctx.SaveChangesAsync();
+
+            // si es llamado por fetch (AJAX) desde el modal, devuelve 204 y listo
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return NoContent(); // 204
+
+            // fallback si alguien entra por navegación normal
             return RedirectToAction(nameof(Index));
         }
 
@@ -360,8 +426,6 @@ namespace MecaFlow2025.Controllers
             var fileName = $"Reportes_{scope}_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
             return File(pdfBytes, "application/pdf", fileName);
         }
-
-
 
         /*--------------------- View-Model -----------------------------*/
         public class ResumenVM

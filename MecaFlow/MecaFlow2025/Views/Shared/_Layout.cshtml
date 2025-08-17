@@ -45,14 +45,8 @@
                     color: #ffffff;
                     text-decoration: none;
                 }
-
-
-
-        
-
-
-
     </style>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -60,22 +54,41 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-dark" style="background: linear-gradient(to right, #003973, #005AA7);">
             <div class="container-fluid">
-                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo-mecaflow.png" alt="Logo" style="height: 32px;" class="rounded shadow-sm" />
-                    <strong>MecaFlow2025</strong>
-                </a>
+
+                @* Brand: si hay sesión -> Home; si no -> AcercaNosotros *@
+                @if (Context.Session.GetString("UserId") != null)
+                {
+                    <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                        <img src="~/images/logo-mecaflow.png" alt="Logo" style="height: 32px;" class="rounded shadow-sm" />
+                        <strong>MecaFlow2025</strong>
+                    </a>
+                }
+                else
+                {
+                    <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="AcercaNosotros" asp-action="Index">
+                        <img src="~/images/logo-mecaflow.png" alt="Logo" style="height: 32px;" class="rounded shadow-sm" />
+                        <strong>MecaFlow2025</strong>
+                    </a>
+                }
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link d-flex align-items-center gap-1" asp-controller="Home" asp-action="Index">
-                                <i class="fas fa-home"></i><span>Inicio</span>
-                            </a>
-                        </li>
+
+                        @* Inicio solo con sesión *@
+                        @if (Context.Session.GetString("UserId") != null)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center gap-1" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-home"></i><span>Inicio</span>
+                                </a>
+                            </li>
+                        }
+
                         @if (Context.Session.GetString("UserId") != null)
                         {
                             @if (RoleHelper.IsAdmin(Context))
@@ -87,7 +100,6 @@
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-controller="Empleados" asp-action="Index"><i class="fas fa-user-tie"></i> Empleados</a></li>
                                         <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index"><i class="fas fa-user"></i> Clientes</a></li>
-                                       
                                     </ul>
                                 </li>
                                 <li class="nav-item dropdown">
@@ -97,7 +109,6 @@
                                     <ul class="dropdown-menu">
                                         <li><a class="dropdown-item" asp-controller="Facturas" asp-action="Index"><i class="fas fa-file-invoice"></i> Facturas</a></li>
                                         <li><a class="dropdown-item" asp-controller="ReportesFinancieros" asp-action="Index"><i class="fas fa-chart-line"></i> Reportes Financieros</a></li>
-                                        
                                     </ul>
                                 </li>
                             }
@@ -109,7 +120,6 @@
                                         <i class="fas fa-clock"></i><span>Asistencias</span>
                                     </a>
                                 </li>
-                                
                             }
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-1" asp-controller="Vehiculos" asp-action="Index">
@@ -122,7 +132,6 @@
                                 </a>
                             </li>
 
-
                             @if (RoleHelper.IsAdmin(Context))
                             {
                                 <li class="nav-item">
@@ -132,17 +141,16 @@
                                     </a>
                                 </li>
                             }
-
-
-
-                            <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center gap-1" asp-controller="Chatbot" asp-action="Index">
-                                    <i class="bi bi-robot"></i><span>Asistente Mecánico</span>
-                                </a>
-                            </li>
-                           
                         }
+
+                        @* Acerca de nosotros: siempre visible *@
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center gap-1" asp-controller="AcercaNosotros" asp-action="Index">
+                                <i class="fas fa-circle-info"></i><span>Acerca de nosotros</span>
+                            </a>
+                        </li>
                     </ul>
+
                     <ul class="navbar-nav ms-auto">
                         @if (Context.Session.GetString("UserId") != null)
                         {
@@ -154,7 +162,7 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="#"><i class="fas fa-user"></i> Perfil</a></li>
-                                    <li><hr class="dropdown-divider"></li>
+                                    <li><hr class="dropdown-divider" /></li>
                                     <li><a class="dropdown-item" asp-controller="Auth" asp-action="Logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
                                 </ul>
                             </li>
@@ -197,9 +205,241 @@
         </div>
     </footer>
 
+    @* ============ CHATBOT (solo si hay sesión) ============ *@
+    @if (Context.Session.GetString("UserId") != null)
+    {
+        <style>
+            .mf-chat-fab {
+                position: fixed;
+                right: 18px;
+                bottom: 18px;
+                z-index: 1055;
+                width: 56px;
+                height: 56px;
+                border: none;
+                border-radius: 50%;
+                background: #0d6efd;
+                color: #fff;
+                box-shadow: 0 6px 20px rgba(0,0,0,.35)
+            }
+
+                .mf-chat-fab:hover {
+                    filter: brightness(1.05)
+                }
+
+            .mf-chat-panel {
+                position: fixed;
+                right: 18px;
+                bottom: 84px;
+                z-index: 1055;
+                width: 340px;
+                max-width: 90vw;
+                height: 460px;
+                background: #0b1220;
+                color: #e5e7eb;
+                border: 1px solid #334155;
+                border-radius: 12px;
+                display: none;
+                flex-direction: column
+            }
+
+            .mf-chat-header {
+                padding: .75rem 1rem;
+                background: #003973;
+                border-bottom: 1px solid #005AA7;
+                color: #fff;
+                border-radius: 12px 12px 0 0
+            }
+
+            .mf-chat-body {
+                flex: 1;
+                overflow: auto;
+                padding: 10px
+            }
+
+            .mf-chat-input {
+                display: flex;
+                gap: .5rem;
+                padding: .6rem;
+                border-top: 1px solid #334155
+            }
+
+                .mf-chat-input input {
+                    flex: 1;
+                    background: #101826;
+                    border: 1px solid #334155;
+                    color: #e5e7eb;
+                    border-radius: 8px;
+                    padding: .5rem
+                }
+
+            .mf-msg {
+                max-width: 80%;
+                margin: .35rem 0;
+                padding: .5rem .65rem;
+                border-radius: 10px;
+                border: 1px solid #334155
+            }
+
+                .mf-msg.me {
+                    margin-left: auto;
+                    background: #0f2027
+                }
+
+                .mf-msg.bot {
+                    background: #0b1220
+                }
+        </style>
+
+        <button id="mfFab" class="mf-chat-fab" title="Asistente">
+            <i class="bi bi-robot"></i>
+        </button>
+        <div id="mfPanel" class="mf-chat-panel" aria-live="polite" aria-label="Chat del taller">
+            <div class="mf-chat-header d-flex justify-content-between align-items-center">
+                <strong>Asistente del Taller</strong>
+                <div class="d-flex gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-light" onclick="mfReset()" title="Reiniciar">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light" onclick="mfToggle()">×</button>
+                </div>
+            </div>
+            <div id="mfBody" class="mf-chat-body"></div>
+            <div class="mf-chat-input">
+                <input id="mfInput" type="text" placeholder="Escribe tu consulta..." />
+                <button id="mfSend" class="btn btn-primary btn-sm">Enviar</button>
+            </div>
+        </div>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @* Script del chatbot (solo si hay sesión) *@
+    @if (Context.Session.GetString("UserId") != null)
+    {
+        <script>
+            const mfFab   = document.getElementById('mfFab');
+            const mfPanel = document.getElementById('mfPanel');
+            const mfBody  = document.getElementById('mfBody');
+            const mfInput = document.getElementById('mfInput');
+            const mfSend  = document.getElementById('mfSend');
+
+            // Historial (solo mensajes del usuario)
+            const mfHistory = [];
+            let mfGreeted = false;
+
+            // Identificador de conversación (se renueva al reiniciar)
+            let mfChatId = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString());
+
+            function mfToggle() {
+                const show = mfPanel.style.display !== 'flex';
+                mfPanel.style.display = show ? 'flex' : 'none';
+                if (show && !mfGreeted) {
+                    appendMsg('¡Hola! Soy el asistente del taller. ¿En qué te ayudo?', 'bot');
+                    mfGreeted = true;
+                }
+                if (show) mfInput?.focus();
+            }
+            mfFab.addEventListener('click', mfToggle);
+
+            function appendMsg(text, who) {
+                const div = document.createElement('div');
+                div.className = 'mf-msg ' + (who === 'me' ? 'me' : 'bot');
+                div.innerText = text;
+                mfBody.appendChild(div);
+                mfBody.scrollTop = mfBody.scrollHeight;
+            }
+
+            function showTyping() {
+                const n = document.createElement('div');
+                n.id = 'mfTyping';
+                n.className = 'mf-msg bot';
+                n.innerText = 'Escribiendo…';
+                mfBody.appendChild(n);
+                mfBody.scrollTop = mfBody.scrollHeight;
+            }
+            function hideTyping() {
+                const n = document.getElementById('mfTyping');
+                if (n) n.remove();
+            }
+
+            // Reinicio total del chat
+            async function mfReset() {
+                mfHistory.length = 0;       // limpia historial
+                mfBody.innerHTML = '';      // limpia UI
+                mfGreeted = false;          // permite mostrar saludo de nuevo
+                mfChatId = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString()); // nueva conversación
+
+                // (Opcional) avisa al servidor
+                try { await fetch('/api/chat/reset', { method: 'POST', credentials: 'same-origin' }); } catch {}
+
+                appendMsg('Chat reiniciado. ¿En qué te ayudo?', 'bot');
+            }
+
+            async function sendMsg() {
+                const text = mfInput.value.trim();
+                if (!text) return;
+
+                appendMsg(text, 'me');
+
+                // Guarda solo el mensaje del usuario
+                mfHistory.push({ role: 'user', content: text });
+                while (mfHistory.length > 12) mfHistory.shift();
+
+                mfInput.value = '';
+                mfSend.disabled = true;
+                showTyping();
+
+                try {
+                    const resp = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ message: text, history: mfHistory, chatId: mfChatId })
+                    });
+
+                    if (!resp.ok) {
+                        let extra = '';
+                        try {
+                            const j = await resp.json();
+                            if (j) {
+                                const parts = [];
+                                if (j.error)  parts.push(j.error);
+                                if (j.status) parts.push('#' + j.status);
+                                if (j.detail) {
+                                    const d = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+                                    parts.push((d || '').slice(0, 180) + (d && d.length > 180 ? '…' : ''));
+                                }
+                                extra = parts.join(' — ');
+                            }
+                        } catch {}
+                        appendMsg(`Error HTTP ${resp.status}${extra ? ': ' + extra : ''}`, 'bot');
+                        console.error('POST /api/chat failed', resp.status, extra);
+                        return;
+                    }
+
+                    const data = await resp.json();
+                    const reply = data.reply || 'Lo siento, no pude responder.';
+                    appendMsg(reply, 'bot');
+
+                    // Importante: NO añadimos la respuesta del bot a mfHistory
+                } catch (e) {
+                    appendMsg('Error de red al contactar el asistente.', 'bot');
+                    console.error(e);
+                } finally {
+                    hideTyping();
+                    mfSend.disabled = false;
+                    mfInput.focus();
+                }
+            }
+
+            mfSend.addEventListener('click', sendMsg);
+            mfInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+        </script>
+    }
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

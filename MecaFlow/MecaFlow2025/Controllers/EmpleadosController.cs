@@ -1,10 +1,12 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MecaFlow2025.Models;
 using MecaFlow2025.Attributes;
+using MecaFlow2025.Models;
 
 namespace MecaFlow2025.Controllers
 {
@@ -12,146 +14,241 @@ namespace MecaFlow2025.Controllers
     public class EmpleadosController : Controller
     {
         private readonly MecaFlowContext _context;
+        private bool IsAjax => Request.Headers["X-Requested-With"] == "XMLHttpRequest";
 
         public EmpleadosController(MecaFlowContext context)
         {
             _context = context;
         }
 
-        // GET: Empleados
+        // INDEX: vista normal con tabla
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Empleados.ToListAsync());
+            var empleados = await _context.Empleados
+                .OrderBy(e => e.Nombre)
+                .ToListAsync();
+            return View(empleados);
         }
 
-        // GET: Empleados/Details/5
+        // DETAILS (GET) -> pensado para mostrarse en modal (Layout = null en la vista)
+        [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
 
             var empleado = await _context.Empleados
-                .FirstOrDefaultAsync(m => m.EmpleadoId == id);
+                .FirstOrDefaultAsync(e => e.EmpleadoId == id);
 
             if (empleado == null) return NotFound();
-
             return View(empleado);
         }
 
-        // GET: Empleados/Create
-        public IActionResult Create() => View();
-
-        // POST: Empleados/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            // Bind SOLO campos editables (sin fechas)
-            [Bind("Nombre,Cedula,Correo,Puesto,Activo")] Empleado empleado)
+        // ===== CREATE =====
+        [HttpGet]
+        public IActionResult Create()
         {
-            // Defaults en servidor (si Activo es bool?, conserva este set)
-            if (empleado.Activo == null) empleado.Activo = true;
-
-            // >>>>>>> FECHAS (no vienen del form) <<<<<<<
-            // FechaIngreso: tu modelo da error DateTime -> DateOnly?, así que convertimos:
-            empleado.FechaIngreso = DateOnly.FromDateTime(DateTime.Today);
-
-            // FechaRegistro: si es DateTime? (como Clientes)
-            empleado.FechaRegistro ??= DateTime.Now;
-            // Si en tu modelo FechaRegistro es DateOnly?, usa esta en su lugar:
-            // empleado.FechaRegistro ??= DateOnly.FromDateTime(DateTime.Now);
-
-            // Evitar validación de fechas (por si tienen [Required])
-            ModelState.Remove(nameof(Empleado.FechaIngreso));
-            ModelState.Remove(nameof(Empleado.FechaRegistro));
-
-            if (!ModelState.IsValid) return View(empleado);
-
-            _context.Add(empleado);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            if (IsAjax) return PartialView("Create");
+            return View();
         }
 
-        // GET: Empleados/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Nombre,Cedula,Correo,Puesto,Activo")] Empleado empleado)
         {
-            if (id == null) return NotFound();
+            // --- Reglas de negocio (igual estilo que Clientes) ---
+            if (!string.IsNullOrWhiteSpace(empleado.Cedula) &&
+                !Regex.IsMatch(empleado.Cedula, @"^\d+$"))
+            {
+                ModelState.AddModelError(nameof(empleado.Cedula),
+                    "La cédula debe contener solo números.");
+            }
 
-            var empleado = await _context.Empleados.FindAsync(id);
-            if (empleado == null) return NotFound();
+            if (string.IsNullOrWhiteSpace(empleado.Correo) ||
+                !new EmailAddressAttribute().IsValid(empleado.Correo))
+            {
+                ModelState.AddModelError(nameof(empleado.Correo),
+                    "Formato de correo inválido.");
+            }
 
-            // Si usas AJAX para el modal parcial:
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return PartialView("EditPartial", empleado);
+            // Unicidad
+            if (!string.IsNullOrWhiteSpace(empleado.Cedula))
+            {
+                bool cedulaExiste = await _context.Empleados.AnyAsync(e => e.Cedula == empleado.Cedula);
+                if (cedulaExiste)
+                    ModelState.AddModelError(nameof(empleado.Cedula), "Ya existe un empleado con esta cédula.");
+            }
 
-            return View(empleado);
-        }
+            if (!string.IsNullOrWhiteSpace(empleado.Correo))
+            {
+                bool correoExiste = await _context.Empleados.AnyAsync(e => e.Correo == empleado.Correo);
+                if (correoExiste)
+                    ModelState.AddModelError(nameof(empleado.Correo), "Ese correo ya está registrado.");
+            }
 
-        // POST: Empleados/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(
-            int id,
-            // Bind SOLO campos editables (sin fechas)
-            [Bind("EmpleadoId,Nombre,Cedula,Correo,Puesto,Activo")] Empleado form)
-        {
-            if (id != form.EmpleadoId) return NotFound();
-
-            // No validar fechas que NO vienen del form
+            // Campos que NO vienen del form: setear en servidor
+            // (tu modelo usa DateOnly? y DateTime?) 
+            // Quitar validación para que no estorben:
             ModelState.Remove(nameof(Empleado.FechaIngreso));
             ModelState.Remove(nameof(Empleado.FechaRegistro));
 
             if (!ModelState.IsValid)
             {
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return PartialView("EditPartial", form);
+                if (IsAjax) return PartialView("Create", empleado);
+                return View(empleado);
+            }
+
+            // Defaults de servidor
+            empleado.FechaIngreso ??= DateOnly.FromDateTime(DateTime.Today);
+            empleado.FechaRegistro ??= DateTime.Now;
+
+            _context.Empleados.Add(empleado);
+            await _context.SaveChangesAsync();
+
+            if (IsAjax) return Json(new { ok = true, id = empleado.EmpleadoId, nombre = empleado.Nombre });
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ===== EDIT =====
+        [HttpGet]
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+            var empleado = await _context.Empleados.FindAsync(id);
+            if (empleado == null) return NotFound();
+
+            if (IsAjax) return PartialView("Edit", empleado);
+            return View(empleado);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("EmpleadoId,Nombre,Cedula,Correo,Puesto,Activo")] Empleado form)
+        {
+            if (id != form.EmpleadoId) return NotFound();
+
+            // Reglas de negocio (mismo estilo)
+            if (!string.IsNullOrWhiteSpace(form.Cedula) &&
+                !Regex.IsMatch(form.Cedula, @"^\d+$"))
+            {
+                ModelState.AddModelError(nameof(form.Cedula),
+                    "La cédula debe contener solo números.");
+            }
+
+            if (string.IsNullOrWhiteSpace(form.Correo) ||
+                !new EmailAddressAttribute().IsValid(form.Correo))
+            {
+                ModelState.AddModelError(nameof(form.Correo),
+                    "Formato de correo inválido.");
+            }
+
+            // Unicidad excluyendo el propio registro
+            if (!string.IsNullOrWhiteSpace(form.Cedula))
+            {
+                bool cedulaRepetida = await _context.Empleados
+                    .AnyAsync(e => e.EmpleadoId != id && e.Cedula == form.Cedula);
+                if (cedulaRepetida)
+                    ModelState.AddModelError(nameof(form.Cedula), "Ya existe un empleado con esta cédula.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(form.Correo))
+            {
+                bool correoRepetido = await _context.Empleados
+                    .AnyAsync(e => e.EmpleadoId != id && e.Correo == form.Correo);
+                if (correoRepetido)
+                    ModelState.AddModelError(nameof(form.Correo), "Ese correo ya está registrado.");
+            }
+
+            // Quitar validación de campos no bindeados
+            ModelState.Remove(nameof(Empleado.FechaIngreso));
+            ModelState.Remove(nameof(Empleado.FechaRegistro));
+
+            if (!ModelState.IsValid)
+            {
+                if (IsAjax) return PartialView("Edit", form);
                 return View(form);
             }
 
-            var empleadoDb = await _context.Empleados
-                                           .FirstOrDefaultAsync(e => e.EmpleadoId == id);
-            if (empleadoDb == null) return NotFound();
-
-            // Mapear SOLO campos editables — NO tocar fechas
-            empleadoDb.Nombre = form.Nombre;
-            empleadoDb.Cedula = form.Cedula;
-            empleadoDb.Correo = form.Correo;
-            empleadoDb.Puesto = form.Puesto;
-            empleadoDb.Activo = form.Activo;
+            var entity = await _context.Empleados.FirstOrDefaultAsync(e => e.EmpleadoId == id);
+            if (entity == null) return NotFound();
 
             try
             {
+                // Mapear SOLO campos editables (no tocar fechas)
+                entity.Nombre = form.Nombre;
+                entity.Cedula = form.Cedula;
+                entity.Correo = form.Correo;
+                entity.Puesto = form.Puesto;
+                entity.Activo = form.Activo;
+
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!EmpleadoExists(form.EmpleadoId)) return NotFound();
                 throw;
             }
+
+            if (IsAjax) return Json(new { ok = true, id = id });
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: Empleados/Delete/5
+        // ===== DELETE =====
+        [HttpGet]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
 
             var empleado = await _context.Empleados
-                .FirstOrDefaultAsync(m => m.EmpleadoId == id);
+                .FirstOrDefaultAsync(e => e.EmpleadoId == id);
 
             if (empleado == null) return NotFound();
-
-            return View(empleado);
+            return View(empleado); // pensado para modal (Layout = null)
         }
 
-        // POST: Empleados/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var empleado = await _context.Empleados.FindAsync(id);
-            if (empleado != null)
-                _context.Empleados.Remove(empleado);
+            if (id <= 0)
+            {
+                var msg = "Solicitud de eliminación no válida.";
+                if (IsAjax) return Json(new { ok = false, error = msg });
+                TempData["Error"] = msg;
+                return RedirectToAction(nameof(Index));
+            }
 
-            await _context.SaveChangesAsync();
+            // Validación de dependencias mínimas (diagnósticos asignados)
+            var diagCount = await _context.Diagnosticos.CountAsync(d => d.EmpleadoId == id);
+            if (diagCount > 0)
+            {
+                var msg = $"No se puede eliminar el empleado: tiene {diagCount} diagnóstico(s) asociado(s). " +
+                          $"Elimine o reasigne esos registros primero.";
+                if (IsAjax) return Json(new { ok = false, error = msg });
+                TempData["Error"] = msg;
+                return RedirectToAction(nameof(Index));
+            }
+
+            var empleado = await _context.Empleados.FindAsync(id);
+            if (empleado == null)
+            {
+                var msg = "El empleado no existe o ya fue eliminado.";
+                if (IsAjax) return Json(new { ok = false, error = msg });
+                TempData["Error"] = msg;
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                _context.Empleados.Remove(empleado);
+                await _context.SaveChangesAsync();
+                if (!IsAjax) TempData["Success"] = "Empleado eliminado correctamente.";
+            }
+            catch (DbUpdateException)
+            {
+                var msg = "No se puede eliminar el empleado: el registro tiene información asociada.";
+                if (IsAjax) return Json(new { ok = false, error = msg });
+                TempData["Error"] = msg;
+            }
+
+            if (IsAjax) return Json(new { ok = true });
             return RedirectToAction(nameof(Index));
         }
 

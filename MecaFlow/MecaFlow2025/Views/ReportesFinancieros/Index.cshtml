@@ -53,6 +53,77 @@
     .table thead th {
         color: #f8f9fa;
     }
+
+    /* === Fix fuerte para modal oscuro === */
+    #modalReporte .modal-content {
+        background-color: #111827 !important; /* gris oscuro */
+        color: #e5e7eb !important;
+    }
+
+    #modalReporte .modal-header {
+        background-color: #0d6efd !important;
+        color: #ffffff !important;
+    }
+
+    #modalReporte .btn-close {
+        filter: invert(1);
+    }
+
+    #modalReporte label,
+    #modalReporte .form-label,
+    #modalReporte h2,
+    #modalReporte h5,
+    #modalReporte .modal-title,
+    #modalReporte strong {
+        color: #e5e7eb !important;
+    }
+
+    #modalReporte .form-control,
+    #modalReporte textarea,
+    #modalReporte input[type="date"],
+    #modalReporte input[type="number"] {
+        background-color: #0b1220 !important;
+        color: #e5e7eb !important;
+        border-color: #334155 !important;
+    }
+
+        #modalReporte .form-control::placeholder,
+        #modalReporte textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+
+    /* === Parche Details en modal oscuro === */
+    #modalReporte .card {
+        background-color: #0b1220 !important;
+        color: #e5e7eb !important;
+        border: 1px solid #334155 !important;
+    }
+
+        #modalReporte .card .card-body {
+            background-color: transparent !important;
+        }
+
+    #modalReporte dt {
+        color: #cbd5e1 !important; /* etiquetas */
+        font-weight: 600 !important;
+    }
+
+    #modalReporte dd {
+        color: #f1f5f9 !important; /* valores */
+    }
+
+    #modalReporte .text-success {
+        color: #22c55e !important;
+    }
+
+    #modalReporte .text-danger {
+        color: #ef4444 !important;
+    }
+
+    #modalReporte .btn-secondary {
+        color: #e5e7eb !important;
+    }
+
 </style>
 
 <div class="container mt-5 fade-in">
@@ -204,107 +275,69 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    @using System.Text.Json
-    <script>
-        function openModal(url) {
-            const modal = new bootstrap.Modal(document.getElementById('modalReporte'));
-            document.getElementById('modalContent').innerHTML =
-                '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
-            fetch(url)
-                .then(r => r.text())
-                .then(html => {
-                    document.getElementById('modalContent').innerHTML = html;
-                    modal.show();
-                });
+<script>
+    (function () {
+      const modalEl = document.getElementById('modalReporte');
+      const bodyEl  = document.getElementById('modalContent');
+
+      // 1) Delegación de eventos: captura cualquier submit de forms dentro del modal
+      bodyEl.addEventListener('submit', async function (e) {
+        const form = e.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        e.preventDefault();
+
+        try {
+          const fd = new FormData(form);
+          const resp = await fetch(form.action, {
+            method: form.method || 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin' // <-- IMPRESCINDIBLE para que viaje la cookie AntiForgery
+          });
+
+          if (resp.status === 204) {
+            // Guardó bien
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.hide();
+            location.reload();
+            return;
+          }
+
+          if (resp.ok) {
+            // Validaciones: el server devuelve la parcial con errores -> la volvemos a pintar
+            bodyEl.innerHTML = await resp.text();
+            return;
+          }
+
+          bodyEl.innerHTML =
+            `<div class="alert alert-danger">Error ${resp.status} ${resp.statusText}. Revisa Network.</div>`;
+        } catch (err) {
+          console.error(err);
+          bodyEl.innerHTML =
+            `<div class="alert alert-danger">Ocurrió un error al guardar. Revisa la consola.</div>`;
         }
+      });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const ctx = document.getElementById('finChart');
-            if (!ctx) return;
+      // 2) Abrir modal y cargar parcial
+      window.openModal = function (url) {
+        bodyEl.innerHTML =
+          '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>';
 
-            // Labels: período (día/mes/año). Datasets: ingresos, gastos, utilidad
-            const labels = @Html.Raw(JsonSerializer.Serialize(
-            Model.Select(m => m.Periodo).ToList()
-            ));
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-            const ingresos = @Html.Raw(JsonSerializer.Serialize(
-            Model.Select(m => m.TotalIngresos).ToList()
-            ));
-
-            const gastos = @Html.Raw(JsonSerializer.Serialize(
-            Model.Select(m => m.TotalGastos).ToList()
-            ));
-
-            const utilidad = @Html.Raw(JsonSerializer.Serialize(
-            Model.Select(m => m.Utilidad).ToList()
-            ));
-
-            if (labels.length === 0) return;
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Ingresos (₡)',
-                            data: ingresos,
-                            backgroundColor: 'rgba(25, 135, 84, 0.6)',   // verde
-                            borderColor: 'rgba(25, 135, 84, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Gastos (₡)',
-                            data: gastos,
-                            backgroundColor: 'rgba(220, 53, 69, 0.6)',   // rojo
-                            borderColor: 'rgba(220, 53, 69, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Utilidad (₡)',
-                            type: 'line',
-                            data: utilidad,
-                            fill: false,
-                            borderColor: 'rgba(13,110,253,1)',            // azul
-                            borderWidth: 2,
-                            tension: 0.25,
-                            pointRadius: 3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    interaction: { mode: 'index', intersect: false },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                // separadores de miles
-                                callback: function (value) {
-                                    try { return new Intl.NumberFormat('es-CR').format(value); }
-                                    catch { return value; }
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function (ctx) {
-                                    const v = ctx.parsed.y ?? ctx.raw;
-                                    const n = (typeof v === 'number') ? v : parseFloat(v);
-                                    const sign = n < 0 ? '-' : '';
-                                    const abs = Math.abs(n);
-                                    const fmt = new Intl.NumberFormat('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(abs);
-                                    return `${ctx.dataset.label}: ${sign}₡ ${fmt}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        fetch(url, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          credentials: 'same-origin' // <-- también aquí por si hay auth
+        })
+        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`); return r.text(); })
+        .then(html => { bodyEl.innerHTML = html; modal.show(); })
+        .catch(err => {
+          console.error(err);
+          bodyEl.innerHTML =
+            `<div class="alert alert-danger">No se pudo cargar el contenido (${err.message}).</div>`;
+          modal.show();
         });
-    </script>
-}
+      };
+    })();
+</script>
+

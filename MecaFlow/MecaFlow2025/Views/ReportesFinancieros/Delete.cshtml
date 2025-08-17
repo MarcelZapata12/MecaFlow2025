@@ -1,23 +1,32 @@
 ﻿@model MecaFlow2025.Models.ReportesFinanciero
 @{
-    ViewBag.Title = "Eliminar Reporte";
+    ViewData["Title"] = "Eliminar Reporte";
     Layout = null;
+    string ingresos = (Model.TotalIngresos ?? 0m).ToString("N2");
+    string gastos = (Model.TotalGastos ?? 0m).ToString("N2");
+    string obs = string.IsNullOrWhiteSpace(Model.Observaciones) ? "—" : Model.Observaciones!;
 }
 
-<h2>@ViewBag.Title</h2>
+<h1>Eliminar Reporte</h1>
+<hr />
 
-<h5>¿Seguro que deseas eliminar este registro?</h5>
+<dl class="row">
+    <dt class="col-sm-2">Fecha</dt>
+    <dd class="col-sm-10">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
 
-<div class="mb-3">
-    <strong>Fecha:</strong> @Model.Fecha<br />
-    <strong>Ingresos:</strong> @($"{Model.TotalIngresos:N2}")<br />
-    <strong>Gastos:</strong> @($"{Model.TotalGastos:N2}")<br />
-    <strong>Observaciones:</strong> @Model.Observaciones
-</div>
+    <dt class="col-sm-2">Ingresos</dt>
+    <dd class="col-sm-10">₡ @ingresos</dd>
 
-<form asp-action="Delete" method="post">
+    <dt class="col-sm-2">Gastos</dt>
+    <dd class="col-sm-10">₡ @gastos</dd>
+
+    <dt class="col-sm-2">Observaciones</dt>
+    <dd class="col-sm-10">@obs</dd>
+</dl>
+
+<form asp-action="Delete" method="post" class="d-flex gap-2">
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="ReporteId" />
+    <input type="hidden" name="id" value="@Model.ReporteId" />
     <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
 </form>

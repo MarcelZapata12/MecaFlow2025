@@ -13,17 +13,20 @@
     }
 
     @@keyframes gradient {
-        0% {
-            background-position: 0% 50%;
-        }
+        0%
 
-        50% {
-            background-position: 100% 50%;
-        }
+    {
+        background-position: 0% 50%;
+    }
 
-        100% {
-            background-position: 0% 50%;
-        }
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+
     }
 
     .card {
@@ -36,7 +39,7 @@
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
         }
 
     .form-control {
@@ -52,10 +55,21 @@
             box-shadow: none;
         }
 
+    /* Botón de ojo dentro del input-group (dark theme) */
+    .btn-eye {
+        background-color: #2c2c2c;
+        border-color: #444;
+        color: #adb5bd;
+    }
+
+        .btn-eye:hover {
+            color: #fff;
+        }
+
     .btn-success {
         background-color: #28a745;
         border-color: #28a745;
-        transition: all 0.3s ease;
+        transition: all .3s ease;
     }
 
         .btn-success:hover {
@@ -67,7 +81,7 @@
         background-color: #ffc107;
         border-color: #ffc107;
         color: #212529;
-        transition: all 0.3s ease;
+        transition: all .3s ease;
     }
 
         .btn-warning:hover {
@@ -77,30 +91,18 @@
         }
 
     .btn i {
-        transition: transform 0.2s ease;
+        transition: transform .2s ease;
     }
 
     .btn:hover i {
         transform: scale(1.2);
     }
 
-    .toggle-password {
-        cursor: pointer;
-        color: #aaa;
-        position: absolute;
-        right: 15px;
-        top: 38px;
-    }
-
-    .position-relative {
-        position: relative;
-    }
-
     .forgot-password-link {
         color: #ffc107;
         text-decoration: none;
         font-weight: 500;
-        transition: color 0.3s ease;
+        transition: color .3s ease;
     }
 
         .forgot-password-link:hover {
@@ -148,14 +150,21 @@
                             <span asp-validation-for="Correo" class="text-danger"></span>
                         </div>
 
-                        <div class="mb-4 position-relative">
+                        <!-- Contraseña con input-group (icono centrado) -->
+                        <div class="mb-4">
                             <label asp-for="Contrasena" class="form-label fw-bold">
                                 <i class="bi bi-lock-fill me-1"></i>Contraseña
                             </label>
-                            <input asp-for="Contrasena" type="password" class="form-control form-control-lg" id="contrasenaInput" placeholder="Ingrese su contraseña" />
-                            <span class="toggle-password" data-target="#contrasenaInput">
-                                <i class="bi bi-eye"></i>
-                            </span>
+
+                            <div class="input-group input-group-lg">
+                                <input asp-for="Contrasena" id="contrasenaInput" type="password"
+                                       class="form-control" placeholder="Ingrese su contraseña"
+                                       autocomplete="current-password" />
+                                <button type="button" id="btnTogglePwd" class="btn btn-eye" aria-label="Mostrar u ocultar contraseña">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+
                             <span asp-validation-for="Contrasena" class="text-danger"></span>
                         </div>
 
@@ -190,16 +199,15 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const passwordToggle = document.querySelector(".toggle-password");
-            const passwordInput = document.querySelector(passwordToggle.dataset.target);
-
-            passwordToggle.addEventListener("click", function () {
-                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-                passwordInput.setAttribute("type", type);
-                passwordToggle.innerHTML = type === "password"
-                    ? '<i class="bi bi-eye"></i>'
-                    : '<i class="bi bi-eye-slash"></i>';
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('btnTogglePwd');
+            const inp = document.getElementById('contrasenaInput');
+            btn.addEventListener('click', () => {
+                const isPwd = inp.type === 'password';
+                inp.type = isPwd ? 'text' : 'password';
+                const ico = btn.querySelector('i');
+                ico.classList.toggle('bi-eye', !isPwd);
+                ico.classList.toggle('bi-eye-slash', isPwd);
             });
         });
     </script>
