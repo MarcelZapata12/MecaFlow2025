@@ -1,13 +1,13 @@
 ﻿@model MecaFlow2025.Models.Empleado
-
 @{
     ViewData["Title"] = "Detalles del Empleado";
-    Layout = null; // render limpio dentro del modal
+    Layout = null;
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
+    /* === Mismo look & feel que Clientes === */
     body {
         background: linear-gradient(135deg, #141414, #1f1f1f, #141414);
         background-size: 400% 400%;
@@ -15,12 +15,18 @@
         color: #f8f9fa;
     }
 
+    /* No tocamos header/footer del modal externo
+           (queremos que se vea igual que el de Clientes) */
+
     .modal-form-container {
         background-color: rgba(31, 31, 31, 0.95);
         border-radius: 1rem;
         padding: 2rem;
         animation: fadeInUp 0.4s ease-in-out;
         box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        /* Tamaño y centrado como en Clientes */
+        max-width: 420px;
+        margin: 0 auto;
     }
 
     .modal-title {
@@ -46,7 +52,6 @@
         background: #6c757d;
         border: none;
         transition: transform 0.2s ease;
-        border-radius: .5rem;
     }
 
         .btn-secondary:hover {
@@ -94,31 +99,41 @@
     </h4>
 
     <dl class="row dl-horizontal">
-        <dt class="col-sm-3">Nombre</dt>
-        <dd class="col-sm-9">@Model.Nombre</dd>
+        <dt class="col-sm-5">Nombre</dt>
+        <dd class="col-sm-7">@Model.Nombre</dd>
 
-        <dt class="col-sm-3">Cédula</dt>
-        <dd class="col-sm-9">@Model.Cedula</dd>
+        <dt class="col-sm-5">Cédula</dt>
+        <dd class="col-sm-7">@Model.Cedula</dd>
 
-        <dt class="col-sm-3">Correo</dt>
-        <dd class="col-sm-9">@Model.Correo</dd>
+        <dt class="col-sm-5">Correo</dt>
+        <dd class="col-sm-7">@Model.Correo</dd>
 
-        <dt class="col-sm-3">Puesto</dt>
-        <dd class="col-sm-9">@Model.Puesto</dd>
+        <dt class="col-sm-5">Puesto</dt>
+        <dd class="col-sm-7">@Model.Puesto</dd>
 
-        <dt class="col-sm-3">Activo</dt>
-        <dd class="col-sm-9">@(Model.Activo ? "Sí" : "No")</dd>
+        <dt class="col-sm-5">Fecha de Ingreso</dt>
+        <dd class="col-sm-7">
+            @(Model.FechaIngreso.HasValue
+                        ? Model.FechaIngreso.Value.ToString("dd/MM/yyyy")
+                        : "—")
+        </dd>
 
-        <dt class="col-sm-3">Ingreso</dt>
-        <dd class="col-sm-9">@(Model.FechaIngreso?.ToString("dd/MM/yyyy") ?? "—")</dd>
-
-        <dt class="col-sm-3">Registro</dt>
-        <dd class="col-sm-9">@(Model.FechaRegistro?.ToString("dd/MM/yyyy HH:mm") ?? "—")</dd>
+        <dt class="col-sm-5">Estado</dt>
+        <dd class="col-sm-7">
+            @if (Model.Activo)
+            {
+                <span class="badge bg-success">Activo</span>
+            }
+            else
+            {
+                <span class="badge bg-danger">Inactivo</span>
+            }
+        </dd>
     </dl>
 
-    <div class="mt-4 d-flex justify-content-end">
-        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
-            <i class="bi bi-x-lg me-1"></i>Cerrar
+    <div class="d-flex justify-content-end mt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-1"></i> Cerrar
         </button>
     </div>
 </div>
