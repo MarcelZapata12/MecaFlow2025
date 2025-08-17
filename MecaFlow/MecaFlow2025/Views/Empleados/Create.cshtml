@@ -121,15 +121,10 @@
             <label asp-for="Correo" class="form-label fw-bold">Correo</label>
             <input asp-for="Correo"
                    class="form-control"
-                   type="email"
                    required
                    maxlength="100"
-                   autocomplete="email"
-                   placeholder="usuario@dominio.com" />
-            <span asp-validation-for="Correo" class="text-danger"></span>
         </div>
 
-        <!-- Cédula -->
         <div class="mb-3">
             <label asp-for="Cedula" class="form-label fw-bold">Cédula</label>
             <input asp-for="Cedula"
