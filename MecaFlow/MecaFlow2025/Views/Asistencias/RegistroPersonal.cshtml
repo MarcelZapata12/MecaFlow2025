@@ -2,8 +2,7 @@
 
 @{
     ViewData["Title"] = "Registro Personal de Asistencia";
-    var empleados = ViewBag.Empleados as SelectList;
-    var asistenciasHoy = ViewBag.AsistenciasHoy as List<MecaFlow2025.Models.Asistencia>;
+    var yo = ViewBag.EmpleadoActual; // { EmpleadoId, Nombre, Puesto }
 }
 
 <style>
@@ -22,17 +21,17 @@
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
         }
 
     .badge {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 0.5rem;
+        font-size: .8rem;
+        padding: .4rem .8rem;
+        border-radius: .5rem;
     }
 
     .btn-lg {
-        padding: 0.75rem 1.25rem;
+        padding: .75rem 1.25rem;
         font-size: 1.1rem;
     }
 
@@ -54,22 +53,35 @@
                 <i class="fas fa-list"></i> Ver Todos los Registros
             </a>
         </div>
+
         <div class="card-body">
+
+            @* Alertas inline confiables *@
             @if (TempData["Success"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i> @TempData["Success"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <i class="fas fa-check-circle me-1"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
-
             @if (TempData["Error"] != null)
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <i class="fas fa-exclamation-triangle me-1"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
+
+            @* Header con el usuario actual *@
+            <div class="d-flex align-items-center mb-4">
+                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                    @((yo?.Nombre as string)?.Substring(0, 1).ToUpper())
+                </div>
+                <div>
+                    <div class="fw-bold">@yo?.Nombre</div>
+                    <small class="text-muted">@yo?.Puesto</small>
+                </div>
+            </div>
 
             <div class="row mb-4">
                 <div class="col-md-6">
@@ -78,49 +90,26 @@
                             <h5 class="mb-0"><i class="fas fa-sign-in-alt"></i> Registrar Entrada</h5>
                         </div>
                         <div class="card-body">
-                            <form asp-action="RegistrarEntrada" method="post" onsubmit="return confirmarAccion('entrada')">
-                                <div class="mb-3">
-                                    <label for="empleadoEntrada" class="form-label">Seleccionar Empleado:</label>
-                                    <select name="empleadoId" id="empleadoEntrada" class="form-select" required>
-                                        <option value="">-- Selecciona tu nombre --</option>
-                                        @if (empleados != null)
-                                        {
-                                            @foreach (var empleado in empleados)
-                                            {
-                                                <option value="@empleado.Value">@empleado.Text</option>
-                                            }
-                                        }
-                                    </select>
-                                </div>
+                            <form asp-action="RegistrarEntrada" method="post" data-show-loading="true">
+                                @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-success btn-lg w-100">
-                                    <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                                    <i class="fas fa-sign-in-alt"></i> Registrar mi Entrada
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-md-6">
                     <div class="card border-danger">
                         <div class="card-header bg-danger text-white">
                             <h5 class="mb-0"><i class="fas fa-sign-out-alt"></i> Registrar Salida</h5>
                         </div>
                         <div class="card-body">
-                            <form asp-action="RegistrarSalida" method="post" onsubmit="return confirmarAccion('salida')">
-                                <div class="mb-3">
-                                    <label for="empleadoSalida" class="form-label">Seleccionar Empleado:</label>
-                                    <select name="empleadoId" id="empleadoSalida" class="form-select" required>
-                                        <option value="">-- Selecciona tu nombre --</option>
-                                        @if (empleados != null)
-                                        {
-                                            @foreach (var empleado in empleados)
-                                            {
-                                                <option value="@empleado.Value">@empleado.Text</option>
-                                            }
-                                        }
-                                    </select>
-                                </div>
+                            <form asp-action="RegistrarSalida" method="post" data-show-loading="true">
+                                @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-danger btn-lg w-100">
-                                    <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                                    <i class="fas fa-sign-out-alt"></i> Registrar mi Salida
                                 </button>
                             </form>
                         </div>
@@ -128,6 +117,7 @@
                 </div>
             </div>
 
+            @* Asistencias del día (filtradas en el controlador por el empleado actual) *@
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">
@@ -136,6 +126,9 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    @{
+                        var asistenciasHoy = ViewBag.AsistenciasHoy as List<MecaFlow2025.Models.Asistencia>;
+                    }
                     @if (asistenciasHoy != null && asistenciasHoy.Any())
                     {
                         <div class="table-responsive">
@@ -191,21 +184,15 @@
                                             <td>
                                                 @if (asistencia.HoraEntrada.HasValue && asistencia.HoraSalida.HasValue)
                                                 {
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-check"></i> Completo
-                                                    </span>
+                                                    <span class="badge bg-success"><i class="fas fa-check"></i> Completo</span>
                                                 }
                                                 else if (asistencia.HoraEntrada.HasValue)
                                                 {
-                                                    <span class="badge bg-warning">
-                                                        <i class="fas fa-clock"></i> En Trabajo
-                                                    </span>
+                                                    <span class="badge bg-warning"><i class="fas fa-clock"></i> En Trabajo</span>
                                                 }
                                                 else
                                                 {
-                                                    <span class="badge bg-secondary">
-                                                        <i class="fas fa-question"></i> Sin Iniciar
-                                                    </span>
+                                                    <span class="badge bg-secondary"><i class="fas fa-question"></i> Sin Iniciar</span>
                                                 }
                                             </td>
                                             <td>
@@ -214,9 +201,7 @@
                                                     var horasTrabajadas = asistencia.HoraSalida.Value.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
                                                     var horas = (int)horasTrabajadas.TotalHours;
                                                     var minutos = horasTrabajadas.Minutes;
-                                                    <span class="badge bg-info">
-                                                        <i class="fas fa-hourglass-half"></i> @($"{horas}h {minutos}m")
-                                                    </span>
+                                                    <span class="badge bg-info"><i class="fas fa-hourglass-half"></i> @($"{horas}h {minutos}m")</span>
                                                 }
                                                 else if (asistencia.HoraEntrada.HasValue)
                                                 {
@@ -224,9 +209,7 @@
                                                     var tiempoTranscurrido = tiempoActual.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
                                                     var horasTranscurridas = (int)tiempoTranscurrido.TotalHours;
                                                     var minutosTranscurridos = tiempoTranscurrido.Minutes;
-                                                    <span class="badge bg-warning">
-                                                        <i class="fas fa-clock"></i> @($"{horasTranscurridas}h {minutosTranscurridos}m")
-                                                    </span>
+                                                    <span class="badge bg-warning"><i class="fas fa-clock"></i> @($"{horasTranscurridas}h {minutosTranscurridos}m")</span>
                                                 }
                                                 else
                                                 {
@@ -253,36 +236,17 @@
 </div>
 
 <script>
-    function confirmarAccion(tipo) {
-        var empleadoSelect = document.getElementById(tipo === 'entrada' ? 'empleadoEntrada' : 'empleadoSalida');
-        var nombreEmpleado = empleadoSelect.options[empleadoSelect.selectedIndex].text;
-
-        if (empleadoSelect.value === '') {
-            alert('Por favor selecciona un empleado');
-            return false;
-        }
-
-        var mensaje = tipo === 'entrada'
-            ? `¿Confirmas que deseas registrar la ENTRADA de ${nombreEmpleado}?`
-            : `¿Confirmas que deseas registrar la SALIDA de ${nombreEmpleado}?`;
-
-        return confirm(mensaje);
-    }
-
-    function actualizarHora() {
-        var ahora = new Date();
-        var horaActual = ahora.toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+    // Spinner y bloqueo al enviar (para feedback inmediato, sin notificaciones)
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('form[data-show-loading="true"]').forEach(form => {
+            form.addEventListener('submit', function () {
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.dataset.original = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Registrando...';
+                }
+            });
         });
-
-        var elementoHora = document.getElementById('hora-actual');
-        if (elementoHora) {
-            elementoHora.textContent = horaActual;
-        }
-    }
-
-    setInterval(actualizarHora, 1000);
-    document.addEventListener('DOMContentLoaded', actualizarHora);
+    });
 </script>

@@ -133,7 +133,6 @@
 
 <div class="container py-4">
 
-    <!-- 🔔 Alertas de servidor -->
     @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -149,7 +148,6 @@
         </div>
     }
 
-    <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-white">
             <i class="bi bi-people-fill me-2"></i>Empleados
@@ -162,7 +160,6 @@
         </div>
     </div>
 
-    <!-- Grid de tarjetas -->
     <div id="cardsContainer" class="empleado-grid">
         @if (Model != null && Model.Any())
         {
@@ -170,7 +167,6 @@
             {
                 var ingreso = e.FechaIngreso.HasValue ? e.FechaIngreso.Value.ToString("dd/MM/yyyy") : "—";
                 var registro = e.FechaRegistro.HasValue ? e.FechaRegistro.Value.ToString("dd/MM/yyyy") : "—";
-
                 <div class="empleado-card card p-3"
                      data-nombre="@((e.Nombre ?? "").ToLower())"
                      data-correo="@((e.Correo ?? "").ToLower())">
@@ -216,7 +212,6 @@
     </div>
 </div>
 
-<!-- Toast de éxito -->
 <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
         <div class="toast-body">¡Acción realizada con éxito!</div>
@@ -224,7 +219,6 @@
     </div>
 </div>
 
-<!-- Modales comunes -->
 <div class="modal fade" id="modalCrud" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -237,9 +231,6 @@
 @section Scripts {
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
-        /* ===========================
-           Búsqueda rápida
-           =========================== */
         document.getElementById('txtBuscar').addEventListener('input', function () {
             const q = this.value.toLowerCase();
             document.querySelectorAll('#cardsContainer .empleado-card').forEach(function (card) {
@@ -248,14 +239,10 @@
             });
         });
 
-        /* ===========================
-           MODALES (jQuery + AJAX)
-           =========================== */
         const modalEl = document.getElementById('modalCrud');
         const modal = new bootstrap.Modal(modalEl);
         const modalBody = document.getElementById('modalCrudBody');
         const modalTitle = document.getElementById('modalCrudTitle');
-
         function openModal(url, title){
             modalTitle.innerText = title;
             modalBody.innerHTML = "<p class='text-center'>Cargando…</p>";
@@ -294,7 +281,11 @@
                             modal.hide();
                             location.reload();
                         } else if (resp && resp.error) {
-                            modalBody.prepend(`<div class="alert alert-danger ajax-alert">${resp.error}</div>`);
+                            modal.hide();
+                            setTimeout(() => {
+                                const alert = `<div class="alert alert-danger alert-dismissible fade show" role="alert"><i class="bi bi-exclamation-triangle-fill me-2"></i>${resp.error}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                                document.querySelector('.container.py-4').insertAdjacentHTML('afterbegin', alert);
+                            }, 300);
                         }
                     } else {
                         const html = await res.text();
@@ -320,20 +311,15 @@
                 openModal(target.dataset.url, title);
             }
         });
-
-        /* ===========================
-           TOAST
-           =========================== */
         function showSuccessToast() {
             new bootstrap.Toast(document.getElementById('toastSuccess')).show();
         }
 
-        // Mostrar toast si hay Success en TempData
         @{
-                    if (TempData["Success"] is string)
-                    {
-                                <text>showSuccessToast();</text>
-                    }
+                            if (TempData["Success"] is string)
+                            {
+                                                <text>showSuccessToast();</text>
+                            }
         }
     </script>
 }
