@@ -1,20 +1,37 @@
 ﻿@model IEnumerable<MecaFlow2025.Models.TareasVehiculo>
 
 <style>
-    /* Opcional: si ya lo pones en site.css, quita este <style> */
     .tareas-table thead th {
         position: sticky;
         top: 0;
         z-index: 1;
+        background-color: #343a40;
+        color: #f8f9fa;
+        border-color: #444;
     }
 
     .tareas-table td, .tareas-table th {
         white-space: nowrap;
+        border-color: #444;
+        color: #f8f9fa;
     }
 
     .tareas-table .desc {
         white-space: normal;
     }
+
+    .tareas-table {
+        background-color: #2a2a2a;
+        color: #f8f9fa;
+    }
+
+        .tareas-table tbody tr {
+            background-color: #2a2a2a;
+        }
+
+            .tareas-table tbody tr:hover {
+                background-color: #333;
+            }
 </style>
 
 @if (Model == null || !Model.Any())
@@ -25,7 +42,7 @@ else
 {
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 tareas-table">
-            <thead class="table-light">
+            <thead class="table-dark">
                 <tr>
                     <th class="text-center" style="width:70px">#</th>
                     <th style="width:130px">Fecha</th>

@@ -11,8 +11,23 @@
 <style>
     body {
         background: linear-gradient(135deg, #141e30, #243b55);
+        animation: gradientBG 15s ease infinite;
         background-size: 400% 400%;
         color: #fff;
+    }
+
+    @@keyframes gradientBG {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
     }
 
     .details-card {
@@ -20,6 +35,19 @@
         padding: 2rem;
         border-radius: 1rem;
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        animation: fadeInUp 0.6s ease-in-out;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .details-label {
@@ -30,6 +58,44 @@
     .btn-group a {
         min-width: 100px;
     }
+
+    /* Estilos para la tabla de tareas */
+    .tareas-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #343a40;
+        color: #f8f9fa;
+        border-color: #444;
+    }
+
+    .tareas-table td, .tareas-table th {
+        white-space: nowrap;
+        border-color: #444;
+        color: #f8f9fa;
+    }
+
+    .tareas-table .desc {
+        white-space: normal;
+    }
+
+    .tareas-table {
+        background-color: #2a2a2a;
+        color: #f8f9fa;
+    }
+
+        .tareas-table tbody tr {
+            background-color: #2a2a2a;
+        }
+
+            .tareas-table tbody tr:hover {
+                background-color: #333;
+            }
+
+    .card {
+        background-color: #2a2a2a;
+        border-color: #444;
+    }
 </style>
 
 <div class="container py-5">
@@ -39,17 +105,21 @@
         <dl class="row">
             <dt class="col-sm-3 details-label">Cliente</dt>
             <dd class="col-sm-9">@Model.Cliente?.Nombre</dd>
+
             <dt class="col-sm-3 details-label">Vehículo</dt>
-            <dd class="col-sm-9">@(Model.Vehiculo?.Placa + (Model.Cliente != null ? $" — {Model.Cliente.Nombre}" : ""))</dd>
+            <dd class="col-sm-9">@Model.Vehiculo?.Placa</dd>
+
             <dt class="col-sm-3 details-label">Fecha</dt>
             <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+
             <dt class="col-sm-3 details-label">Monto Total</dt>
             <dd class="col-sm-9">@montoCR</dd>
+
             <dt class="col-sm-3 details-label">Método de pago</dt>
-            <dd class="col-sm-9">@Model.Metodo</dd>
+            <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Metodo) ? "-" : Model.Metodo)</dd>
         </dl>
 
-        <div class="col-12">
+        <div class="col-12 mt-4">
             <h5 class="mt-3">Tareas realizadas al vehículo</h5>
             <div class="card shadow-sm">
                 @{
@@ -67,9 +137,6 @@
         </div>
 
         <div class="btn-group mt-4">
-            <a asp-action="Edit" asp-route-id="@Model.FacturaId" class="btn btn-warning">
-                <i class="bi bi-pencil-square me-1"></i>Editar
-            </a>
             <a asp-action="Index" class="btn btn-outline-light ms-2">
                 <i class="bi bi-arrow-left me-1"></i>Volver
             </a>

@@ -11,8 +11,63 @@
     body {
         background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
         color: #f8f9fa;
+        animation: gradient 15s ease infinite;
         background-size: 400% 400%;
-        background-position: 0% 50%;
+    }
+
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13,110,253,.4);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(13,110,253,0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13,110,253,0);
+        }
     }
 
     .factura-card {
@@ -23,6 +78,7 @@
         transition: transform .3s ease, box-shadow .3s ease;
         margin-bottom: 1rem;
         position: relative;
+        animation: fadeInUp .5s ease-in-out;
     }
 
         .factura-card:hover {
@@ -75,6 +131,11 @@
     .modal-content {
         background-color: #1f1f1f;
         color: white;
+        animation: fadeIn .3s ease-in-out;
+    }
+
+    .btn-pulse {
+        animation: pulse 2s infinite;
     }
 </style>
 
@@ -87,8 +148,7 @@
             <input id="facturaSearch" type="search"
                    class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
                    placeholder="Buscar por cliente, vehículo o método de pago…" />
-
-            <a href="#" class="btn btn-primary" onclick="loadFacturaCreate()">
+            <a href="#" class="btn btn-primary btn-pulse" onclick="loadFacturaCreate()">
                 <i class="bi bi-plus-circle me-1"></i>Nueva Factura
             </a>
         </div>
@@ -194,9 +254,9 @@
 
 @section Scripts {
     <script>
-        console.log("Scripts cargados"); // Para debug
+        console.log("Scripts cargados");
 
-        // Búsqueda client-side
+        // =================== BÚSQUEDA ===================
         document.getElementById('facturaSearch').addEventListener('input', function () {
             const q = this.value.toLowerCase();
             document.querySelectorAll('#facturasGrid .factura-card').forEach(function (card) {
@@ -205,95 +265,186 @@
             });
         });
 
-        // Crear - SIMPLIFICADO
+        // =================== CREAR ===================
         function loadFacturaCreate() {
-            console.log("loadFacturaCreate llamado"); // Para debug
-
             const modal = new bootstrap.Modal(document.getElementById('facturaCreate'));
-            const body = document.getElementById('facturaCreateBody');
+            const body  = document.getElementById('facturaCreateBody');
 
             body.innerHTML = "<p class='text-center'>Cargando…</p>";
             modal.show();
 
-            // Petición simple sin headers complicados
-            fetch('/Facturas/Create')
-                .then(response => {
-                    console.log("Respuesta recibida:", response.status);
-                    return response.text();
-                })
-                .then(html => {
-                    console.log("HTML recibido, longitud:", html.length);
-                    body.innerHTML = html;
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    body.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario</div>';
-                });
-        }
-
-        // Editar - SIMPLIFICADO
-        function loadFacturaEdit(id) {
-            console.log("loadFacturaEdit llamado con ID:", id);
-
-            const modal = new bootstrap.Modal(document.getElementById('facturaEdit'));
-            const body = document.getElementById('facturaEditBody');
-
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
-            modal.show();
-
-            fetch('/Facturas/Edit/' + id)
+            fetch('/Facturas/Create', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
+                .then(html => { body.innerHTML = html; initFacturaCreateEvents(); })
                 .catch(() => { body.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario</div>'; });
         }
 
-        // Detalles - SIMPLIFICADO
-        function openFacturaDetails(id) {
-            console.log("openFacturaDetails llamado con ID:", id);
+        function initFacturaCreateEvents() {
+            const vehiculoSelect  = document.querySelector('#facturaCreateBody #vehiculoSelect');
+            const tareasContainer = document.querySelector('#facturaCreateBody #tareasContainer');
 
-            const modalId = 'facturaDetails-' + id;
-            const bodyId = 'facturaDetailsBody-' + id;
-            const modal = new bootstrap.Modal(document.getElementById(modalId));
-            const body = document.getElementById(bodyId);
+            if (!vehiculoSelect || !tareasContainer) return;
+
+            vehiculoSelect.addEventListener('change', async function () {
+                const vehiculoId = this.value;
+                if (!vehiculoId) {
+                    tareasContainer.innerHTML = '<div class="p-3 text-muted">Seleccione un vehículo para cargar sus tareas…</div>';
+                    return;
+                }
+                try {
+                    tareasContainer.innerHTML = '<div class="p-3 text-muted">Cargando tareas…</div>';
+                    const resp = await fetch(`/Facturas/TareasPorVehiculo?vehiculoId=${vehiculoId}`);
+                    tareasContainer.innerHTML = resp.ok ? await resp.text() : '<div class="p-3 text-danger">Error al cargar las tareas</div>';
+                } catch {
+                    tareasContainer.innerHTML = '<div class="p-3 text-danger">Error al cargar las tareas</div>';
+                }
+            });
+
+            if (vehiculoSelect.value) vehiculoSelect.dispatchEvent(new Event('change'));
+        }
+
+        // =================== EDITAR ===================
+        function loadFacturaEdit(id) {
+            const modal = new bootstrap.Modal(document.getElementById('facturaEdit'));
+            const body  = document.getElementById('facturaEditBody');
 
             body.innerHTML = "<p class='text-center'>Cargando…</p>";
             modal.show();
 
-            fetch('/Facturas/Details/' + id)
+            fetch('/Facturas/Edit/' + id, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.text())
+                .then(html => {
+                    body.innerHTML = html;
+                    initFacturaEditEvents();   // 👈 ENGANCHE PARA CARGAR TAREAS EN EDITAR
+                })
+                .catch(() => { body.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario</div>'; });
+        }
+
+        function initFacturaEditEvents() {
+            const root            = document.querySelector('#facturaEditBody');
+            const vehiculoSelect  = root?.querySelector('#vehiculoSelect');
+            const tareasContainer = root?.querySelector('#tareasContainer');
+            const facturaId       = root?.querySelector('input[name="FacturaId"]')?.value;
+
+            if (!vehiculoSelect || !tareasContainer) return;
+
+            async function loadTareas() {
+                const vehiculoId = vehiculoSelect.value;
+                if (!vehiculoId) {
+                    tareasContainer.innerHTML = '<div class="p-3 text-muted">Seleccione un vehículo para cargar sus tareas…</div>';
+                    return;
+                }
+                tareasContainer.innerHTML = '<div class="p-3 text-muted">Cargando tareas…</div>';
+
+                // Si tu endpoint acepta facturaId, lo enviamos para preseleccionar tareas de la factura
+                const url = facturaId
+                    ? `/Facturas/TareasPorVehiculo?vehiculoId=${vehiculoId}&facturaId=${facturaId}`
+                    : `/Facturas/TareasPorVehiculo?vehiculoId=${vehiculoId}`;
+
+                try {
+                    const resp = await fetch(url);
+                    tareasContainer.innerHTML = resp.ok ? await resp.text() : '<div class="p-3 text-danger">Error al cargar las tareas</div>';
+                } catch {
+                    tareasContainer.innerHTML = '<div class="p-3 text-danger">Error al cargar las tareas</div>';
+                }
+            }
+
+            vehiculoSelect.addEventListener('change', loadTareas);
+            loadTareas(); // 👈 carga inicial con el vehículo ya seleccionado
+        }
+
+        // =================== DETALLES ===================
+        function openFacturaDetails(id) {
+            const modalId = 'facturaDetails-' + id;
+            const bodyId  = 'facturaDetailsBody-' + id;
+            const modal   = new bootstrap.Modal(document.getElementById(modalId));
+            const body    = document.getElementById(bodyId);
+
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch('/Facturas/Details/' + id, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.text())
                 .then(html => { body.innerHTML = html; })
                 .catch(() => { body.innerHTML = '<div class="alert alert-danger">Error al cargar detalles</div>'; });
         }
 
-        // Eliminar - SIMPLIFICADO
+        // =================== ELIMINAR ===================
         function confirmFacturaDelete(id) {
-            console.log("confirmFacturaDelete llamado con ID:", id);
-
             const modal = new bootstrap.Modal(document.getElementById('facturaDelete'));
+            const body  = document.querySelector('#facturaDelete .modal-body');
+
+            const oldAlert = body.querySelector('.alert'); if (oldAlert) oldAlert.remove();
             document.getElementById('facturaDeleteId').value = id;
             document.getElementById('facturaDeleteForm').action = '/Facturas/Delete/' + id;
             modal.show();
         }
 
         function submitFacturaDelete() {
-            console.log("submitFacturaDelete llamado");
-            document.getElementById('facturaDeleteForm').submit();
+            const form = document.getElementById('facturaDeleteForm');
+            const body = document.querySelector('#facturaDelete .modal-body');
+
+            fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('facturaDelete'))?.hide();
+                        showSuccessToast();
+                        location.reload();
+                    } else {
+                        const old = body.querySelector('.alert'); if (old) old.remove();
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-warning';
+                        alert.textContent = data.message || 'No se pudo eliminar la factura.';
+                        body.prepend(alert);
+                    }
+                })
+                .catch(() => {
+                    const old = body.querySelector('.alert'); if (old) old.remove();
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-danger';
+                    alert.textContent = 'Ocurrió un error al intentar eliminar.';
+                    body.prepend(alert);
+                });
         }
 
-        // Toast de éxito
+        // =================== TOAST ===================
         function showSuccessToast() {
             new bootstrap.Toast(document.getElementById('toastSuccess')).show();
         }
 
-        // Test del botón (puedes eliminar esto después)
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM cargado");
-            const btn = document.querySelector('a[onclick="loadFacturaCreate()"]');
-            if (btn) {
-                console.log("Botón Nueva Factura encontrado");
-            } else {
-                console.log("Botón Nueva Factura NO encontrado");
-            }
+        // =================== SUBMIT CREATE (AJAX) ===================
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            const esCreateEnModal = form.closest('#facturaCreateBody') && form.action.includes('/Facturas/Create');
+            if (!esCreateEnModal) return;
+
+            e.preventDefault();
+            const body = document.getElementById('facturaCreateBody');
+
+            fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(async (r) => {
+                    const ct = r.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        const data = await r.json();
+                        if (data.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('facturaCreate'))?.hide();
+                            showSuccessToast();
+                            location.reload();
+                            return;
+                        }
+                    }
+                    const html = await r.text();
+                    body.innerHTML = html;
+                    initFacturaCreateEvents();
+                })
+                .catch(() => { body.innerHTML = '<div class="alert alert-danger">Error al guardar. Intenta de nuevo.</div>'; });
+        });
+
+        // DEBUG botón
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.querySelector('a[onclick="loadFacturaCreate()"], button[onclick="loadFacturaCreate()"]');
+            console.log(btn ? "Botón Nueva Factura encontrado" : "Botón Nueva Factura NO encontrado");
         });
     </script>
 }
