@@ -1,0 +1,51 @@
+﻿@model MecaFlow2025.Models.PerfilViewModel
+@{
+    ViewData["Title"] = "Perfil";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow border-0" style="background-color:#1f1f1f;color:#f8f9fa;">
+                <div class="card-header d-flex justify-content-between align-items-center"
+                     style="background:linear-gradient(to right,#003973,#005AA7);border-bottom:1px solid #0d6efd;">
+                    <h4 class="mb-0"><i class="bi bi-person-circle me-2"></i>Mi Perfil</h4>
+                    <span class="badge bg-secondary">@Model.Rol</span>
+                </div>
+
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Nombre</dt>
+                        <dd class="col-sm-9">@Model.Nombre</dd>
+
+                        <dt class="col-sm-3">Correo</dt>
+                        <dd class="col-sm-9">@Model.Correo</dd>
+
+                        @if (Model.Rol == "Cliente")
+                        {
+                            <dt class="col-sm-3">Teléfono</dt>
+                            <dd class="col-sm-9">@(!string.IsNullOrWhiteSpace(Model.Telefono) ? Model.Telefono : "-")</dd>
+
+                            <dt class="col-sm-3">Registro</dt>
+                            <dd class="col-sm-9">@((Model.FechaRegistro?.ToString("dd/MM/yyyy")) ?? "-")</dd>
+                        }
+                        else
+                        {
+                            <dt class="col-sm-3">Cédula</dt>
+                            <dd class="col-sm-9">@Model.Cedula</dd>
+
+                            <dt class="col-sm-3">Puesto</dt>
+                            <dd class="col-sm-9">@Model.Puesto</dd>
+
+                            <dt class="col-sm-3">Estado</dt>
+                            <dd class="col-sm-9">@(Model.Activo == true ? "Activo" : "Inactivo")</dd>
+                        }
+
+                        <dt class="col-sm-3">Usuario desde</dt>
+                        <dd class="col-sm-9">@((Model.FechaCreacion?.ToString("dd/MM/yyyy")) ?? "-")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

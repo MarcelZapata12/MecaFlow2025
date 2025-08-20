@@ -25,9 +25,10 @@ namespace MecaFlow2025.Middleware
             var userId = context.Session.GetString("UserId");
             var userRole = context.Session.GetString("UserRole");
 
-            // 1) Rutas públicas y estáticos (SIN /home)
+            // 1) Rutas públicas y estáticos
             if (path == "/" ||
                 path.StartsWith("/auth") ||
+                path.StartsWith("/home") ||
                 path.StartsWith("/acercanosotros") ||
                 path.StartsWith("/css/") ||
                 path.StartsWith("/js/") ||
@@ -72,14 +73,18 @@ namespace MecaFlow2025.Middleware
                 return path.Contains("/asistencias") ||
                        path.Contains("/diagnosticos") ||
                        path.Contains("/vehiculos") ||
-                       path.Contains("/pagos");
+                       path.Contains("/pagos") ||
+                       path.Contains("/facturas") ||  // ← AGREGADO PARA EMPLEADOS
+                       path.Contains("/home");
             }
 
-            // Cliente
+            // Cliente  
             if (userRole == "Cliente")
             {
                 return path.Contains("/diagnosticos") ||
-                       path.Contains("/vehiculos");
+                       path.Contains("/vehiculos") ||
+                       path.Contains("/facturas") ||  // ← AGREGADO PARA CLIENTES
+                       path.Contains("/home");
             }
 
             return false;

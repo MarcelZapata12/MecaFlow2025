@@ -1,0 +1,65 @@
+﻿@model MecaFlow2025.Models.Diagnostico
+@{
+    Layout = null;
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary mb-3">
+            <div class="card-header bg-primary text-white">
+                <i class="bi bi-info-circle me-2"></i>Información General
+            </div>
+            <div class="card-body">
+                <p><strong><i class="bi bi-hash me-2"></i>ID:</strong> @Model.DiagnosticoId</p>
+                <p><strong><i class="bi bi-calendar3 me-2"></i>Fecha:</strong> @Model.Fecha.ToString("dd/MM/yyyy")</p>
+                <p><strong><i class="bi bi-person-gear me-2"></i>Empleado:</strong> @Model.Empleado?.Nombre</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-dark border-secondary mb-3">
+            <div class="card-header bg-info text-white">
+                <i class="bi bi-car-front me-2"></i>Información del Vehículo
+            </div>
+            <div class="card-body">
+                <p><strong><i class="bi bi-upc-scan me-2"></i>Placa:</strong> @Model.Vehiculo?.Placa</p>
+                <p><strong><i class="bi bi-building me-2"></i>Marca:</strong> @Model.Vehiculo?.Marca?.Nombre</p>
+                <p><strong><i class="bi bi-car-front-fill me-2"></i>Modelo:</strong> @Model.Vehiculo?.Modelo?.Nombre</p>
+                @if (Model.Vehiculo?.Anio.HasValue == true)
+                {
+                    <p><strong><i class="bi bi-calendar-date me-2"></i>Año:</strong> @Model.Vehiculo.Anio</p>
+                }
+                <p><strong><i class="bi bi-person-fill me-2"></i>Cliente:</strong> @Model.Vehiculo?.Cliente?.Nombre</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card bg-dark border-secondary">
+    <div class="card-header bg-warning text-dark">
+        <i class="bi bi-chat-square-text me-2"></i>Detalle del Diagnóstico
+    </div>
+    <div class="card-body">
+        <div class="alert alert-light" role="alert">
+            @Model.Detalle
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        color: white;
+    }
+
+    .card-body p {
+        margin-bottom: 0.5rem;
+    }
+
+    .alert-light {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        color: #212529;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>

@@ -1,0 +1,26 @@
+﻿@model MecaFlow2025.Models.Vehiculo
+@{
+    ViewData["Title"] = "Eliminar Vehículo";
+    Layout = null;
+}
+
+<h1>Eliminar Vehículo</h1>
+<hr />
+
+<dl class="row">
+    <dt class="col-sm-2">Placa</dt>
+    <dd class="col-sm-10">@Model.Placa</dd>
+    <dt class="col-sm-2">Marca</dt>
+    <dd class="col-sm-10">@Model.Marca.Nombre</dd>
+    <dt class="col-sm-2">Modelo</dt>
+    <dd class="col-sm-10">@Model.Modelo?.Nombre</dd>
+    <dt class="col-sm-2">Cliente</dt>
+    <dd class="col-sm-10">@Model.Cliente.Nombre</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="VehiculoId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

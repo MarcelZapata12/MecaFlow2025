@@ -20,11 +20,21 @@ namespace MecaFlow2025.Controllers
         // GET: Vehiculos
         public async Task<IActionResult> Index(string filtroPlaca)
         {
-            var lista = await _context.Vehiculos
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+
+            IQueryable<Vehiculo> query = _context.Vehiculos
                 .Include(v => v.Cliente)
                 .Include(v => v.Marca)
-                .Include(v => v.Modelo)
-                .ToListAsync();
+                .Include(v => v.Modelo);
+
+            // Si es cliente, solo mostrar sus vehículos
+            if (userRole == "Cliente")
+            {
+                query = query.Where(v => v.Cliente.Correo == userEmail);
+            }
+
+            var lista = await query.ToListAsync();
 
             if (!string.IsNullOrWhiteSpace(filtroPlaca))
             {
@@ -34,6 +44,7 @@ namespace MecaFlow2025.Controllers
             }
 
             ViewBag.FiltroPlaca = filtroPlaca;
+            ViewBag.UserRole = userRole; // Pasar el rol a la vista
             return View(lista);
         }
 
@@ -42,11 +53,22 @@ namespace MecaFlow2025.Controllers
         {
             if (id == null) return NotFound();
 
-            var veh = await _context.Vehiculos
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+
+            var vehiculoQuery = _context.Vehiculos
                 .Include(v => v.Cliente)
                 .Include(v => v.Marca)
                 .Include(v => v.Modelo)
-                .FirstOrDefaultAsync(v => v.VehiculoId == id);
+                .Where(v => v.VehiculoId == id);
+
+            // Si es cliente, verificar que el vehículo le pertenezca
+            if (userRole == "Cliente")
+            {
+                vehiculoQuery = vehiculoQuery.Where(v => v.Cliente.Correo == userEmail);
+            }
+
+            var veh = await vehiculoQuery.FirstOrDefaultAsync();
 
             if (veh == null) return NotFound();
             return View(veh);
@@ -73,6 +95,7 @@ namespace MecaFlow2025.Controllers
 
         // POST: Vehiculos/Create
         [HttpPost, ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Create(
             [Bind("Placa,Anio,ClienteId,MarcaId,ModeloId")] Vehiculo vehiculo)
         {
@@ -114,6 +137,7 @@ namespace MecaFlow2025.Controllers
         }
 
         // GET: Vehiculos/Edit/5
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -148,6 +172,7 @@ namespace MecaFlow2025.Controllers
 
         // POST: Vehiculos/Edit/5
         [HttpPost, ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Edit(int id,
             [Bind("VehiculoId,Placa,Anio,ClienteId,MarcaId,ModeloId")] Vehiculo vehiculo)
         {
@@ -188,6 +213,7 @@ namespace MecaFlow2025.Controllers
         }
 
         // GET: Vehiculos/Delete/5
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -204,6 +230,7 @@ namespace MecaFlow2025.Controllers
 
         // POST: Vehiculos/Delete/5
         [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var veh = await _context.Vehiculos.FirstOrDefaultAsync(v => v.VehiculoId == id);
@@ -254,6 +281,7 @@ namespace MecaFlow2025.Controllers
         // ========= NUEVO: Marca -> Modelo (JSON) =========
         // GET: Vehiculos/GetModelosPorMarca?marcaId=123
         [HttpGet]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> GetModelosPorMarca(int marcaId)
         {
             if (marcaId <= 0)
@@ -270,6 +298,6 @@ namespace MecaFlow2025.Controllers
                 .ToListAsync();
 
             return Ok(modelos); // 200 JSON
-        }
+        }
     }
 }

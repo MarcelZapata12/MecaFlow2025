@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MecaFlow2025.Controllers
 {
-    [AuthorizeRole("Administrador", "Empleado")]
+    [AuthorizeRole("Administrador", "Empleado", "Cliente")]
     public class DiagnosticosController : Controller
     {
         private readonly MecaFlowContext _context;
@@ -25,11 +25,20 @@ namespace MecaFlow2025.Controllers
         // GET: Diagnosticos
         public async Task<IActionResult> Index(string search, string sort, string dir)
         {
-            var diagnosticos = _context.Diagnosticos
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+
+            IQueryable<Diagnostico> diagnosticos = _context.Diagnosticos
                 .Include(d => d.Vehiculo).ThenInclude(v => v.Marca)
                 .Include(d => d.Vehiculo).ThenInclude(v => v.Modelo)
-                .Include(d => d.Empleado)
-                .AsQueryable();
+                .Include(d => d.Vehiculo).ThenInclude(v => v.Cliente)
+                .Include(d => d.Empleado);
+
+            // Si es cliente, filtrar solo sus diagnósticos
+            if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
+            {
+                diagnosticos = diagnosticos.Where(d => d.Vehiculo.Cliente.Correo == userEmail);
+            }
 
             // Búsqueda
             if (!string.IsNullOrEmpty(search))
@@ -56,10 +65,48 @@ namespace MecaFlow2025.Controllers
                 _ => diagnosticos.OrderByDescending(d => d.Fecha),
             };
 
+            // Pasar el rol a la vista
+            ViewBag.UserRole = userRole;
+
             return View(await diagnosticos.ToListAsync());
         }
 
-        // GET: Diagnosticos/Create
+        // GET: Diagnosticos/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+
+            var query = _context.Diagnosticos
+                .Include(d => d.Vehiculo).ThenInclude(v => v.Marca)
+                .Include(d => d.Vehiculo).ThenInclude(v => v.Modelo)
+                .Include(d => d.Vehiculo).ThenInclude(v => v.Cliente)
+                .Include(d => d.Empleado)
+                .Where(d => d.DiagnosticoId == id);
+
+            // Si es cliente, verificar que el diagnóstico sea de su vehículo
+            if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
+            {
+                query = query.Where(d => d.Vehiculo.Cliente.Correo == userEmail);
+            }
+
+            var diagnostico = await query.FirstOrDefaultAsync();
+
+            if (diagnostico == null) return NotFound();
+
+            // Si es una llamada AJAX, devolver vista parcial
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView(diagnostico);
+            }
+
+            return View(diagnostico);
+        }
+
+        // GET: Diagnosticos/Create - Solo para Admin y Empleados
+        [AuthorizeRole("Administrador", "Empleado")]
         public IActionResult Create()
         {
             ViewBag.Vehiculos = new SelectList(_context.Vehiculos
@@ -76,8 +123,9 @@ namespace MecaFlow2025.Controllers
             return View();
         }
 
-        // POST: Diagnosticos/Create
+        // POST: Diagnosticos/Create - Solo para Admin y Empleados
         [HttpPost, ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Create([Bind("VehiculoId,Fecha,Detalle,EmpleadoId")] Diagnostico model)
         {
             if (ModelState.IsValid)
@@ -101,7 +149,8 @@ namespace MecaFlow2025.Controllers
             return View(model);
         }
 
-        // GET: Diagnosticos/Edit/5
+        // GET: Diagnosticos/Edit/5 - Solo para Admin y Empleados
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -123,8 +172,9 @@ namespace MecaFlow2025.Controllers
             return View(diag);
         }
 
-        // POST: Diagnosticos/Edit/5
+        // POST: Diagnosticos/Edit/5 - Solo para Admin y Empleados
         [HttpPost, ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Edit(int id, [Bind("DiagnosticoId,VehiculoId,Fecha,Detalle,EmpleadoId")] Diagnostico model)
         {
             if (id != model.DiagnosticoId) return NotFound();
@@ -158,7 +208,8 @@ namespace MecaFlow2025.Controllers
             return View(model);
         }
 
-        // GET: Diagnosticos/Delete/5
+        // GET: Diagnosticos/Delete/5 - Solo para Admin y Empleados
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -174,8 +225,9 @@ namespace MecaFlow2025.Controllers
             return View(diag);
         }
 
-        // POST: Diagnosticos/Delete/5
+        // POST: Diagnosticos/Delete/5 - Solo para Admin y Empleados
         [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var diag = await _context.Diagnosticos.FindAsync(id);
@@ -187,7 +239,8 @@ namespace MecaFlow2025.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Exportar a Excel
+        // Exportar a Excel - Solo para Admin y Empleados
+        [AuthorizeRole("Administrador", "Empleado")]
         public IActionResult ExportToExcel()
         {
             using var workbook = new XLWorkbook();
@@ -223,8 +276,9 @@ namespace MecaFlow2025.Controllers
             return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Diagnosticos.xlsx");
         }
 
-        // Exportar a PDF
+        // Exportar a PDF - Solo para Admin y Empleados
         [HttpGet]
+        [AuthorizeRole("Administrador", "Empleado")]
         public IActionResult ExportToPdf()
         {
             var data = _context.Diagnosticos
@@ -335,6 +389,5 @@ namespace MecaFlow2025.Controllers
             var fileName = $"Diagnosticos_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
             return File(pdfBytes, "application/pdf", fileName);
         }
-
     }
 }

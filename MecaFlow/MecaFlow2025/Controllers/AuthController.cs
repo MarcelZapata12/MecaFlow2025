@@ -171,15 +171,13 @@ namespace MecaFlow2025.Controllers
 
                 if (usuario != null)
                 {
-                    // Invalidar todos los tokens anteriores para este usuario
+                    // Invalidar tokens anteriores
                     var tokensAnteriores = await _context.PasswordResetTokens
                         .Where(t => t.UsuarioId == usuario.UsuarioId && !t.Usado)
                         .ToListAsync();
 
                     foreach (var token in tokensAnteriores)
-                    {
                         token.Usado = true;
-                    }
 
                     // Generar nuevo token
                     var resetToken = GenerateResetToken();
@@ -188,34 +186,30 @@ namespace MecaFlow2025.Controllers
                         UsuarioId = usuario.UsuarioId,
                         Token = resetToken,
                         FechaCreacion = DateTime.Now,
-                        FechaExpiracion = DateTime.Now.AddHours(1), // Token válido por 1 hora
+                        FechaExpiracion = DateTime.Now.AddHours(1),
                         Usado = false
                     };
 
                     _context.PasswordResetTokens.Add(passwordResetToken);
                     await _context.SaveChangesAsync();
 
-                    // Generar enlace de restablecimiento
+                    // Enlace
                     var resetLink = Url.Action("ResetPassword", "Auth",
                         new { token = resetToken }, Request.Scheme);
 
                     try
                     {
-                        // Enviar correo
                         await _emailService.SendPasswordResetEmailAsync(model.Email, resetLink);
-
                         TempData["SuccessMessage"] = "Se ha enviado un correo con las instrucciones para restablecer tu contraseña. Revisa tu bandeja de entrada.";
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         TempData["ErrorMessage"] = "Hubo un error al enviar el correo. Por favor, inténtalo de nuevo más tarde.";
-                        // Log del error (opcional)
-                        // _logger.LogError(ex, "Error al enviar correo de restablecimiento");
                     }
                 }
                 else
                 {
-                    // Por seguridad, no revelar si el correo existe o no
+                    // No revelar existencia del correo
                     TempData["SuccessMessage"] = "Si el correo electrónico está registrado, recibirás las instrucciones para restablecer tu contraseña.";
                 }
             }
@@ -227,9 +221,7 @@ namespace MecaFlow2025.Controllers
         public async Task<IActionResult> ResetPassword(string token)
         {
             if (string.IsNullOrEmpty(token))
-            {
                 return RedirectToAction("Login");
-            }
 
             var passwordResetToken = await _context.PasswordResetTokens
                 .Include(t => t.Usuario)
@@ -241,11 +233,7 @@ namespace MecaFlow2025.Controllers
                 return View();
             }
 
-            var model = new ResetPasswordViewModel
-            {
-                Token = token
-            };
-
+            var model = new ResetPasswordViewModel { Token = token };
             return View(model);
         }
 
@@ -266,10 +254,8 @@ namespace MecaFlow2025.Controllers
                     return View(model);
                 }
 
-                // Actualizar la contraseña del usuario
+                // Actualizar contraseña y marcar token usado
                 passwordResetToken.Usuario.PasswordHash = HashPassword(model.NewPassword);
-
-                // Marcar el token como usado
                 passwordResetToken.Usado = true;
 
                 await _context.SaveChangesAsync();
@@ -288,7 +274,7 @@ namespace MecaFlow2025.Controllers
             return RedirectToAction("Login");
         }
 
-        // Método para hashear contraseñas
+        // Hash de contraseña
         private string HashPassword(string password)
         {
             using (var sha256 = SHA256.Create())
@@ -298,14 +284,14 @@ namespace MecaFlow2025.Controllers
             }
         }
 
-        // Método para verificar contraseñas
+        // Verificación de contraseña
         private bool VerifyPassword(string password, string hash)
         {
             var hashedPassword = HashPassword(password);
             return hashedPassword == hash;
         }
 
-        // Método para generar token de restablecimiento
+        // Generación de token
         private string GenerateResetToken()
         {
             using (var rng = RandomNumberGenerator.Create())
@@ -321,6 +307,60 @@ namespace MecaFlow2025.Controllers
             ViewBag.UserRole = HttpContext.Session.GetString("UserRole");
             ViewBag.UserName = HttpContext.Session.GetString("UserName");
             return View();
+        }
+
+        // =========================
+        // NUEVO: Perfil del usuario
+        // =========================
+        [HttpGet]
+        public async Task<IActionResult> Perfil()
+        {
+            // Requiere sesión
+            if (HttpContext.Session.GetString("UserId") == null)
+                return RedirectToAction("Login");
+
+            var email = HttpContext.Session.GetString("UserEmail") ?? string.Empty;
+            var rol = HttpContext.Session.GetString("UserRole") ?? string.Empty;
+
+            var usuario = await _context.Usuarios
+                .Include(u => u.Rols)
+                .FirstOrDefaultAsync(u => u.Correo == email);
+
+            if (usuario == null)
+                return RedirectToAction("Login");
+
+            var vm = new PerfilViewModel
+            {
+                Correo = usuario.Correo,
+                Rol = rol,
+                FechaCreacion = usuario.FechaCreacion
+            };
+
+            if (rol == "Administrador" || rol == "Empleado")
+            {
+                var empleado = await _context.Empleados.FirstOrDefaultAsync(e => e.Correo == email);
+                if (empleado != null)
+                {
+                    vm.Nombre = empleado.Nombre;
+                    vm.Cedula = empleado.Cedula;
+                    vm.Puesto = empleado.Puesto;
+                    vm.FechaIngreso = empleado.FechaIngreso; // DateOnly?
+                    vm.Activo = empleado.Activo;
+                }
+            }
+            else // Cliente
+            {
+                var cliente = await _context.Clientes.FirstOrDefaultAsync(c => c.Correo == email);
+                if (cliente != null)
+                {
+                    vm.Nombre = cliente.Nombre;
+                    vm.Telefono = cliente.Telefono;
+                    vm.FechaRegistro = cliente.FechaRegistro; // DateTime?
+                }
+            }
+
+            // >>> Importante: especificar el nombre de la vista
+            return View("Perfil", vm);
         }
     }
 }

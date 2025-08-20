@@ -1,0 +1,126 @@
+﻿@model MecaFlow2025.Models.Vehiculo
+@{
+    ViewData["Title"] = "Crear Vehículo";
+    Layout = null; // se carga dentro de modal
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+    body {
+        background-color: transparent;
+        color: #f8f9fa;
+    }
+
+    .modal-form-container {
+        background-color: #1f1f1f;
+        border-radius: 1rem;
+        padding: 2rem;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .form-control, .form-select {
+        background-color: #2a2a2a;
+        border: 1px solid #444;
+        color: #f8f9fa;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #2a2a2a;
+            border-color: #66afe9;
+            box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
+        }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+        .btn-secondary:hover {
+            background-color: #565e64;
+            border-color: #4e555b;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    label {
+        font-weight: 600;
+    }
+</style>
+
+<div class="modal-form-container">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Placa" class="form-label">Placa</label>
+            <input asp-for="Placa" class="form-control" />
+            <span asp-validation-for="Placa" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MarcaId" class="form-label">Marca</label>
+            <select asp-for="MarcaId" class="form-select" id="MarcaId" asp-items="ViewBag.Marcas">
+                <option value="">-- Seleccione una marca --</option>
+            </select>
+            <span asp-validation-for="MarcaId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ModeloId" class="form-label">Modelo</label>
+            <select asp-for="ModeloId" class="form-select" id="ModeloId">
+                <option value="">-- Seleccione un modelo --</option>
+            </select>
+            <span asp-validation-for="ModeloId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Anio" class="form-label">Año</label>
+            <input asp-for="Anio" class="form-control" />
+            <span asp-validation-for="Anio" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ClienteId" class="form-label">Cliente</label>
+            <select asp-for="ClienteId" asp-items="ViewBag.Clientes" class="form-select">
+                <option value="">-- Seleccione un cliente --</option>
+            </select>
+            <span asp-validation-for="ClienteId" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary me-2">
+                <i class="bi bi-plus-circle me-1"></i>Crear
+            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <!-- Solo validación unobtrusive; sin JS de Marca→Modelo aquí -->
+    <partial name="_ValidationScriptsPartial" />
+}

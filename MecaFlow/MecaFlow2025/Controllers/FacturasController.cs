@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
+using MecaFlow2025.Helpers;
+using MecaFlow2025.Attributes;
 
 namespace MecaFlow2025.Controllers
 {
@@ -21,11 +23,38 @@ namespace MecaFlow2025.Controllers
         // GET: /Facturas
         public async Task<IActionResult> Index()
         {
-            var data = await _ctx.Facturas
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail"); // Usar EMAIL en lugar de UserId
+
+            IQueryable<Factura> query = _ctx.Facturas
                 .Include(f => f.Cliente)
-                .Include(f => f.Vehiculo)
+                .Include(f => f.Vehiculo);
+
+            // Si es cliente, buscar por EMAIL para encontrar su ClienteId real
+            if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
+            {
+                // Primero encontrar el ClienteId real basado en el email
+                var cliente = await _ctx.Clientes
+                    .FirstOrDefaultAsync(c => c.Correo == userEmail);
+
+                if (cliente != null)
+                {
+                    // Filtrar facturas por el ClienteId real
+                    query = query.Where(f => f.ClienteId == cliente.ClienteId);
+                }
+                else
+                {
+                    // Si no se encuentra el cliente, no mostrar nada
+                    query = query.Where(f => false);
+                }
+            }
+
+            var data = await query
                 .OrderByDescending(f => f.FacturaId)
                 .ToListAsync();
+
+            // Pasar el rol a la vista para controlar la UI
+            ViewBag.UserRole = userRole;
 
             return View(data);
         }
@@ -35,10 +64,22 @@ namespace MecaFlow2025.Controllers
         {
             if (id == null) return NotFound();
 
-            var factura = await _ctx.Facturas
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+
+            var query = _ctx.Facturas
                 .Include(f => f.Cliente)
                 .Include(f => f.Vehiculo)
-                .FirstOrDefaultAsync(m => m.FacturaId == id);
+                .Where(m => m.FacturaId == id);
+
+            // Si es cliente, verificar que la factura le pertenezca
+            if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
+            {
+                // Verificar que la factura pertenezca al cliente por email
+                query = query.Where(f => f.Cliente.Correo == userEmail);
+            }
+
+            var factura = await query.FirstOrDefaultAsync();
 
             if (factura == null) return NotFound();
 
@@ -58,7 +99,8 @@ namespace MecaFlow2025.Controllers
             return View(factura);
         }
 
-        // GET: /Facturas/Create
+        // GET: /Facturas/Create - Solo para Admin y Empleados
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Create()
         {
             await CargarSelects();
@@ -74,9 +116,10 @@ namespace MecaFlow2025.Controllers
             return View();
         }
 
-        // POST: /Facturas/Create
+        // POST: /Facturas/Create - Solo para Admin y Empleados
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Create([Bind("ClienteId,VehiculoId,MontoTotal,Metodo")] Factura factura)
         {
             // Siempre setear fecha en servidor
@@ -133,8 +176,9 @@ namespace MecaFlow2025.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: /Facturas/Edit/5
+        // GET: /Facturas/Edit/5 - Solo para Admin y Empleados
         [HttpGet]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -154,9 +198,10 @@ namespace MecaFlow2025.Controllers
             return View(factura);
         }
 
-        // POST: /Facturas/Edit/5
+        // POST: /Facturas/Edit/5 - Solo para Admin y Empleados
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Edit(int id, [Bind("FacturaId,ClienteId,VehiculoId,MontoTotal,Metodo")] Factura dto)
         {
             if (id != dto.FacturaId) return NotFound();
@@ -214,7 +259,8 @@ namespace MecaFlow2025.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: /Facturas/Delete/5
+        // GET: /Facturas/Delete/5 - Solo para Admin y Empleados
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -235,9 +281,10 @@ namespace MecaFlow2025.Controllers
             return View(factura);
         }
 
-        // POST: /Facturas/Delete/5
+        // POST: /Facturas/Delete/5 - Solo para Admin y Empleados
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [AuthorizeRole("Administrador", "Empleado")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var factura = await _ctx.Facturas.FindAsync(id);
