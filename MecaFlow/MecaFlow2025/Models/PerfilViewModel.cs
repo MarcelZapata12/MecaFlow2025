@@ -10,6 +10,8 @@
         public string? Telefono { get; set; }
         public DateTime? FechaRegistro { get; set; }
 
+        public string? Direccion { get; set; }
+
         // Datos empleado
         public string? Cedula { get; set; }
         public string? Puesto { get; set; }

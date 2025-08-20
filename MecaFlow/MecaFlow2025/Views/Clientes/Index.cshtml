@@ -52,23 +52,6 @@
         }
     }
 
-    @@keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(13,110,253,.4)
-        }
-
-        70% {
-            transform: scale(1.05);
-            box-shadow: 0 0 0 10px rgba(13,110,253,0)
-        }
-
-        100% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(13,110,253,0)
-        }
-    }
-
     .client-card {
         background-color: #1f1f1f;
         border: 1px solid #2c2c2c;
@@ -120,10 +103,6 @@
         color: white;
         animation: fadeIn .3s ease-in-out;
     }
-
-    .btn-pulse {
-        animation: pulse 2s infinite;
-    }
 </style>
 
 <div class="container py-4">
@@ -144,16 +123,13 @@
         </div>
     }
 
-    <!-- Encabezado -->
+    <!-- Encabezado sin botón de crear -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-white">
             <i class="bi bi-people-fill me-2"></i>Clientes
         </h2>
         <div class="d-flex align-items-center">
-            <input id="clientSearch" type="search" class="form-control form-control-sm me-3 bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…">
-            <a href="#" class="btn btn-primary btn-pulse" onclick="loadClienteCreate()">
-                <i class="bi bi-plus-circle me-1"></i>Nuevo Cliente
-            </a>
+            <input id="clientSearch" type="search" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…">
         </div>
     </div>
 
@@ -209,21 +185,12 @@
     </div>
 </div>
 
-<!-- Modales comunes -->
+<!-- Modales para editar y eliminar (sin modal de crear) -->
 <div class="modal fade" id="clienteEdit" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header"><h5 class="modal-title">Editar Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body" id="clienteEditBody"><p class="text-center">Cargando…</p></div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="clienteCreate" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title">Nuevo Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body" id="clienteCreateBody"><p class="text-center">Cargando…</p></div>
         </div>
     </div>
 </div>
@@ -259,64 +226,6 @@
                 card.style.display = txt.includes(q) ? '' : 'none';
             });
         });
-
-        /* ===========================
-           CREATE (modal + AJAX nativo)
-           =========================== */
-        function loadClienteCreate() {
-            const modalEl = document.getElementById('clienteCreate');
-            const modal   = new bootstrap.Modal(modalEl);
-            const body    = document.getElementById('clienteCreateBody');
-
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
-            modal.show();
-
-            fetch('/Clientes/Create')
-              .then(r => r.text())
-              .then(html => { body.innerHTML = html; hookCreateForm(); })
-              .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
-        }
-
-        function hookCreateForm() {
-            const form = document.querySelector('#clienteCreateBody form');
-            if (!form) return;
-
-            // Quita handlers previos si recargamos el HTML
-            form.addEventListener('submit', onCreateSubmit, { once: true });
-        }
-
-        async function onCreateSubmit(e) {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const fd   = new FormData(form);
-
-            try {
-                const res = await fetch(form.action, {
-                    method: 'POST',
-                    body: fd,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' } // <- importante
-                });
-
-                const ct = res.headers.get('content-type') || '';
-
-                if (ct.includes('application/json')) {
-                    // ✅ Éxito
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('clienteCreate'));
-                    if (modal) modal.hide();
-                    location.reload(); // O inyecta la nueva card si prefieres
-                    return;
-                }
-
-                // ❌ Errores de validación -> HTML con ModelState
-                const html = await res.text();
-                const body = document.getElementById('clienteCreateBody');
-                body.innerHTML = html;
-                hookCreateForm(); // reenganchar tras re-render
-            } catch {
-                document.getElementById('clienteCreateBody').innerHTML =
-                  `<div class="alert alert-danger">No se pudo enviar el formulario.</div>`;
-            }
-        }
 
         /* ===========================
            EDIT (modal + AJAX nativo)
@@ -410,10 +319,10 @@
 
         // Mostrar toast si hay Success en TempData
         @{
-            if (TempData["Success"] is string)
-            {
-                <text>showSuccessToast();</text>
-            }
+                if (TempData["Success"] is string)
+                {
+                        <text>showSuccessToast();</text>
+                }
 
         }
     </script>

@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<MecaFlow2025.Controllers.ReportesFinancierosController.ResumenVM>
+@using System.Text.Json
 
 @{
     string alcance = ViewBag.Scope ?? "day";                    // "day" | "month" | "year"
@@ -17,24 +18,24 @@
 
     .kpi-card {
         border-radius: 1rem;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform .3s, box-shadow .3s;
     }
 
         .kpi-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
         }
 
     .card-title, .card-text {
-        color: white;
+        color: #fff;
     }
 
     .btn {
-        border-radius: 0.75rem;
+        border-radius: .75rem;
     }
 
     .fade-in {
-        animation: fadeIn 0.8s ease-in-out forwards;
+        animation: fadeIn .8s ease-in-out forwards;
         opacity: 0;
     }
 
@@ -46,7 +47,7 @@
 
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: none;
         }
     }
 
@@ -54,76 +55,65 @@
         color: #f8f9fa;
     }
 
-    /* === Fix fuerte para modal oscuro === */
+    /* Modal oscuro (lo tuyo) */
     #modalReporte .modal-content {
-        background-color: #111827 !important; /* gris oscuro */
-        color: #e5e7eb !important;
+        background: #111827 !important;
+        color: #e5e7eb !important
     }
 
     #modalReporte .modal-header {
-        background-color: #0d6efd !important;
-        color: #ffffff !important;
+        background: #0d6efd !important;
+        color: #fff !important
     }
 
     #modalReporte .btn-close {
-        filter: invert(1);
+        filter: invert(1)
     }
 
-    #modalReporte label,
-    #modalReporte .form-label,
-    #modalReporte h2,
-    #modalReporte h5,
-    #modalReporte .modal-title,
-    #modalReporte strong {
+    #modalReporte label, #modalReporte .form-label, #modalReporte h2, #modalReporte h5, #modalReporte .modal-title, #modalReporte strong {
+        color: #e5e7eb !important
+    }
+
+    #modalReporte .form-control, #modalReporte textarea, #modalReporte input[type="date"], #modalReporte input[type="number"] {
+        background: #0b1220 !important;
         color: #e5e7eb !important;
+        border-color: #334155 !important
     }
 
-    #modalReporte .form-control,
-    #modalReporte textarea,
-    #modalReporte input[type="date"],
-    #modalReporte input[type="number"] {
-        background-color: #0b1220 !important;
-        color: #e5e7eb !important;
-        border-color: #334155 !important;
-    }
-
-        #modalReporte .form-control::placeholder,
-        #modalReporte textarea::placeholder {
-            color: #94a3b8 !important;
+        #modalReporte .form-control::placeholder, #modalReporte textarea::placeholder {
+            color: #94a3b8 !important
         }
 
-    /* === Parche Details en modal oscuro === */
     #modalReporte .card {
-        background-color: #0b1220 !important;
+        background: #0b1220 !important;
         color: #e5e7eb !important;
-        border: 1px solid #334155 !important;
+        border: 1px solid #334155 !important
     }
 
         #modalReporte .card .card-body {
-            background-color: transparent !important;
+            background: transparent !important
         }
 
     #modalReporte dt {
-        color: #cbd5e1 !important; /* etiquetas */
-        font-weight: 600 !important;
+        color: #cbd5e1 !important;
+        font-weight: 600 !important
     }
 
     #modalReporte dd {
-        color: #f1f5f9 !important; /* valores */
+        color: #f1f5f9 !important
     }
 
     #modalReporte .text-success {
-        color: #22c55e !important;
+        color: #22c55e !important
     }
 
     #modalReporte .text-danger {
-        color: #ef4444 !important;
+        color: #ef4444 !important
     }
 
     #modalReporte .btn-secondary {
-        color: #e5e7eb !important;
+        color: #e5e7eb !important
     }
-
 </style>
 
 <div class="container mt-5 fade-in">
@@ -133,7 +123,6 @@
         </h2>
 
         <div class="d-flex align-items-center">
-            <!-- Selector de alcance -->
             <div class="btn-group me-2">
                 <a asp-action="Index" asp-route-scope="day"
                    class="btn btn-outline-info @(alcance == "day" ? "active" : "")">Diario</a>
@@ -143,7 +132,6 @@
                    class="btn btn-outline-info @(alcance == "year" ? "active" : "")">Anual</a>
             </div>
 
-            <!-- Export / Nuevo -->
             <a asp-controller="ReportesFinancieros" asp-action="ExportToExcel" asp-route-scope="@alcance" class="btn btn-outline-success me-2">
                 <i class="bi bi-file-earmark-excel"></i> Excel
             </a>
@@ -151,20 +139,18 @@
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
             <a href="javascript:void(0)" class="btn btn-success"
-               onclick="openModal('@Url.Action("Create","ReportesFinancieros")')">
+               onclick="openModal('@Url.Action("Create", "ReportesFinancieros")')">
                 <i class="bi bi-plus-circle-fill"></i> Nuevo Reporte
             </a>
         </div>
     </div>
 
-    <!-- KPIs -->
+    @* KPIs *@
     @{
         var totalReportes = Model?.Count() ?? 0;
         var totalIngresos = Model?.Sum(x => x.TotalIngresos) ?? 0m;
         var totalGastos = Model?.Sum(x => x.TotalGastos) ?? 0m;
         var totalUtilidad = Model?.Sum(x => x.Utilidad) ?? 0m;
-
-        // "Último período" por ordenamiento del label. Si tus labels son yyyy-MM-dd / yyyy-MM / yyyy, queda ok.
         var ultimoPeriodo = Model?.OrderByDescending(x => x.Periodo)?.FirstOrDefault()?.Periodo ?? "-";
     }
 
@@ -195,7 +181,6 @@
         </div>
     </div>
 
-    <!-- (Opcional) Buscador simple por período o concepto -->
     <form method="get" asp-action="Index" class="input-group mb-4">
         <input type="hidden" name="scope" value="@alcance" />
         <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Buscar por período o concepto...">
@@ -204,14 +189,12 @@
         </button>
     </form>
 
-    <!-- Chart -->
     <div class="card mb-4 shadow-sm fade-in">
-        <div class="card-body bg-dark rounded">
-            <canvas id="finChart" height="100"></canvas>
+        <div class="card-body bg-dark rounded" style="height: 360px;">
+            <canvas id="finChart"></canvas>
         </div>
     </div>
 
-    <!-- Tabla -->
     <table class="table table-dark table-striped table-hover text-center align-middle shadow fade-in">
         <thead class="bg-gradient">
             <tr>
@@ -237,15 +220,15 @@
                     {
                         <td>
                             <a href="javascript:void(0)" class="btn btn-sm btn-info me-1"
-                               onclick="openModal('@Url.Action("Details","ReportesFinancieros", new { id = r.ReporteId })')">
+                               onclick="openModal('@Url.Action("Details", "ReportesFinancieros", new { id = r.ReporteId })')">
                                 <i class="bi bi-eye"></i>
                             </a>
                             <a href="javascript:void(0)" class="btn btn-sm btn-warning me-1"
-                               onclick="openModal('@Url.Action("Edit","ReportesFinancieros", new { id = r.ReporteId })')">
+                               onclick="openModal('@Url.Action("Edit", "ReportesFinancieros", new { id = r.ReporteId })')">
                                 <i class="bi bi-pencil-square"></i>
                             </a>
                             <a href="javascript:void(0)" class="btn btn-sm btn-danger"
-                               onclick="openModal('@Url.Action("Delete","ReportesFinancieros", new { id = r.ReporteId })')">
+                               onclick="openModal('@Url.Action("Delete", "ReportesFinancieros", new { id = r.ReporteId })')">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
@@ -275,12 +258,82 @@
     </div>
 </div>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+    // ====== GRAFICO ======
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('finChart');
+      if (!canvas) return;
+
+      // Datos desde el servidor (JSON plano, números crudos)
+      const labels   = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.Periodo).ToList()));
+      const ingresos = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.TotalIngresos).ToList()));
+      const gastos   = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.TotalGastos).ToList()));
+      const utilidad = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.Utilidad).ToList()));
+
+      if (!labels || labels.length === 0) {
+        // Si no hay datos, mostramos un placeholder
+        canvas.parentElement.innerHTML = '<div class="text-center text-secondary py-4">Sin datos para graficar.</div>';
+        return;
+      }
+
+      const fmtCRC = (v) =>
+        new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 2 }).format(Number(v||0));
+
+      new Chart(canvas, {
+        data: {
+          labels,
+              datasets: [
+      { type: 'bar',  label: 'Ingresos', data: ingresos, backgroundColor: 'rgba(25,135,84,.7)' },
+      { type: 'bar',  label: 'Gastos',   data: gastos,   backgroundColor: 'rgba(255,193,7,.8)' },
+      {
+        type: 'line',
+        label: 'Utilidad',
+        data: utilidad,
+        borderColor: '#0d6efd',          
+        backgroundColor: 'rgba(13,110,253,.15)',
+        pointBackgroundColor: '#0d6efd',
+        pointBorderColor: '#0d6efd',
+        borderWidth: 2,
+        tension: 0.35,
+        fill: false
+      }
+    ]
+
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#e5e7eb' }, grid: { color: 'rgba(255,255,255,.08)' } },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: '#e5e7eb',
+                callback: (val) => fmtCRC(val)
+              },
+              grid: { color: 'rgba(255,255,255,.08)' }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#e5e7eb' } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.dataset.label}: ${fmtCRC(ctx.raw)}`
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // ====== MODAL (tu lógica) ======
     (function () {
       const modalEl = document.getElementById('modalReporte');
       const bodyEl  = document.getElementById('modalContent');
 
-      // 1) Delegación de eventos: captura cualquier submit de forms dentro del modal
       bodyEl.addEventListener('submit', async function (e) {
         const form = e.target;
         if (!(form instanceof HTMLFormElement)) return;
@@ -292,52 +345,37 @@
             method: form.method || 'POST',
             body: fd,
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin' // <-- IMPRESCINDIBLE para que viaje la cookie AntiForgery
+            credentials: 'same-origin'
           });
 
           if (resp.status === 204) {
-            // Guardó bien
-            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modal.hide();
+            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
             location.reload();
             return;
           }
-
           if (resp.ok) {
-            // Validaciones: el server devuelve la parcial con errores -> la volvemos a pintar
             bodyEl.innerHTML = await resp.text();
             return;
           }
-
-          bodyEl.innerHTML =
-            `<div class="alert alert-danger">Error ${resp.status} ${resp.statusText}. Revisa Network.</div>`;
+          bodyEl.innerHTML = `<div class="alert alert-danger">Error ${resp.status} ${resp.statusText}</div>`;
         } catch (err) {
           console.error(err);
-          bodyEl.innerHTML =
-            `<div class="alert alert-danger">Ocurrió un error al guardar. Revisa la consola.</div>`;
+          bodyEl.innerHTML = `<div class="alert alert-danger">Ocurrió un error al guardar.</div>`;
         }
       });
 
-      // 2) Abrir modal y cargar parcial
       window.openModal = function (url) {
-        bodyEl.innerHTML =
-          '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>';
-
+        bodyEl.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>';
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-        fetch(url, {
-          headers: { 'X-Requested-With': 'XMLHttpRequest' },
-          credentials: 'same-origin' // <-- también aquí por si hay auth
-        })
-        .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`); return r.text(); })
-        .then(html => { bodyEl.innerHTML = html; modal.show(); })
-        .catch(err => {
-          console.error(err);
-          bodyEl.innerHTML =
-            `<div class="alert alert-danger">No se pudo cargar el contenido (${err.message}).</div>`;
-          modal.show();
-        });
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+          .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`); return r.text(); })
+          .then(html => { bodyEl.innerHTML = html; modal.show(); })
+          .catch(err => {
+            console.error(err);
+            bodyEl.innerHTML = `<div class="alert alert-danger">No se pudo cargar el contenido (${err.message}).</div>`;
+            modal.show();
+          });
       };
     })();
 </script>
-

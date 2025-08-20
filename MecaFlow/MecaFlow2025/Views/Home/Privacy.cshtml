@@ -1,6 +1,48 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Política de Privacidad";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="container py-4">
+    <div class="card bg-dark text-light border-0 shadow-sm">
+        <div class="card-body">
+            <h2 class="mb-3">@ViewData["Title"]</h2>
+            <p class="text-secondary mb-4">Última actualización: @DateTime.Today.ToString("dd/MM/yyyy")</p>
+
+            <h5>Qué datos recopilamos</h5>
+            <ul>
+                <li>Nombre, correo y teléfono.</li>
+                <li>Información del vehículo (placa, modelo) y citas/servicios.</li>
+                <li>Datos de facturación necesarios por ley.</li>
+            </ul>
+
+            <h5>Para qué los usamos</h5>
+            <ul>
+                <li>Brindar y mejorar nuestros servicios.</li>
+                <li>Agendar, confirmar y dar seguimiento a trabajos.</li>
+                <li>Cumplimiento legal y contable.</li>
+            </ul>
+
+            <h5>Compartición</h5>
+            <ul>
+                <li>No vendemos tus datos.</li>
+                <li>Podemos usar proveedores (hosting, correo) bajo acuerdos de confidencialidad.</li>
+            </ul>
+
+            <h5>Conservación</h5>
+            <ul>
+                <li>Solo el tiempo necesario para el servicio y obligaciones legales.</li>
+            </ul>
+
+            <h5>Tus derechos</h5>
+            <ul>
+                <li>Acceso, rectificación y eliminación cuando aplique.</li>
+                <li>Para ejercerlos, contáctanos.</li>
+            </ul>
+
+            <h5>Contacto</h5>
+            <p class="mb-0">
+                MecaFlow2025 · <a href="mailto:tallerhiburt@gmail.com">tallerhiburt@gmail.com</a>
+            </p>
+        </div>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-﻿@model MecaFlow2025.Models.Empleado
+﻿@model MecaFlow2025.Models.CreateEmpleadoViewModel
 
 @{
     ViewData["Title"] = "Crear Empleado";
@@ -16,17 +16,20 @@
     }
 
     @@keyframes gradient {
-        0% {
-            background-position: 0% 50%;
-        }
+        0%
 
-        50% {
-            background-position: 100% 50%;
-        }
+    {
+        background-position: 0% 50%;
+    }
 
-        100% {
-            background-position: 0% 50%;
-        }
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+
     }
 
     .form-container {
@@ -40,15 +43,18 @@
     }
 
     @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
+        from
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     }
 
     h1 {
@@ -59,13 +65,16 @@
     }
 
     @@keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
+        from
 
-        to {
-            opacity: 1;
-        }
+    {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
     }
 
     .form-control, .form-select {
@@ -88,6 +97,21 @@
     .btn-secondary {
         background-color: #6c757d;
         border: none;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        border: none;
+        background: none;
+        color: #6c757d;
+        cursor: pointer;
+    }
+
+    .password-input-container {
+        position: relative;
     }
 </style>
 
@@ -150,12 +174,49 @@
                     required>
                 <option value="">— Seleccione puesto —</option>
                 <option value="Mecánico">Mecánico</option>
-                <option value="Supervisor">Supervisor</option>
                 <option value="Administrador">Administrador</option>
-                <option value="Recepcionista">Recepcionista</option>
-                <option value="Auxiliar">Auxiliar</option>
             </select>
             <span asp-validation-for="Puesto" class="text-danger"></span>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="mb-3">
+            <label asp-for="Contrasena" class="form-label fw-bold">Contraseña</label>
+            <div class="password-input-container">
+                <input asp-for="Contrasena"
+                       class="form-control"
+                       type="password"
+                       required
+                       minlength="6"
+                       maxlength="100"
+                       autocomplete="new-password"
+                       placeholder="Mínimo 6 caracteres"
+                       id="contrasena" />
+                <button type="button" class="password-toggle" onclick="togglePassword('contrasena', this)">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Contrasena" class="text-danger"></span>
+        </div>
+
+        <!-- Confirmar Contraseña -->
+        <div class="mb-3">
+            <label asp-for="ConfirmarContrasena" class="form-label fw-bold">Confirmar Contraseña</label>
+            <div class="password-input-container">
+                <input asp-for="ConfirmarContrasena"
+                       class="form-control"
+                       type="password"
+                       required
+                       minlength="6"
+                       maxlength="100"
+                       autocomplete="new-password"
+                       placeholder="Repita la contraseña"
+                       id="confirmarContrasena" />
+                <button type="button" class="password-toggle" onclick="togglePassword('confirmarContrasena', this)">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+            <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
         </div>
 
         <!-- Activo -->
@@ -174,3 +235,18 @@
         </div>
     </form>
 </div>
+
+<script>
+    function togglePassword(inputId, button) {
+        const input = document.getElementById(inputId);
+        const icon = button.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+</script>

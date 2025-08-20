@@ -16,17 +16,20 @@
     }
 
     @@keyframes gradient {
-        0% {
-            background-position: 0% 50%;
-        }
+        0%
 
-        50% {
-            background-position: 100% 50%;
-        }
+    {
+        background-position: 0% 50%;
+    }
 
-        100% {
-            background-position: 0% 50%;
-        }
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+
     }
 
     .form-container {
@@ -39,16 +42,20 @@
         margin: 4rem auto;
     }
 
+    
     @@keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
+        from
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
     }
 
     h1 {
@@ -59,13 +66,16 @@
     }
 
     @@keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
+        from
 
-        to {
-            opacity: 1;
-        }
+    {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
     }
 
     .form-control, .form-select {
@@ -123,10 +133,7 @@
                 <select asp-for="Puesto" class="form-select">
                     <option value="">— Seleccione puesto —</option>
                     <option value="Mecánico">Mecánico</option>
-                    <option value="Supervisor">Supervisor</option>
                     <option value="Administrador">Administrador</option>
-                    <option value="Recepcionista">Recepcionista</option>
-                    <option value="Auxiliar">Auxiliar</option>
                 </select>
                 <span asp-validation-for="Puesto" class="text-danger"></span>
             </div>

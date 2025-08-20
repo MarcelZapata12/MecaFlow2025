@@ -89,10 +89,14 @@
 </dl>
 
 <form asp-action="Delete" asp-route-id="@Model.DiagnosticoId" method="post" class="d-flex justify-content-between mt-4">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-        <i class="bi bi-x-circle"></i> Cancelar
-    </button>
+  
     <button type="submit" class="btn btn-danger">
         <i class="bi bi-trash-fill"></i> Confirmar Eliminación
     </button>
+    
+    
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="bi bi-x-circle"></i> Cancelar
+    </button>
+    
 </form>
