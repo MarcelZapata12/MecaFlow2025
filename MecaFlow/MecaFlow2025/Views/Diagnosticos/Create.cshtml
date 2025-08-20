@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Nuevo Diagnóstico";
+    Layout = null;
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
@@ -92,15 +93,12 @@
             <span asp-validation-for="EmpleadoId" class="text-danger"></span>
         </div>
 
-        <div class="modal-footer d-flex justify-content-between">
-            <!-- Botón cancelar a la izquierda -->
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-check-circle"></i> Guardar
-            </button>
-
-            <!-- Botón guardar a la derecha -->
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="bi bi-x-circle"></i> Volver
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Volver
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle-fill"></i> Guardar
             </button>
         </div>
     </form>

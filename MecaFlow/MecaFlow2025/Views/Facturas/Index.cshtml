@@ -1,10 +1,21 @@
 ﻿@model IEnumerable<MecaFlow2025.Models.Factura>
 @using System.Globalization
+@using System.Text.Json
 @{
     ViewData["Title"] = "Facturas";
     var cr = new CultureInfo("es-CR");
     var userRole = ViewBag.UserRole as string;
     var isClient = userRole == "Cliente";
+
+    // KPIs
+    var totalFacturas = Model?.Count() ?? 0;
+    var montoTotal = Model?.Sum(f => f.MontoTotal) ?? 0m;
+    var ultimaFecha = Model?.OrderByDescending(f => f.Fecha).FirstOrDefault()?.Fecha.ToString("dd/MM/yyyy") ?? "—";
+    var metodoTop = Model?
+        .Where(f => !string.IsNullOrWhiteSpace(f.Metodo))
+        .GroupBy(f => f.Metodo!)
+        .OrderByDescending(g => g.Count())
+        .FirstOrDefault()?.Key ?? "—";
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -72,6 +83,16 @@
         }
     }
 
+    .kpi-card {
+        border-radius: 1rem;
+        transition: transform .3s ease, box-shadow .3s ease;
+    }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
+        }
+
     .factura-card {
         background-color: #1f1f1f;
         border: 1px solid #2c2c2c;
@@ -101,14 +122,6 @@
         box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
     }
 
-    .card-footer a, .card-footer button {
-        transition: transform .2s ease;
-    }
-
-        .card-footer a:hover, .card-footer button:hover {
-            transform: scale(1.2);
-        }
-
     .icon-btn {
         background: none;
         border: none;
@@ -126,16 +139,6 @@
         z-index: 2;
     }
 
-        .action-icons form {
-            display: inline;
-        }
-
-    .modal-content {
-        background-color: #1f1f1f;
-        color: white;
-        animation: fadeIn .3s ease-in-out;
-    }
-
     .btn-pulse {
         animation: pulse 2s infinite;
     }
@@ -144,7 +147,7 @@
         background: linear-gradient(135deg, #17a2b8, #138496);
         color: white;
         padding: 1rem;
-        border-radius: 0.5rem;
+        border-radius: .5rem;
         margin-bottom: 1.5rem;
         text-align: center;
     }
@@ -158,11 +161,65 @@
         .no-facturas-message i {
             font-size: 4rem;
             margin-bottom: 1rem;
-            opacity: 0.5;
+            opacity: .5;
         }
+
+    /* === Estilo de modal oscuro similar a Reportes === */
+    #modalFactura .modal-content {
+        background-color: #111827 !important;
+        color: #e5e7eb !important;
+    }
+
+    #modalFactura .modal-header {
+        background-color: #0d6efd !important;
+        color: #ffffff !important;
+    }
+
+    #modalFactura .btn-close {
+        filter: invert(1);
+    }
+
+    #modalFactura label,
+    #modalFactura .form-label,
+    #modalFactura h2,
+    #modalFactura h5,
+    #modalFactura .modal-title,
+    #modalFactura strong {
+        color: #e5e7eb !important;
+    }
+
+    #modalFactura .form-control,
+    #modalFactura textarea,
+    #modalFactura input[type="date"],
+    #modalFactura input[type="number"] {
+        background-color: #0b1220 !important;
+        color: #e5e7eb !important;
+        border-color: #334155 !important;
+    }
+
+        #modalFactura .form-control::placeholder, #modalFactura textarea::placeholder {
+            color: #94a3b8 !important;
+        }
+
+    #modalFactura .card {
+        background-color: #0b1220 !important;
+        color: #e5e7eb !important;
+        border: 1px solid #334155 !important;
+    }
+
+        #modalFactura .card .card-body {
+            background-color: transparent !important;
+        }
+
+    /* Footer con Cancelar a la izquierda y Guardar a la derecha (si el parcial lo usa) */
+    #modalFactura .modal-footer {
+        display: flex;
+        justify-content: space-between;
+    }
 </style>
 
 <div class="container py-4">
+
     @if (isClient)
     {
         <div class="client-info-banner">
@@ -180,9 +237,17 @@
                    class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
                    placeholder="Buscar por @(isClient ? "fecha, vehículo o método de pago" : "cliente, vehículo o método de pago")…" />
 
+            <!-- Exportar: igual que Reportes -->
+            <a asp-controller="Facturas" asp-action="ExportToExcel" class="btn btn-outline-success me-2">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
+            <a asp-controller="Facturas" asp-action="ExportToPdf" class="btn btn-outline-danger me-2">
+                <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+
             @if (!isClient)
             {
-                <a href="#" class="btn btn-primary btn-pulse" onclick="loadFacturaCreate()">
+                <a href="#" class="btn btn-success btn-pulse" onclick="loadFacturaCreate()">
                     <i class="bi bi-plus-circle me-1"></i>Nueva Factura
                 </a>
             }
@@ -197,6 +262,41 @@
     {
         <div class="alert alert-danger">@err</div>
     }
+
+    <!-- KPIs al estilo Reportes -->
+    <div class="row text-white mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary shadow kpi-card text-center p-3">
+                <h5>Total Facturas</h5>
+                <h3 class="fw-bold">@totalFacturas</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success shadow kpi-card text-center p-3">
+                <h5>Monto Total</h5>
+                <h3 class="fw-bold">@montoTotal.ToString("C", cr)</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning shadow kpi-card text-center p-3">
+                <h5>Última Fecha</h5>
+                <h3 class="fw-bold">@ultimaFecha</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark shadow kpi-card text-center p-3">
+                <h5>Método más usado</h5>
+                <h3 class="fw-bold">@metodoTop</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico estilo Reportes: total facturado por fecha -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body bg-dark rounded">
+            <canvas id="facturasChart" height="100"></canvas>
+        </div>
+    </div>
 
     @if (!Model.Any())
     {
@@ -238,24 +338,8 @@
                     <p class="card-text mb-1"><i class="bi bi-car-front-fill me-1 text-secondary"></i><strong>Vehículo:</strong> @item.Vehiculo?.Placa</p>
                     <p class="card-text mb-1"><i class="bi bi-credit-card me-1 text-secondary"></i><strong>Método:</strong> @(string.IsNullOrWhiteSpace(item.Metodo) ? "-" : item.Metodo)</p>
                     <p class="card-text small text-muted">
-                        <i class="bi bi-currency-dollar me-1"></i>
-                        @item.MontoTotal.ToString("C", cr)
+                        <i class="bi bi-currency-dollar me-1"></i>@item.MontoTotal.ToString("C", cr)
                     </p>
-                </div>
-
-                <!-- Modal Details (uno por item) -->
-                <div class="modal fade" id="facturaDetails-@item.FacturaId" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Detalles de la Factura</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                            </div>
-                            <div class="modal-body" id="facturaDetailsBody-@item.FacturaId">
-                                <p class="text-center">Cargando…</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             }
         </div>
@@ -270,51 +354,32 @@
     </div>
 </div>
 
-@if (!isClient)
-{
-    <!-- Modales comunes (solo para admin/empleado) -->
-    <div class="modal fade" id="facturaEdit" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Editar Factura</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body" id="facturaEditBody"><p class="text-center">Cargando…</p></div>
+<!-- Modal único al estilo Reportes -->
+<div class="modal fade" id="modalFactura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content shadow">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFacturaTitle">Gestión de Factura</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="facturaCreate" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
-            <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Nueva Factura</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body" id="facturaCreateBody"><p class="text-center">Cargando…</p></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="facturaDelete" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header"><h5 class="modal-title">Confirmar eliminación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar esta factura?</p>
-                    <form id="facturaDeleteForm" method="post">
-                        <input type="hidden" name="id" id="facturaDeleteId" />
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-danger" onclick="submitFacturaDelete()">Eliminar</button>
+            <div class="modal-body" id="modalFacturaBody">
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
                 </div>
             </div>
+        
         </div>
     </div>
-}
+</div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const isClient = @(isClient.ToString().ToLower());
 
-        // BÚSQUEDA CLIENT-SIDE
+        // ===== Buscar en cards (client-side)
         document.getElementById('facturaSearch').addEventListener('input', function () {
             const q = this.value.toLowerCase();
             document.querySelectorAll('#facturasGrid .factura-card').forEach(function (card) {
@@ -323,191 +388,121 @@
             });
         });
 
-        // DETALLES (carga en modal por ítem)
-        function openFacturaDetails(id) {
-            const modalId = `facturaDetails-${id}`;
-            const bodyId = `facturaDetailsBody-${id}`;
-            const modal = new bootstrap.Modal(document.getElementById(modalId));
-            const body = document.getElementById(bodyId);
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
+        // ===== Modal único (similar a Reportes)
+        const modalEl = document.getElementById('modalFactura');
+        const modal = new bootstrap.Modal(modalEl);
+        const modalBody = document.getElementById('modalFacturaBody');
+        const modalTitle = document.getElementById('modalFacturaTitle');
+
+        function openFacturaModal(url, title) {
+            modalTitle.textContent = title || 'Gestión de Factura';
+            modalBody.innerHTML = "<div class='text-center p-3'><div class='spinner-border text-primary' role='status'></div></div>";
             modal.show();
 
-            fetch(`/Facturas/Details/${id}`)
-                .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
-                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+                .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status} ${r.statusText}`); return r.text(); })
+                .then(html => { modalBody.innerHTML = html; })
+                .catch(err => {
+                    modalBody.innerHTML = `<div class="alert alert-danger">No se pudo cargar el contenido (${err.message}).</div>`;
+                });
         }
 
-        // Funciones solo para admin/empleado
-        if (!isClient) {
-            // CREAR (carga en modal)
-            function loadFacturaCreate() {
-                const modal = new bootstrap.Modal(document.getElementById('facturaCreate'));
-                const body = document.getElementById('facturaCreateBody');
-                body.innerHTML = "<p class='text-center'>Cargando…</p>";
-                modal.show();
+        // Delegación: submit AJAX de cualquier <form> dentro del modal
+        modalBody.addEventListener('submit', async function (e) {
+            const form = e.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            e.preventDefault();
 
-                fetch(`/Facturas/Create`)
-                    .then(r => r.text())
-                    .then(html => {
-                        body.innerHTML = html;
-                        initFacturaCreateEvents();
-                    })
-                    .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
-            }
+            try {
+                const resp = await fetch(form.action, {
+                    method: form.method || 'POST',
+                    body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
 
-            // Función para inicializar eventos en el formulario de crear factura
-            function initFacturaCreateEvents() {
-                const vehiculoSelect = document.querySelector('#facturaCreateBody #vehiculoSelect');
-                const tareasContainer = document.querySelector('#facturaCreateBody #tareasContainer');
-
-                if (vehiculoSelect && tareasContainer) {
-                    vehiculoSelect.addEventListener('change', async function() {
-                        const vehiculoId = this.value;
-
-                        if (!vehiculoId) {
-                            tareasContainer.innerHTML = '<div class="p-3 text-muted">Seleccione un vehículo para cargar sus tareas…</div>';
-                            return;
-                        }
-
-                        try {
-                            tareasContainer.innerHTML = '<div class="p-3 text-muted">Cargando tareas…</div>';
-
-                            const response = await fetch(`/Facturas/TareasPorVehiculo?vehiculoId=${vehiculoId}`);
-                            if (response.ok) {
-                                const html = await response.text();
-                                tareasContainer.innerHTML = html;
-                            } else {
-                                tareasContainer.innerHTML = '<div class="p-3 text-danger">Error al cargar las tareas</div>';
-                            }
-                        } catch (error) {
-                            tareasContainer.innerHTML = '<div class="p-3 text-danger">Error al cargar las tareas</div>';
-                        }
-                    });
-
-                    // Si ya hay un vehículo seleccionado, cargar sus tareas
-                    if (vehiculoSelect.value) {
-                        vehiculoSelect.dispatchEvent(new Event('change'));
-                    }
+                const ct = resp.headers.get('content-type') || '';
+                if (resp.status === 204) { // No Content -> OK
+                    modal.hide(); showSuccessToast(); location.reload(); return;
                 }
+                if (ct.includes('application/json')) {
+                    const data = await resp.json();
+                    if (data && (data.ok || data.success)) { modal.hide(); showSuccessToast(); location.reload(); return; }
+                }
+
+                // Si llega HTML, re-pintamos con validaciones
+                modalBody.innerHTML = await resp.text();
+            } catch (err) {
+                modalBody.innerHTML = `<div class="alert alert-danger">Ocurrió un error al guardar. Revisa la consola.</div>`;
+                console.error(err);
             }
+        });
 
-            // EDITAR (carga en modal)
-            function loadFacturaEdit(id) {
-                const modal = new bootstrap.Modal(document.getElementById('facturaEdit'));
-                const body = document.getElementById('facturaEditBody');
-                body.innerHTML = "<p class='text-center'>Cargando…</p>";
-                modal.show();
+        // Botones públicos para usar el modal con parciales
+        function loadFacturaCreate() { openFacturaModal(`/Facturas/Create`, "Nueva Factura"); }
+        function loadFacturaEdit(id) { openFacturaModal(`/Facturas/Edit/${id}`, "Editar Factura"); }
+        function confirmFacturaDelete(id) { openFacturaModal(`/Facturas/Delete/${id}`, "Eliminar Factura"); }
+        function openFacturaDetails(id) { openFacturaModal(`/Facturas/Details/${id}`, "Detalles de la Factura"); }
+        function showSuccessToast() { new bootstrap.Toast(document.getElementById('toastSuccess')).show(); }
 
-                fetch(`/Facturas/Edit/${id}`)
-                    .then(r => r.text())
-                    .then(html => { body.innerHTML = html; })
-                    .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar el formulario</div>`; });
-            }
-
-            // ELIMINAR (AJAX + mensaje en modal)
-            function confirmFacturaDelete(id) {
-                const modal = new bootstrap.Modal(document.getElementById('facturaDelete'));
-                const form = document.getElementById('facturaDeleteForm');
-                const body = document.querySelector('#facturaDelete .modal-body');
-
-                const oldAlert = body.querySelector('.alert');
-                if (oldAlert) oldAlert.remove();
-
-                document.getElementById('facturaDeleteId').value = id;
-                form.action = `/Facturas/Delete/${id}`;
-                modal.show();
-            }
-
-            function submitFacturaDelete() {
-                const form = document.getElementById('facturaDeleteForm');
-                const body = document.querySelector('#facturaDelete .modal-body');
-
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const modalEl = document.getElementById('facturaDelete');
-                        const modal = bootstrap.Modal.getInstance(modalEl);
-                        modal?.hide();
-                        showSuccessToast();
-                        location.reload();
-                    } else {
-                        const old = body.querySelector('.alert'); if (old) old.remove();
-                        const alert = document.createElement('div');
-                        alert.className = 'alert alert-warning';
-                        alert.textContent = data.message || 'No se pudo eliminar la factura.';
-                        body.prepend(alert);
-                    }
-                })
-                .catch(() => {
-                    const old = body.querySelector('.alert'); if (old) old.remove();
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-danger';
-                    alert.textContent = 'Ocurrió un error al intentar eliminar.';
-                    body.prepend(alert);
-                });
-            }
-
-            // Submit AJAX del Create (mantiene el modal abierto con errores)
-            document.addEventListener('submit', function (e) {
-                const form = e.target;
-                const esCreateEnModal =
-                    form.closest('#facturaCreateBody') &&
-                    form.action.includes('/Facturas/Create');
-                if (!esCreateEnModal) return;
-
-                e.preventDefault();
-
-                const body = document.getElementById('facturaCreateBody');
-
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(async (r) => {
-                    const ct = r.headers.get('content-type') || '';
-
-                    // Éxito: JSON { success: true }
-                    if (ct.includes('application/json')) {
-                        const data = await r.json();
-                        if (data.success) {
-                            const modalEl = document.getElementById('facturaCreate');
-                            const modal = bootstrap.Modal.getInstance(modalEl);
-                            modal?.hide();
-                            showSuccessToast();
-                            location.reload();
-                            return;
-                        }
-                    }
-
-                    // Errores de validación: llega HTML parcial -> reinyectar en el modal
-                    const html = await r.text();
-                    body.innerHTML = html;
-                    // Reinicializar eventos después de recargar el HTML
-                    initFacturaCreateEvents();
-                })
-                .catch(() => {
-                    body.innerHTML = `<div class="alert alert-danger">Error al guardar. Intenta de nuevo.</div>`;
-                });
-            });
+        // Si habilitas el footer genérico comentado, esto envía el primer form del modal:
+        function submitFirstFormInModal() {
+            const f = modalBody.querySelector('form');
+            if (f) f.requestSubmit();
         }
 
-        // TOAST ÉXITO (disponible para todos)
-        function showSuccessToast() {
-            new bootstrap.Toast(document.getElementById('toastSuccess')).show();
-        }
-
-        // Hacer funciones globales para que funcionen desde onclick
+        // Exponer global
         window.loadFacturaCreate = loadFacturaCreate;
         window.loadFacturaEdit = loadFacturaEdit;
         window.confirmFacturaDelete = confirmFacturaDelete;
-        window.submitFacturaDelete = submitFacturaDelete;
         window.openFacturaDetails = openFacturaDetails;
+        window.submitFirstFormInModal = submitFirstFormInModal;
+
+        // ===== Gráfico: total facturado por fecha (suma de MontoTotal)
+        (function () {
+            const ctx = document.getElementById('facturasChart');
+            if (!ctx) return;
+
+            const labels = @Html.Raw(JsonSerializer.Serialize(
+            Model.GroupBy(f => f.Fecha.ToDateTime(TimeOnly.MinValue))
+            .OrderBy(g => g.Key)
+            .Select(g => g.Key.ToString("yyyy-MM-dd"))
+            ));
+            const data = @Html.Raw(JsonSerializer.Serialize(
+        Model.GroupBy(f => f.Fecha.ToDateTime(TimeOnly.MinValue))
+        .OrderBy(g => g.Key)
+        .Select(g => g.Sum(x => x.MontoTotal))
+        ));
+
+            if (!labels.length || !data.length) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Total facturado por fecha',
+                        data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (c) {
+                                    try { return new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' }).format(c.parsed.y); }
+                                    catch { return c.parsed.y; }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })();
     </script>
 }
