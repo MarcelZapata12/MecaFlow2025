@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
 using MecaFlow2025.Attributes;
+using Microsoft.AspNetCore.Http; // Necesario para HttpContext.Session
 
 namespace MecaFlow2025.Controllers
 {
@@ -83,9 +84,13 @@ namespace MecaFlow2025.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Buscar si hay una asistencia "abierta" (sin hora de salida) para hoy
+            // ✅ Obtener la fecha local de Costa Rica para evitar el desfase
+            var zonaHorariaCR = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+            var fechaLocalCR = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaCR).Date;
+
+            // ✅ Usar la fecha local para buscar la asistencia
             var asistenciaAbierta = await _context.Asistencias
-                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(DateTime.Today) && !a.HoraSalida.HasValue);
+                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(fechaLocalCR) && !a.HoraSalida.HasValue);
 
             ViewBag.AsistenciaAbierta = asistenciaAbierta;
             ViewBag.EmpleadoNombre = empleado.Nombre;
@@ -107,9 +112,13 @@ namespace MecaFlow2025.Controllers
                 return RedirectToAction(nameof(RegistroPersonal));
             }
 
-            // Verificar que no haya una asistencia de entrada ya registrada para hoy
+            // ✅ Obtener la fecha y hora locales de Costa Rica
+            var zonaHorariaCR = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+            var fechaHoraLocalCR = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaCR);
+
+            // ✅ Usar la fecha local de Costa Rica para la verificación
             var asistenciaHoy = await _context.Asistencias
-                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(DateTime.Today));
+                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(fechaHoraLocalCR.Date));
 
             if (asistenciaHoy != null)
             {
@@ -120,8 +129,9 @@ namespace MecaFlow2025.Controllers
             var nuevaAsistencia = new Asistencia
             {
                 EmpleadoId = empleado.EmpleadoId,
-                Fecha = DateOnly.FromDateTime(DateTime.Today),
-                HoraEntrada = TimeOnly.FromTimeSpan(DateTime.Now.TimeOfDay)
+                // ✅ Guardar la fecha y la hora local de Costa Rica
+                Fecha = DateOnly.FromDateTime(fechaHoraLocalCR.Date),
+                HoraEntrada = TimeOnly.FromTimeSpan(fechaHoraLocalCR.TimeOfDay)
             };
 
             _context.Asistencias.Add(nuevaAsistencia);
@@ -145,9 +155,13 @@ namespace MecaFlow2025.Controllers
                 return RedirectToAction(nameof(RegistroPersonal));
             }
 
-            // Buscar la asistencia abierta del empleado para hoy
+            // ✅ Obtener la fecha y hora locales de Costa Rica
+            var zonaHorariaCR = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+            var fechaHoraLocalCR = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, zonaHorariaCR);
+
+            // ✅ Usar la fecha local de Costa Rica para buscar la asistencia abierta del empleado para hoy
             var asistencia = await _context.Asistencias
-                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(DateTime.Today) && !a.HoraSalida.HasValue);
+                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(fechaHoraLocalCR.Date) && !a.HoraSalida.HasValue);
 
             if (asistencia == null)
             {
@@ -155,7 +169,8 @@ namespace MecaFlow2025.Controllers
                 return RedirectToAction(nameof(RegistroPersonal));
             }
 
-            asistencia.HoraSalida = TimeOnly.FromTimeSpan(DateTime.Now.TimeOfDay);
+            // ✅ Guardar la hora de salida local de Costa Rica
+            asistencia.HoraSalida = TimeOnly.FromTimeSpan(fechaHoraLocalCR.TimeOfDay);
             _context.Asistencias.Update(asistencia);
             await _context.SaveChangesAsync();
 
