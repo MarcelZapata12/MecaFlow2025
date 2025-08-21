@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Clientes";
+    var userRole = ViewBag.UserRole as string;
+    var isAdmin = userRole == "Administrador";
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -87,15 +89,59 @@
         padding: 0;
         font-size: 1.25rem;
         color: inherit;
+        line-height: 1;
     }
 
-    .action-icons {
-        position: absolute;
-        top: .75rem;
-        right: 1rem;
+    /* ===== Encabezado flexible para que el nombre no tape los botones ===== */
+    .client-card .header-flex {
         display: flex;
+        align-items: flex-start;
         gap: .75rem;
-        z-index: 2;
+        margin-bottom: .25rem;
+    }
+
+    .client-card .title-ellipsis {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        flex: 1 1 auto; /* ocupa el espacio disponible */
+        min-width: 0; /* necesario para ellipsis en contenedores flex */
+        color: #66ccff;
+        font-weight: 700;
+    }
+
+        .client-card .title-ellipsis .name {
+            display: inline-block;
+            min-width: 0;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+    /* Botones de acción en flujo normal (no absolute) */
+    .action-icons {
+        position: static; /* ← clave para evitar solapamiento */
+        top: auto;
+        right: auto;
+        display: flex;
+        gap: .5rem;
+        z-index: auto;
+        flex-shrink: 0; /* no se encogen */
+    }
+
+    /* (Opcional) en pantallas muy estrechas permitir 2 líneas para el nombre */
+    @@media (max-width: 420px) {
+        .client-card .title-ellipsis .name
+
+    {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
     }
 
     .modal-content {
@@ -106,8 +152,6 @@
 </style>
 
 <div class="container py-4">
-
-    <!-- 🔔 Alertas de servidor -->
     @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -123,32 +167,42 @@
         </div>
     }
 
-    <!-- Encabezado sin botón de crear -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-white">
             <i class="bi bi-people-fill me-2"></i>Clientes
         </h2>
         <div class="d-flex align-items-center">
-            <input id="clientSearch" type="search" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…">
+            <input id="clientSearch" type="search" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Buscar por nombre o correo…" />
         </div>
     </div>
 
-    <!-- Grid de tarjetas -->
     <div id="clientsGrid" class="client-grid">
         @foreach (var c in Model)
         {
             <div id="cliente-@c.ClienteId" class="client-card card p-3">
-                <div class="action-icons">
-                    <a href="#" class="text-info icon-btn" title="Detalles" onclick="openClienteDetails(@c.ClienteId)"><i class="bi bi-eye"></i></a>
-                    <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadClienteEdit(@c.ClienteId)"><i class="bi bi-pencil-square"></i></a>
-                    <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmClienteDelete(@c.ClienteId)">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </div>
 
-                <h5 class="card-title" style="color:#66ccff;font-weight:700;">
-                    <i class="bi bi-person-circle me-1"></i>@c.Nombre
-                </h5>
+                <!-- Encabezado FLEX: nombre con ellipsis + acciones a la derecha -->
+                <div class="header-flex">
+                    <h5 class="title-ellipsis">
+                        <i class="bi bi-person-circle"></i>
+                        <span class="name">@c.Nombre</span>
+                    </h5>
+
+                    <div class="action-icons">
+                        <a href="#" class="text-info icon-btn" title="Detalles" onclick="openClienteDetails(@c.ClienteId)">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="#" class="text-warning icon-btn" title="Editar" onclick="loadClienteEdit(@c.ClienteId)">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        @if (isAdmin)
+                        {
+                            <button type="button" class="icon-btn text-danger" title="Eliminar" onclick="confirmClienteDelete(@c.ClienteId)">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        }
+                    </div>
+                </div>
 
                 <p class="card-text mb-1"><i class="bi bi-envelope-fill me-1 text-secondary"></i>@c.Correo</p>
                 <p class="card-text mb-1"><i class="bi bi-telephone-fill me-1 text-secondary"></i>@c.Telefono</p>
@@ -159,7 +213,6 @@
                 </p>
             </div>
 
-            <!-- Modal Details -->
             <div class="modal fade" id="clienteDetails-@c.ClienteId" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
@@ -177,7 +230,6 @@
     </div>
 </div>
 
-<!-- Toast de éxito -->
 <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
         <div class="toast-body">¡Acción realizada con éxito!</div>
@@ -185,7 +237,6 @@
     </div>
 </div>
 
-<!-- Modales para editar y eliminar (sin modal de crear) -->
 <div class="modal fade" id="clienteEdit" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -317,13 +368,9 @@
             new bootstrap.Toast(document.getElementById('toastSuccess')).show();
         }
 
-        // Mostrar toast si hay Success en TempData
-        @{
-                if (TempData["Success"] is string)
-                {
-                        <text>showSuccessToast();</text>
-                }
-
+        @if (TempData["Success"] is string)
+        {
+                <text>showSuccessToast();</text>
         }
     </script>
 }

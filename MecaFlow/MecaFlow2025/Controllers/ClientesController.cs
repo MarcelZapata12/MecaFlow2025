@@ -11,7 +11,7 @@ using System; // por DateTime
 
 namespace MecaFlow2025.Controllers
 {
-    [AuthorizeRole("Administrador")]
+    [AuthorizeRole("Administrador","Empleado")]
     public class ClientesController : Controller
     {
         private readonly MecaFlowContext _context;
@@ -34,7 +34,11 @@ namespace MecaFlow2025.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Clientes.ToListAsync());
+            var userRole = HttpContext.Session.GetString("UserRole");
+            ViewBag.UserRole = userRole;
+
+            var clientes = await _context.Clientes.ToListAsync();
+            return View(clientes);
         }
 
         public async Task<IActionResult> Details(int? id)

@@ -10,6 +10,7 @@ namespace MecaFlow2025.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
+            // 0) Respetar [AllowAnonymous]
             var endpoint = context.GetEndpoint();
             if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
             {
@@ -22,24 +23,25 @@ namespace MecaFlow2025.Middleware
             var userId = context.Session.GetString("UserId");
             var userRole = context.Session.GetString("UserRole");
 
-            if (path == "/" ||
-                path.StartsWith("/auth") ||
-                path.StartsWith("/home") ||
-                path.StartsWith("/acercanosotros") ||
-                path.StartsWith("/css/") ||
-                path.StartsWith("/js/") ||
-                path.StartsWith("/lib/") ||
-                path.StartsWith("/images/") ||
-                path.StartsWith("/favicon") ||
-                path == "/robots.txt" ||
-                path == "/sitemap.xml")
+            // 1) Rutas públicas y estáticos
+            if (path == "/"
+                || path.StartsWith("/auth")
+                || path.StartsWith("/home")
+                || path.StartsWith("/acercanosotros")
+                || path.StartsWith("/css/")
+                || path.StartsWith("/js/")
+                || path.StartsWith("/lib/")
+                || path.StartsWith("/images/")
+                || path.StartsWith("/favicon")
+                || path == "/robots.txt"
+                || path == "/sitemap.xml")
             {
                 await _next(context);
                 return;
             }
 
-            // --- ALLOWLIST: Chat para cualquier usuario autenticado ---
-            if (path.StartsWith("/api/chat")) 
+            // --- ALLOWLIST: Chat para cualquier usuario autenticado (incluye /api/chat y /api/chat/reset) ---
+            if (path.StartsWith("/api/chat"))
             {
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -50,7 +52,7 @@ namespace MecaFlow2025.Middleware
                 await _next(context);
                 return;
             }
-            // -----------------------------------------------------------
+            // -------------------------------------------------------------------------------------------------
 
             // 2) Sin sesión
             if (string.IsNullOrEmpty(userId))
@@ -67,7 +69,7 @@ namespace MecaFlow2025.Middleware
                 return;
             }
 
-            // 3) Chequeo de permisos por rol (solo para lo no-API o APIs distintas a /api/chat)
+            // 3) Chequeo de permisos por rol (no-API o APIs distintas a /api/chat)
             if (!HasPermission(path, userRole))
             {
                 if (isApi)
@@ -96,21 +98,23 @@ namespace MecaFlow2025.Middleware
             // Empleado
             if (userRole == "Empleado")
             {
-                return path.Contains("/asistencias") ||
-                       path.Contains("/diagnosticos") ||
-                       path.Contains("/vehiculos") ||
-                       path.Contains("/pagos") ||
-                       path.Contains("/facturas") ||
-                       path.Contains("/home");
+                return path.Contains("/asistencias")
+                    || path.Contains("/diagnosticos")
+                    || path.Contains("/vehiculos")
+                    || path.Contains("/pagos")
+                    || path.Contains("/facturas")
+                    || path.Contains("/clientes") 
+                    || path.Contains("/tareas")    
+                    || path.Contains("/home");
             }
 
             // Cliente
             if (userRole == "Cliente")
             {
-                return path.Contains("/diagnosticos") ||
-                       path.Contains("/vehiculos") ||
-                       path.Contains("/facturas") ||
-                       path.Contains("/home");
+                return path.Contains("/diagnosticos")
+                    || path.Contains("/vehiculos")
+                    || path.Contains("/facturas")
+                    || path.Contains("/home");
             }
 
             return false;
