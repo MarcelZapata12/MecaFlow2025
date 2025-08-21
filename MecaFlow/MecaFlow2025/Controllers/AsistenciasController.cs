@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MecaFlow2025.Models;
@@ -16,246 +20,234 @@ namespace MecaFlow2025.Controllers
             _context = context;
         }
 
-        // GET: Asistencias (solo listado general; útil para admin)
-        public async Task<IActionResult> Index()
+        // GET: Asistencias
+        public async Task<IActionResult> Index(string? nombre, DateOnly? fechaInicio, DateOnly? fechaFin)
         {
-            var asistencias = await _context.Asistencias
-                .Include(a => a.Empleado)
-                .OrderByDescending(a => a.Fecha)
-                .ThenByDescending(a => a.HoraEntrada)
-                .ToListAsync();
+            var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
 
-            return View(asistencias);
-        }
+            IQueryable<Asistencia> asistencias = _context.Asistencias.Include(a => a.Empleado);
 
-        // -------- REGISTRO PERSONAL (solo el usuario logueado) --------
-
-        // GET: Asistencias/RegistroPersonal
-        public async Task<IActionResult> RegistroPersonal()
-        {
-            try
+            // Los administradores verán todas las asistencias y podrán aplicar filtros
+            if (userRole == "Administrador")
             {
-                var empleadoActual = await GetEmpleadoActualAsync();
-                if (empleadoActual == null)
+                ViewBag.IsAdminReadOnly = true;
+                ViewBag.CurrentNombre = nombre;
+                ViewBag.CurrentFechaInicio = fechaInicio;
+                ViewBag.CurrentFechaFin = fechaFin;
+
+                if (!string.IsNullOrEmpty(nombre))
                 {
-                    TempData["Error"] = "No se pudo identificar al usuario en sesión o no está activo.";
-                    ViewBag.AsistenciasHoy = new List<Asistencia>();
-                    ViewBag.EmpleadoActual = null;
-                    return View();
+                    asistencias = asistencias.Where(a => a.Empleado.Nombre.Contains(nombre));
                 }
 
-                ViewBag.EmpleadoActual = new
+                if (fechaInicio.HasValue)
                 {
-                    empleadoActual.EmpleadoId,
-                    empleadoActual.Nombre,
-                    empleadoActual.Puesto
-                };
+                    asistencias = asistencias.Where(a => a.Fecha >= fechaInicio.Value);
+                }
 
-                var hoy = DateOnly.FromDateTime(DateTime.Today);
-
-                // Asistencias de HOY solo del empleado actual
-                var asistenciasHoy = await _context.Asistencias
-                    .Include(a => a.Empleado)
-                    .Where(a => a.Fecha == hoy && a.EmpleadoId == empleadoActual.EmpleadoId)
-                    .OrderBy(a => a.Empleado.Nombre)
-                    .ToListAsync();
-
-                ViewBag.AsistenciasHoy = asistenciasHoy;
+                if (fechaFin.HasValue)
+                {
+                    asistencias = asistencias.Where(a => a.Fecha <= fechaFin.Value);
+                }
             }
-            catch (Exception ex)
+            // Si el usuario es un Empleado, solo puede ver sus propias asistencias y no se aplican filtros
+            else if (userRole == "Empleado" && !string.IsNullOrEmpty(userEmail))
             {
-                TempData["Error"] = "Error al cargar los datos: " + ex.Message;
-                ViewBag.AsistenciasHoy = new List<Asistencia>();
-                ViewBag.EmpleadoActual = null;
+                var empleado = await _context.Empleados.FirstOrDefaultAsync(e => e.Correo == userEmail);
+                if (empleado != null)
+                {
+                    asistencias = asistencias.Where(a => a.EmpleadoId == empleado.EmpleadoId);
+                }
+                else
+                {
+                    // En caso de que el empleado no se encuentre, se devuelve una lista vacía.
+                    asistencias = asistencias.Where(a => false);
+                }
+                ViewBag.IsAdminReadOnly = false;
             }
+
+            return View(await asistencias.ToListAsync());
+        }
+
+        // GET: Asistencias/RegistroPersonal
+        [HttpGet]
+        public async Task<IActionResult> RegistroPersonal()
+        {
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var empleado = await _context.Empleados.FirstOrDefaultAsync(e => e.Correo == userEmail);
+
+            if (empleado == null)
+            {
+                TempData["Error"] = "No se pudo encontrar la información del empleado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Buscar si hay una asistencia "abierta" (sin hora de salida) para hoy
+            var asistenciaAbierta = await _context.Asistencias
+                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(DateTime.Today) && !a.HoraSalida.HasValue);
+
+            ViewBag.AsistenciaAbierta = asistenciaAbierta;
+            ViewBag.EmpleadoNombre = empleado.Nombre;
 
             return View();
         }
 
-        // POST: Registrar Entrada (sin parámetros; usa el usuario en sesión)
+        // POST: Asistencias/RegistrarEntrada
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarEntrada()
         {
-            try
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var empleado = await _context.Empleados.FirstOrDefaultAsync(e => e.Correo == userEmail);
+
+            if (empleado == null)
             {
-                var empleado = await GetEmpleadoActualAsync();
-                if (empleado == null)
-                {
-                    TempData["Error"] = "Sesión inválida o empleado inactivo.";
-                    return RedirectToAction(nameof(RegistroPersonal));
-                }
-
-                var hoy = DateOnly.FromDateTime(DateTime.Today);
-                var horaActual = TimeOnly.FromDateTime(DateTime.Now);
-
-                var asistencia = await _context.Asistencias
-                    .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == hoy);
-
-                if (asistencia != null)
-                {
-                    if (asistencia.HoraEntrada.HasValue)
-                    {
-                        TempData["Error"] = $"{empleado.Nombre} ya registró su entrada hoy a las {asistencia.HoraEntrada.Value:HH:mm}.";
-                    }
-                    else
-                    {
-                        asistencia.HoraEntrada = horaActual;
-                        _context.Update(asistencia);
-                        await _context.SaveChangesAsync();
-                        TempData["Success"] = $"Entrada registrada: {empleado.Nombre} {horaActual:HH:mm}.";
-                    }
-                }
-                else
-                {
-                    _context.Add(new Asistencia
-                    {
-                        EmpleadoId = empleado.EmpleadoId,
-                        Fecha = hoy,
-                        HoraEntrada = horaActual
-                    });
-                    await _context.SaveChangesAsync();
-                    TempData["Success"] = $"Entrada registrada: {empleado.Nombre} {horaActual:HH:mm}.";
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "Error al registrar la entrada: " + ex.Message;
+                TempData["Error"] = "No se pudo encontrar la información del empleado.";
+                return RedirectToAction(nameof(RegistroPersonal));
             }
 
+            // Verificar que no haya una asistencia de entrada ya registrada para hoy
+            var asistenciaHoy = await _context.Asistencias
+                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(DateTime.Today));
+
+            if (asistenciaHoy != null)
+            {
+                TempData["Error"] = "Ya se ha registrado una entrada para el día de hoy.";
+                return RedirectToAction(nameof(RegistroPersonal));
+            }
+
+            var nuevaAsistencia = new Asistencia
+            {
+                EmpleadoId = empleado.EmpleadoId,
+                Fecha = DateOnly.FromDateTime(DateTime.Today),
+                HoraEntrada = TimeOnly.FromTimeSpan(DateTime.Now.TimeOfDay)
+            };
+
+            _context.Asistencias.Add(nuevaAsistencia);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "¡Entrada registrada con éxito!";
             return RedirectToAction(nameof(RegistroPersonal));
         }
 
-        // POST: Registrar Salida (sin parámetros; usa el usuario en sesión)
+        // POST: Asistencias/RegistrarSalida
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarSalida()
         {
-            try
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var empleado = await _context.Empleados.FirstOrDefaultAsync(e => e.Correo == userEmail);
+
+            if (empleado == null)
             {
-                var empleado = await GetEmpleadoActualAsync();
-                if (empleado == null)
-                {
-                    TempData["Error"] = "Sesión inválida o empleado inactivo.";
-                    return RedirectToAction(nameof(RegistroPersonal));
-                }
-
-                var hoy = DateOnly.FromDateTime(DateTime.Today);
-                var horaActual = TimeOnly.FromDateTime(DateTime.Now);
-
-                var asistencia = await _context.Asistencias
-                    .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == hoy);
-
-                if (asistencia == null)
-                {
-                    TempData["Error"] = $"No hay entrada registrada para {empleado.Nombre} el día de hoy.";
-                    return RedirectToAction(nameof(RegistroPersonal));
-                }
-
-                if (!asistencia.HoraEntrada.HasValue)
-                {
-                    TempData["Error"] = $"Primero registra la entrada.";
-                    return RedirectToAction(nameof(RegistroPersonal));
-                }
-
-                if (asistencia.HoraSalida.HasValue)
-                {
-                    TempData["Error"] = $"Ya registraste salida hoy a las {asistencia.HoraSalida.Value:HH:mm}.";
-                    return RedirectToAction(nameof(RegistroPersonal));
-                }
-
-                if (horaActual <= asistencia.HoraEntrada.Value)
-                {
-                    TempData["Error"] = "La hora de salida debe ser posterior a la de entrada.";
-                    return RedirectToAction(nameof(RegistroPersonal));
-                }
-
-                asistencia.HoraSalida = horaActual;
-                _context.Update(asistencia);
-                await _context.SaveChangesAsync();
-
-                var diff = horaActual.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
-                TempData["Success"] = $"Salida registrada: {empleado.Nombre} {horaActual:HH:mm}. Tiempo: {(int)diff.TotalHours}h {diff.Minutes}m.";
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "Error al registrar la salida: " + ex.Message;
+                TempData["Error"] = "No se pudo encontrar la información del empleado.";
+                return RedirectToAction(nameof(RegistroPersonal));
             }
 
+            // Buscar la asistencia abierta del empleado para hoy
+            var asistencia = await _context.Asistencias
+                .FirstOrDefaultAsync(a => a.EmpleadoId == empleado.EmpleadoId && a.Fecha == DateOnly.FromDateTime(DateTime.Today) && !a.HoraSalida.HasValue);
+
+            if (asistencia == null)
+            {
+                TempData["Error"] = "No hay una entrada de hoy sin registrar una salida.";
+                return RedirectToAction(nameof(RegistroPersonal));
+            }
+
+            asistencia.HoraSalida = TimeOnly.FromTimeSpan(DateTime.Now.TimeOfDay);
+            _context.Asistencias.Update(asistencia);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "¡Salida registrada con éxito!";
             return RedirectToAction(nameof(RegistroPersonal));
         }
 
-        // GET: Asistencias por empleado
-        // - Empleado: siempre ve SOLO las suyas (ignora empleadoId externo)
-        // - Admin: puede consultar a quien guste (empleadoId requerido)
-        public async Task<IActionResult> MisAsistencias(int empleadoId, DateTime? fechaInicio, DateTime? fechaFin)
+        // GET: Asistencias/Details/5
+        public async Task<IActionResult> Details(int? id)
         {
-            var userRole = HttpContext.Session.GetString("UserRole");
+            if (id == null) return NotFound();
+            var asistencia = await _context.Asistencias.Include(a => a.Empleado).FirstOrDefaultAsync(m => m.AsistenciaId == id);
+            if (asistencia == null) return NotFound();
+            return View(asistencia);
+        }
 
-            Empleado? empleadoConsulta;
-            if (userRole == "Empleado")
+        // GET: Asistencias/Create
+        public IActionResult Create()
+        {
+            ViewData["EmpleadoId"] = new SelectList(_context.Empleados, "EmpleadoId", "Cedula");
+            return View();
+        }
+
+        // POST: Asistencias/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("AsistenciaId,EmpleadoId,Fecha,HoraLlegada,HoraSalida,FechaRegistro")] Asistencia asistencia)
+        {
+            if (ModelState.IsValid)
             {
-                empleadoConsulta = await GetEmpleadoActualAsync();
-                if (empleadoConsulta == null)
+                _context.Add(asistencia);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["EmpleadoId"] = new SelectList(_context.Empleados, "EmpleadoId", "Cedula", asistencia.EmpleadoId);
+            return View(asistencia);
+        }
+
+        // GET: Asistencias/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+            var asistencia = await _context.Asistencias.FindAsync(id);
+            if (asistencia == null) return NotFound();
+            ViewData["EmpleadoId"] = new SelectList(_context.Empleados, "EmpleadoId", "Cedula", asistencia.EmpleadoId);
+            return View(asistencia);
+        }
+
+        // POST: Asistencias/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("AsistenciaId,EmpleadoId,Fecha,HoraLlegada,HoraSalida,FechaRegistro")] Asistencia asistencia)
+        {
+            if (id != asistencia.AsistenciaId) return NotFound();
+            if (ModelState.IsValid)
+            {
+                try
                 {
-                    TempData["Error"] = "No se pudo identificar al usuario.";
-                    return RedirectToAction(nameof(RegistroPersonal));
+                    _context.Update(asistencia);
+                    await _context.SaveChangesAsync();
                 }
-            }
-            else // Administrador
-            {
-                empleadoConsulta = await _context.Empleados.FindAsync(empleadoId);
-                if (empleadoConsulta == null)
+                catch (DbUpdateConcurrencyException)
                 {
-                    return NotFound();
+                    if (!AsistenciaExists(asistencia.AsistenciaId)) return NotFound();
+                    else throw;
                 }
+                return RedirectToAction(nameof(Index));
             }
-
-            // Rango por defecto: mes actual
-            if (!fechaInicio.HasValue)
-                fechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-
-            if (!fechaFin.HasValue)
-                fechaFin = fechaInicio.Value.AddMonths(1).AddDays(-1);
-
-            var fechaInicioOnly = DateOnly.FromDateTime(fechaInicio.Value);
-            var fechaFinOnly = DateOnly.FromDateTime(fechaFin.Value);
-
-            var asistencias = await _context.Asistencias
-                .Include(a => a.Empleado)
-                .Where(a => a.EmpleadoId == empleadoConsulta.EmpleadoId &&
-                            a.Fecha >= fechaInicioOnly &&
-                            a.Fecha <= fechaFinOnly)
-                .OrderByDescending(a => a.Fecha)
-                .ToListAsync();
-
-            ViewBag.Empleado = empleadoConsulta;
-            ViewBag.FechaInicio = fechaInicio;
-            ViewBag.FechaFin = fechaFin;
-
-            return View(asistencias);
+            ViewData["EmpleadoId"] = new SelectList(_context.Empleados, "EmpleadoId", "Cedula", asistencia.EmpleadoId);
+            return View(asistencia);
         }
 
-        // -------- Helpers --------
-
-        private async Task<Empleado?> GetEmpleadoActualAsync()
+        // GET: Asistencias/Delete/5
+        public async Task<IActionResult> Delete(int? id)
         {
-            var userName = HttpContext.Session.GetString("UserName");
-            if (string.IsNullOrWhiteSpace(userName))
-                return null;
-
-            // Si manejas "Usuario" o "Correo" en Empleado, puedes ampliar la condición aquí.
-            return await _context.Empleados
-                .FirstOrDefaultAsync(e => e.Activo && e.Nombre == userName);
+            if (id == null) return NotFound();
+            var asistencia = await _context.Asistencias.Include(a => a.Empleado).FirstOrDefaultAsync(m => m.AsistenciaId == id);
+            if (asistencia == null) return NotFound();
+            return View(asistencia);
         }
 
-        private TimeSpan? CalcularHorasTrabajadas(TimeOnly? entrada, TimeOnly? salida)
+        // POST: Asistencias/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (entrada.HasValue && salida.HasValue)
-            {
-                return salida.Value.ToTimeSpan() - entrada.Value.ToTimeSpan();
-            }
-            return null;
+            var asistencia = await _context.Asistencias.FindAsync(id);
+            if (asistencia != null) _context.Asistencias.Remove(asistencia);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
+
+        private bool AsistenciaExists(int id) => _context.Asistencias.Any(e => e.AsistenciaId == id);
     }
 }

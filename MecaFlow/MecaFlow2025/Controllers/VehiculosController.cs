@@ -235,24 +235,40 @@ namespace MecaFlow2025.Controllers
         {
             var veh = await _context.Vehiculos.FirstOrDefaultAsync(v => v.VehiculoId == id);
             if (veh == null)
-                return Request.Headers["X-Requested-With"] == "XMLHttpRequest"
-                    ? Json(new { success = false, message = "El vehículo no existe." })
-                    : NotFound();
-
-            // Verifica dependencias (ajusta según tu modelo)
-            bool tieneDependencias =
-                await _context.Diagnosticos.AnyAsync(d => d.VehiculoId == id) ||
-                await _context.Facturas.AnyAsync(f => f.VehiculoId == id) ||
-                await _context.IngresosVehiculos.AnyAsync(i => i.VehiculoId == id) ||
-                await _context.TareasVehiculos.AnyAsync(t => t.VehiculoId == id);
-
-            if (tieneDependencias)
             {
-                var msg = "No se puede eliminar: el vehículo tiene registros asociados (Diagnósticos/Facturas/Ingresos/Tareas).";
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, message = msg });
+                TempData["Error"] = "El vehículo no existe o ya fue eliminado.";
+                return RedirectToAction(nameof(Index));
+            }
 
-                TempData["Error"] = msg;
+            // Contar registros asociados
+            var diagnosticosCount = await _context.Diagnosticos.CountAsync(d => d.VehiculoId == id);
+            var facturasCount = await _context.Facturas.CountAsync(f => f.VehiculoId == id);
+            var ingresosCount = await _context.IngresosVehiculos.CountAsync(i => i.VehiculoId == id);
+            var tareasCount = await _context.TareasVehiculos.CountAsync(t => t.VehiculoId == id);
+
+            if (diagnosticosCount > 0 || facturasCount > 0 || ingresosCount > 0 || tareasCount > 0)
+            {
+                var errorMessages = new List<string>();
+                if (diagnosticosCount > 0)
+                {
+                    errorMessages.Add($"{diagnosticosCount} diagnóstico(s)");
+                }
+                if (facturasCount > 0)
+                {
+                    errorMessages.Add($"{facturasCount} factura(s)");
+                }
+                if (ingresosCount > 0)
+                {
+                    errorMessages.Add($"{ingresosCount} ingreso(s)");
+                }
+                if (tareasCount > 0)
+                {
+                    errorMessages.Add($"{tareasCount} tarea(s)");
+                }
+
+                TempData["Error"] = $"No se puede eliminar el vehículo porque tiene información asociada: " +
+                                   $"{string.Join(" y ", errorMessages)}. " +
+                                   $"Elimine primero esos registros desde sus respectivos módulos.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -261,21 +277,14 @@ namespace MecaFlow2025.Controllers
             try
             {
                 await _context.SaveChangesAsync();
-
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = true });
-
-                return RedirectToAction(nameof(Index));
+                TempData["Success"] = "Vehículo eliminado correctamente.";
             }
             catch (DbUpdateException)
             {
-                var msg = "No se pudo eliminar el vehículo por referencias existentes.";
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                    return Json(new { success = false, message = msg });
-
-                TempData["Error"] = msg;
-                return RedirectToAction(nameof(Index));
+                TempData["Error"] = "No se pudo eliminar el vehículo por referencias existentes.";
             }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // ========= NUEVO: Marca -> Modelo (JSON) =========

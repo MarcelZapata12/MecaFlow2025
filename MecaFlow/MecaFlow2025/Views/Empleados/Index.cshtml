@@ -31,7 +31,7 @@
 
     }
 
-   @@keyframes fadeInUp {
+    @@keyframes fadeInUp {
         from
 
     {
@@ -168,6 +168,9 @@
         </div>
     }
 
+    <!-- Contenedor para alertas dinámicas -->
+    <div id="dynamicAlerts"></div>
+
     <!-- Encabezado -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="text-white">
@@ -268,7 +271,30 @@
         });
 
         /* ===========================
-           MODALES (jQuery + AJAX)
+           FUNCIÓN PARA MOSTRAR BANNER DE ERROR
+           =========================== */
+        function showErrorBanner(message) {
+            // Limpiar alertas dinámicas previas
+            const alertsContainer = document.getElementById('dynamicAlerts');
+            alertsContainer.innerHTML = '';
+
+            // Crear nuevo banner de error
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+            alertDiv.setAttribute('role', 'alert');
+            alertDiv.innerHTML = `
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            alertsContainer.appendChild(alertDiv);
+
+            // Scroll hacia arriba para que se vea el error
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* ===========================
+           MODALES (jQuery + AJAX) - CORREGIDO PARA BANNER
            =========================== */
         const modalEl = document.getElementById('modalCrud');
         const modal = new bootstrap.Modal(modalEl);
@@ -309,6 +335,7 @@
                     const ct = res.headers.get('content-type') || '';
                     if (ct.includes('application/json')) {
                         const resp = await res.json();
+
                         if (resp && resp.ok) {
                             modal.hide();
 
@@ -335,7 +362,9 @@
                                 location.reload();
                             }
                         } else if (resp && resp.error) {
-                            modalBody.prepend(`<div class="alert alert-danger ajax-alert">${resp.error}</div>`);
+                            // *** CERRAR MODAL Y MOSTRAR ERROR COMO BANNER ***
+                            modal.hide();
+                            showErrorBanner(resp.error);
                         }
                     } else {
                         const html = await res.text();
@@ -343,7 +372,9 @@
                         hookAjaxForm();
                     }
                 } catch {
-                    modalBody.innerHTML = `<div class="alert alert-danger">Ocurrió un error inesperado.</div>`;
+                    // *** CERRAR MODAL Y MOSTRAR ERROR COMO BANNER ***
+                    modal.hide();
+                    showErrorBanner('Ocurrió un error inesperado.');
                 }
             });
         }
@@ -372,10 +403,10 @@
 
         // Mostrar toast si hay Success en TempData
         @{
-            if (TempData["Success"] is string)
-            {
-                <text>showSuccessToast();</text>
-            }
+                if (TempData["Success"] is string)
+                {
+                        <text>showSuccessToast();</text>
+                }
         }
     </script>
 }

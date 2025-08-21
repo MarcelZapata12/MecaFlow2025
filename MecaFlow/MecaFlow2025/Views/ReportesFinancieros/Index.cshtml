@@ -114,9 +114,30 @@
     #modalReporte .btn-secondary {
         color: #e5e7eb !important
     }
+
+    /* Estilos del modal de vehiculos para el modal de eliminar*/
+    .modal-content.dark-theme {
+        background-color: #1f1f1f;
+        color: white;
+    }
 </style>
 
 <div class="container mt-5 fade-in">
+    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold">
             <i class="bi bi-cash-coin text-warning"></i> Reportes Financieros — @tituloEsp
@@ -228,7 +249,7 @@
                                 <i class="bi bi-pencil-square"></i>
                             </a>
                             <a href="javascript:void(0)" class="btn btn-sm btn-danger"
-                               onclick="openModal('@Url.Action("Delete", "ReportesFinancieros", new { id = r.ReporteId })')">
+                               onclick="confirmReporteDelete(@r.ReporteId)">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
@@ -239,7 +260,6 @@
     </table>
 </div>
 
-<!-- Modal centrado -->
 <div class="modal fade" id="modalReporte" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow">
@@ -258,7 +278,28 @@
     </div>
 </div>
 
-<!-- Chart.js -->
+<div class="modal fade" id="reporteDelete" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content dark-theme">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea eliminar este reporte?</p>
+                <form id="reporteDeleteForm" method="post" action="">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="reporteDeleteId" />
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="submitReporteDelete()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
@@ -272,7 +313,6 @@
       const ingresos = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.TotalIngresos).ToList()));
       const gastos   = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.TotalGastos).ToList()));
       const utilidad = @Html.Raw(JsonSerializer.Serialize(Model.Select(x => x.Utilidad).ToList()));
-
       if (!labels || labels.length === 0) {
         // Si no hay datos, mostramos un placeholder
         canvas.parentElement.innerHTML = '<div class="text-center text-secondary py-4">Sin datos para graficar.</div>';
@@ -281,7 +321,6 @@
 
       const fmtCRC = (v) =>
         new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 2 }).format(Number(v||0));
-
       new Chart(canvas, {
         data: {
           labels,
@@ -292,7 +331,7 @@
         type: 'line',
         label: 'Utilidad',
         data: utilidad,
-        borderColor: '#0d6efd',          
+        borderColor: '#0d6efd',
         backgroundColor: 'rgba(13,110,253,.15)',
         pointBackgroundColor: '#0d6efd',
         pointBorderColor: '#0d6efd',
@@ -363,7 +402,6 @@
           bodyEl.innerHTML = `<div class="alert alert-danger">Ocurrió un error al guardar.</div>`;
         }
       });
-
       window.openModal = function (url) {
         bodyEl.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>';
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
@@ -378,4 +416,16 @@
           });
       };
     })();
+
+    // ====== NUEVAS FUNCIONES DE ELIMINACION ======
+    function confirmReporteDelete(id) {
+        const modal = new bootstrap.Modal(document.getElementById('reporteDelete'));
+        document.getElementById('reporteDeleteId').value = id;
+        document.getElementById('reporteDeleteForm').action = `/ReportesFinancieros/Delete/${id}`;
+        modal.show();
+    }
+
+    function submitReporteDelete() {
+        document.getElementById('reporteDeleteForm').submit();
+    }
 </script>

@@ -17,21 +17,17 @@ public partial class Vehiculo
     [StringLength(20)]
     public string Placa { get; set; } = null!;
 
+    [Display(Name = "Año")]
     public int? Anio { get; set; }
 
     public int ClienteId { get; set; }
 
+    [Display(Name = "Marca")] 
     public int MarcaId { get; set; }
 
+    [Display(Name = "Modelo")] 
     public int ModeloId { get; set; }
 
-
-    /*
-    [Column(TypeName = "datetime")]
-    public DateTime? FechaRegistro { get; set; }
-    */
-
-    //prueba de fecha
     [Column(TypeName = "datetime")]
     [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime? FechaRegistro { get; set; }

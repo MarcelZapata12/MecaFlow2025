@@ -1,8 +1,10 @@
-﻿@model IEnumerable<MecaFlow2025.Models.Asistencia>
+﻿@using MecaFlow2025.Models
+@model Asistencia
 
 @{
-    ViewData["Title"] = "Registro Personal de Asistencia";
-    var yo = ViewBag.EmpleadoActual; // { EmpleadoId, Nombre, Puesto }
+    ViewData["Title"] = "Registro de Asistencia Personal";
+    var asistenciaAbierta = (Asistencia)ViewBag.AsistenciaAbierta;
+    var empleadoNombre = (string)ViewBag.EmpleadoNombre;
 }
 
 <style>
@@ -21,216 +23,62 @@
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
-    .badge {
-        font-size: .8rem;
-        padding: .4rem .8rem;
-        border-radius: .5rem;
-    }
-
-    .btn-lg {
-        padding: .75rem 1.25rem;
-        font-size: 1.1rem;
-    }
-
-    .avatar-sm {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-        font-weight: bold;
+    .form-container {
+        max-width: 600px;
+        margin: 4rem auto;
     }
 </style>
 
-<div class="container mt-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">
-                <i class="fas fa-user-clock"></i> Registro Personal de Asistencia
-            </h4>
-            <a href="@Url.Action("Index")" class="btn btn-secondary">
-                <i class="fas fa-list"></i> Ver Todos los Registros
-            </a>
-        </div>
+<div class="container form-container">
+    <div class="card p-4">
+        <div class="card-body text-center">
+            <h1 class="card-title mb-4">Registro de Asistencia</h1>
+            <h5 class="mb-4">Bienvenido, @empleadoNombre</h5>
 
-        <div class="card-body">
-
-            @* Alertas inline confiables *@
             @if (TempData["Success"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-1"></i> @TempData["Success"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="fas fa-check-circle"></i> @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
+
             @if (TempData["Error"] != null)
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-1"></i> @TempData["Error"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
 
-            @* Header con el usuario actual *@
-            <div class="d-flex align-items-center mb-4">
-                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                    @((yo?.Nombre as string)?.Substring(0, 1).ToUpper())
-                </div>
-                <div>
-                    <div class="fw-bold">@yo?.Nombre</div>
-                    <small class="text-muted">@yo?.Puesto</small>
-                </div>
-            </div>
+            @if (asistenciaAbierta == null)
+            {
+                <p>No tienes una asistencia registrada para el día de hoy. Puedes registrar tu entrada.</p>
+                <form asp-action="RegistrarEntrada" method="post" class="d-grid gap-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                    </button>
+                </form>
+            }
+            else
+            {
+                <p>Ya has registrado tu entrada hoy a las @asistenciaAbierta.HoraEntrada. Puedes registrar tu salida.</p>
+                <form asp-action="RegistrarSalida" method="post" class="d-grid gap-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                    </button>
+                </form>
+            }
 
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card border-success">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0"><i class="fas fa-sign-in-alt"></i> Registrar Entrada</h5>
-                        </div>
-                        <div class="card-body">
-                            <form asp-action="RegistrarEntrada" method="post" data-show-loading="true">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success btn-lg w-100">
-                                    <i class="fas fa-sign-in-alt"></i> Registrar mi Entrada
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card border-danger">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0"><i class="fas fa-sign-out-alt"></i> Registrar Salida</h5>
-                        </div>
-                        <div class="card-body">
-                            <form asp-action="RegistrarSalida" method="post" data-show-loading="true">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger btn-lg w-100">
-                                    <i class="fas fa-sign-out-alt"></i> Registrar mi Salida
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            @* Asistencias del día (filtradas en el controlador por el empleado actual) *@
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-calendar-day"></i>
-                        Asistencias del Día - @DateTime.Now.ToString("dddd, dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))
-                    </h5>
-                </div>
-                <div class="card-body">
-                    @{
-                        var asistenciasHoy = ViewBag.AsistenciasHoy as List<MecaFlow2025.Models.Asistencia>;
-                    }
-                    @if (asistenciasHoy != null && asistenciasHoy.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-dark table-striped table-hover text-center align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Empleado</th>
-                                        <th>Entrada</th>
-                                        <th>Salida</th>
-                                        <th>Estado</th>
-                                        <th>Tiempo Trabajado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var asistencia in asistenciasHoy)
-                                    {
-                                        <tr>
-                                            <td class="text-start">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                                                        @asistencia.Empleado.Nombre.Substring(0, 1).ToUpper()
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-bold">@asistencia.Empleado.Nombre</div>
-                                                        <small class="text-muted">@asistencia.Empleado.Puesto</small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @if (asistencia.HoraEntrada.HasValue)
-                                                {
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-sign-in-alt"></i> @asistencia.HoraEntrada.Value.ToString("HH:mm")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">No registrada</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (asistencia.HoraSalida.HasValue)
-                                                {
-                                                    <span class="badge bg-danger">
-                                                        <i class="fas fa-sign-out-alt"></i> @asistencia.HoraSalida.Value.ToString("HH:mm")
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">No registrada</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (asistencia.HoraEntrada.HasValue && asistencia.HoraSalida.HasValue)
-                                                {
-                                                    <span class="badge bg-success"><i class="fas fa-check"></i> Completo</span>
-                                                }
-                                                else if (asistencia.HoraEntrada.HasValue)
-                                                {
-                                                    <span class="badge bg-warning"><i class="fas fa-clock"></i> En Trabajo</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary"><i class="fas fa-question"></i> Sin Iniciar</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                @if (asistencia.HoraEntrada.HasValue && asistencia.HoraSalida.HasValue)
-                                                {
-                                                    var horasTrabajadas = asistencia.HoraSalida.Value.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
-                                                    var horas = (int)horasTrabajadas.TotalHours;
-                                                    var minutos = horasTrabajadas.Minutes;
-                                                    <span class="badge bg-info"><i class="fas fa-hourglass-half"></i> @($"{horas}h {minutos}m")</span>
-                                                }
-                                                else if (asistencia.HoraEntrada.HasValue)
-                                                {
-                                                    var tiempoActual = TimeOnly.FromDateTime(DateTime.Now);
-                                                    var tiempoTranscurrido = tiempoActual.ToTimeSpan() - asistencia.HoraEntrada.Value.ToTimeSpan();
-                                                    var horasTranscurridas = (int)tiempoTranscurrido.TotalHours;
-                                                    var minutosTranscurridos = tiempoTranscurrido.Minutes;
-                                                    <span class="badge bg-warning"><i class="fas fa-clock"></i> @($"{horasTranscurridas}h {minutosTranscurridos}m")</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">-</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
-                            <div>No hay registros de asistencia para el día de hoy</div>
-                        </div>
-                    }
-                </div>
-            </div>
+            <hr />
+            <a asp-action="Index" class="btn btn-secondary mt-3">
+                <i class="fas fa-arrow-left"></i> Volver a la Lista
+            </a>
         </div>
     </div>
 </div>

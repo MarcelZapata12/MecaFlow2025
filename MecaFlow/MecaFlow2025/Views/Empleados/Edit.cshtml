@@ -16,20 +16,17 @@
     }
 
     @@keyframes gradient {
-        0%
+        0% {
+            background-position: 0% 50%;
+        }
 
-    {
-        background-position: 0% 50%;
-    }
+        50% {
+            background-position: 100% 50%;
+        }
 
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-
+        100% {
+            background-position: 0% 50%;
+        }
     }
 
     .form-container {
@@ -42,20 +39,16 @@
         margin: 4rem auto;
     }
 
-    
     @@keyframes fadeInUp {
-        from
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
 
-    {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     h1 {
@@ -66,16 +59,13 @@
     }
 
     @@keyframes fadeIn {
-        from
+        from {
+            opacity: 0;
+        }
 
-    {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-
+        to {
+            opacity: 1;
+        }
     }
 
     .form-control, .form-select {
@@ -145,11 +135,11 @@
         </div>
 
         <div class="mt-4 d-flex justify-content-between">
-            <button type="button" class="btn btn-secondary me-2 px-4" data-bs-dismiss="modal">
-                <i class="bi bi-x-lg me-1"></i>Cancelar
-            </button>
             <button type="submit" class="btn btn-primary px-4">
                 <i class="bi bi-check-circle me-1"></i>Guardar cambios
+            </button>
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
             </button>
         </div>
     </form>

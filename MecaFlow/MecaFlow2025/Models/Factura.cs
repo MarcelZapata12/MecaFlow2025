@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; // <-- agrega esto
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; 
 using Microsoft.EntityFrameworkCore;
 
 namespace MecaFlow2025.Models;
@@ -20,10 +20,10 @@ public partial class Factura
     [Range(0, 9999999999.99)]
     public decimal MontoTotal { get; set; }
 
-    // ⬇️ Antes: Observaciones. Ahora: Metodo (mapea a la misma columna)
+
     [Required(ErrorMessage = "Seleccione un método de pago.")]
     [StringLength(20)]
-    [Column("Observaciones")]   // <- reutiliza la columna existente
+    [Column("Observaciones")] 
     public string? Metodo { get; set; }
 
     [ForeignKey("ClienteId")]

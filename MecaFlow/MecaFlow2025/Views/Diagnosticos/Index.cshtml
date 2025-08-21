@@ -18,7 +18,7 @@
 
         .kpi-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
 
     .card-title, .card-text {
@@ -50,8 +50,16 @@
         color: #f8f9fa;
     }
 
+    /* 🔹 Todas las filas mismo color (sin zebra) */
     .table tbody tr {
         background-color: #212529 !important;
+    }
+
+    /* 🔹 Modal oscuro */
+    .modal-content {
+        background-color: #1f1f1f;
+        color: white;
+        animation: fadeIn .3s ease-in-out;
     }
 </style>
 
@@ -67,7 +75,8 @@
             <a asp-action="ExportToPdf" class="btn btn-outline-danger me-2">
                 <i class="bi bi-file-earmark-pdf"></i> PDF
             </a>
-            <a asp-action="Create" class="btn btn-success">
+            <a asp-action="Create" class="btn btn-success"
+               id="btn-create" data-url="@Url.Action("Create", "Diagnosticos")">
                 <i class="bi bi-plus-circle-fill"></i> Nuevo Diagnóstico
             </a>
         </div>
@@ -84,7 +93,7 @@
             <div class="card bg-success shadow kpi-card text-center p-3">
                 <h5>Última Fecha</h5>
                 <h3 class="fw-bold">
-                    @Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("dd/MM/yyyy")
+                    @(Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("yyyy-MM-dd") ?? "N/A")
                 </h3>
             </div>
         </div>
@@ -115,6 +124,7 @@
         </div>
     </div>
 
+    <!-- 🔹 Tabla unificada -->
     <table class="table table-dark table-hover text-center align-middle shadow fade-in">
         <thead class="bg-gradient">
             <tr>
@@ -132,18 +142,20 @@
                 <tr>
                     <td>@d.DiagnosticoId</td>
                     <td>@d.Vehiculo.Placa</td>
-                    <td>@d.Fecha.ToString("dd/MM/yyyy")</td>
+                    <td>@d.Fecha.ToString("yyyy-MM-dd")</td>
                     <td>@d.Detalle</td>
                     <td>@d.Empleado?.Nombre</td>
                     <td>
-                        <a href="javascript:void(0)" class="btn btn-sm btn-warning"
-                           onclick="openModal('@Url.Action("Edit", "Diagnosticos", new { id = d.DiagnosticoId })')">
+                        <button type="button" class="btn btn-sm btn-warning btn-edit"
+                                title="Editar"
+                                data-url="@Url.Action("Edit", "Diagnosticos", new { id = d.DiagnosticoId })">
                             <i class="bi bi-pencil-square"></i>
-                        </a>
-                        <a href="javascript:void(0)" class="btn btn-sm btn-danger"
-                           onclick="openModal('@Url.Action("Delete", "Diagnosticos", new { id = d.DiagnosticoId })')">
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger btn-delete"
+                                title="Eliminar"
+                                data-url="@Url.Action("Delete", "Diagnosticos", new { id = d.DiagnosticoId })">
                             <i class="bi bi-trash"></i>
-                        </a>
+                        </button>
                     </td>
                 </tr>
             }
@@ -151,19 +163,16 @@
     </table>
 </div>
 
-<div class="modal fade" id="modalDiagnostico" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"> Diagnóstico</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<!-- 🔹 Modal genérico -->
+<div class="modal fade" id="modalCrud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCrudTitle">...</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="modalContent">
-                <div class="text-center text-muted">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                </div>
+            <div class="modal-body" id="modalCrudBody">
+                <p class="text-center">Cargando…</p>
             </div>
         </div>
     </div>
@@ -173,32 +182,91 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @using System.Text.Json
 <script>
-    function openModal(url) {
-        const modal = new bootstrap.Modal(document.getElementById('modalDiagnostico'));
-        document.getElementById('modalContent').innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
-        fetch(url)
-            .then(r => r.text())
-            .then(html => {
-                document.getElementById('modalContent').innerHTML = html;
-                modal.show();
+    const modalEl = document.getElementById('modalCrud');
+    const modal = new bootstrap.Modal(modalEl);
+    const modalBody = document.getElementById('modalCrudBody');
+    const modalTitle = document.getElementById('modalCrudTitle');
+
+        function openModal(url, title) {
+            modalTitle.innerText = title || '...';
+            modalBody.innerHTML = "<p class='text-center'>Cargando…</p>";
+            modal.show();
+
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+                    hookAjaxForm();
+                })
+                .catch(() => {
+                    modalBody.innerHTML = <div class="alert alert-danger">Error al cargar el contenido.</div>;
+                });
+        }
+
+        function hookAjaxForm() {
+            const form = modalBody.querySelector("form");
+            if (!form) return;
+
+            form.addEventListener("submit", async function (ev) {
+                ev.preventDefault();
+                const fd = new FormData(form);
+
+                try {
+                    const res = await fetch(form.action, {
+                        method: 'POST',
+                        body: fd,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+
+                    const ct = res.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        const resp = await res.json();
+                        if (resp && resp.ok) {
+                            modal.hide();
+                            location.reload();
+                        } else if (resp && resp.error) {
+                            modalBody.innerHTML = <div class="alert alert-danger">${resp.error}</div>;
+                        }
+                    } else {
+                        const html = await res.text();
+                        modalBody.innerHTML = html;
+                        hookAjaxForm();
+                    }
+                } catch {
+                    modalBody.innerHTML = <div class="alert alert-danger">Ocurrió un error inesperado.</div>;
+                }
             });
-    }
+        }
+
+        document.addEventListener("click", function (ev) {
+            const btn = ev.target.closest(".btn-edit, .btn-delete");
+            if (!btn) return;
+
+            let title = "";
+            if (btn.classList.contains("btn-edit")) title = "Editar Diagnóstico";
+            if (btn.classList.contains("btn-delete")) title = "Eliminar Diagnóstico";
+
+            openModal(btn.dataset.url, title);
+        });
+
+        const btnCreate = document.getElementById("btn-create");
+        if (btnCreate) {
+            btnCreate.addEventListener("click", function (e) {
+                e.preventDefault();
+                openModal(this.dataset.url || this.getAttribute("href"), "Nuevo Diagnóstico");
+            });
+        }
 
         document.addEventListener("DOMContentLoaded", function () {
             const ctx = document.getElementById('diagnosticosChart');
             if (!ctx) return;
 
             const labels = @Html.Raw(JsonSerializer.Serialize(
-                        Model.GroupBy(d => d.Fecha.Date)
-                                  .OrderBy(g => g.Key)
-                                  .Select(g => g.Key.ToString("dd/MM/yyyy"))
+                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Key.ToString("yyyy-MM-dd"))
                 ));
-
         const data = @Html.Raw(JsonSerializer.Serialize(
-                        Model.GroupBy(d => d.Fecha.Date)
-                                  .OrderBy(g => g.Key)
-                                  .Select(g => g.Count())
-                ));
+        Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Count())
+        ));
 
         if (labels.length === 0 || data.length === 0) return;
 
