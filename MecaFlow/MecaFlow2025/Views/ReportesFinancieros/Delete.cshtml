@@ -1,32 +1,9 @@
-﻿@model MecaFlow2025.Models.ReportesFinanciero
-@{
+﻿@{
     ViewData["Title"] = "Eliminar Reporte";
-    Layout = null;
-    string ingresos = (Model.TotalIngresos ?? 0m).ToString("N2");
-    string gastos = (Model.TotalGastos ?? 0m).ToString("N2");
-    string obs = string.IsNullOrWhiteSpace(Model.Observaciones) ? "—" : Model.Observaciones!;
 }
 
-<h1>Eliminar Reporte</h1>
-<hr />
-
-<dl class="row">
-    <dt class="col-sm-2">Fecha</dt>
-    <dd class="col-sm-10">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
-
-    <dt class="col-sm-2">Ingresos</dt>
-    <dd class="col-sm-10">₡ @ingresos</dd>
-
-    <dt class="col-sm-2">Gastos</dt>
-    <dd class="col-sm-10">₡ @gastos</dd>
-
-    <dt class="col-sm-2">Observaciones</dt>
-    <dd class="col-sm-10">@obs</dd>
-</dl>
-
-<form asp-action="Delete" method="post" class="d-flex gap-2">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@Model.ReporteId" />
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-</form>
+<h1 class="text-white">Función de eliminación</h1>
+<p class="text-white-50">La funcionalidad de eliminación se ha movido al modal de confirmación en la página de índice.</p>
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
+</div>

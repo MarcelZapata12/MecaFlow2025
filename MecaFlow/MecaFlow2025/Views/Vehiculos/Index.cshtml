@@ -161,6 +161,20 @@
         }
 </style>
 
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>@err
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>@ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 <div class="container py-4">
     @if (isClient)
     {
@@ -362,51 +376,19 @@
             // =======================
             // ELIMINAR (AJAX + mensaje en modal)
             // =======================
+            // =======================
+            // ELIMINAR (AJAX -> AHORA SE VUELVE POST)
+            // =======================
             function confirmVehiculoDelete(id) {
                 const modal = new bootstrap.Modal(document.getElementById('vehiculoDelete'));
-                const form  = document.getElementById('vehiculoDeleteForm');
-                const body  = document.querySelector('#vehiculoDelete .modal-body');
-
-                const oldAlert = body.querySelector('.alert');
-                if (oldAlert) oldAlert.remove();
-
                 document.getElementById('vehiculoDeleteId').value = id;
-                form.action = `/Vehiculos/Delete/${id}`;
+                document.getElementById('vehiculoDeleteForm').action = `/Vehiculos/Delete/${id}`;
                 modal.show();
             }
 
+            // Nueva función para el submit
             function submitVehiculoDelete() {
-                const form = document.getElementById('vehiculoDeleteForm');
-                const body = document.querySelector('#vehiculoDelete .modal-body');
-
-                fetch(form.action, {
-                    method: 'POST',
-                    body: new FormData(form),
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        const modalEl = document.getElementById('vehiculoDelete');
-                        const modal = bootstrap.Modal.getInstance(modalEl);
-                        modal?.hide();
-                        showSuccessToast();
-                        location.reload();
-                    } else {
-                        const old = body.querySelector('.alert'); if (old) old.remove();
-                        const alert = document.createElement('div');
-                        alert.className = 'alert alert-warning';
-                        alert.textContent = data.message || 'No se pudo eliminar el vehículo.';
-                        body.prepend(alert);
-                    }
-                })
-                .catch(() => {
-                    const old = body.querySelector('.alert'); if (old) old.remove();
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-danger';
-                    alert.textContent = 'Ocurrió un error al intentar eliminar.';
-                    body.prepend(alert);
-                });
+                document.getElementById('vehiculoDeleteForm').submit();
             }
 
             // ======================================================

@@ -350,8 +350,7 @@ namespace MecaFlow2025.Controllers
             var diagCount = await _context.Diagnosticos.CountAsync(d => d.EmpleadoId == id);
             if (diagCount > 0)
             {
-                var msg = $"No se puede eliminar el empleado: tiene {diagCount} diagnóstico(s) asociado(s). " +
-                          $"Elimine o reasigne esos registros primero.";
+                var msg = $"No se puede eliminar el empleado: tiene {diagCount} diagnóstico(s) asociado(s). Elimine o reasigne esos registros primero.";
                 if (IsAjax) return Json(new { ok = false, error = msg });
                 TempData["Error"] = msg;
                 return RedirectToAction(nameof(Index));
@@ -377,7 +376,9 @@ namespace MecaFlow2025.Controllers
 
                 _context.Empleados.Remove(empleado);
                 await _context.SaveChangesAsync();
-                if (!IsAjax) TempData["Success"] = "Empleado eliminado correctamente.";
+
+                if (IsAjax) return Json(new { ok = true });
+                TempData["Success"] = "Empleado eliminado correctamente.";
             }
             catch (DbUpdateException)
             {

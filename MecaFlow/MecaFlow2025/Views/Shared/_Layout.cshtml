@@ -55,8 +55,16 @@
         <nav class="navbar navbar-expand-sm navbar-dark" style="background: linear-gradient(to right, #003973, #005AA7);">
             <div class="container-fluid">
 
+                @{
+                    // Flags de sesión/rol
+                    var autenticado = Context.Session.GetString("UserId") != null;
+                    var esAdmin = RoleHelper.IsAdmin(Context);
+                    var esCliente = RoleHelper.IsClient(Context);
+                    var esEmpleado = RoleHelper.IsEmployee(Context);
+                }
+
                 @* Brand *@
-                @if (Context.Session.GetString("UserId") != null)
+                @if (autenticado)
                 {
                     <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
                         <img src="~/images/logo-mecaflow.png" alt="Logo" style="height: 32px;" class="rounded shadow-sm" />
@@ -80,7 +88,7 @@
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
                         @* Inicio *@
-                        @if (Context.Session.GetString("UserId") != null)
+                        @if (autenticado)
                         {
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-1" asp-controller="Home" asp-action="Index">
@@ -89,34 +97,52 @@
                             </li>
                         }
 
-                        @if (Context.Session.GetString("UserId") != null)
+                        @if (autenticado)
                         {
-                            @* Gestión de usuarios y reportes solo admin *@
-                            @if (RoleHelper.IsAdmin(Context) || RoleHelper.IsClient(Context))
+                            @* ===== Gestión de Usuarios: Admin ve Empleados y Clientes; Empleado ve solo Clientes; Cliente no ve ===== *@
+                            @if (esAdmin || esEmpleado)
                             {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" data-bs-toggle="dropdown">
                                         <i class="fas fa-users"></i><span>Gestión de Usuarios</span>
                                     </a>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" asp-controller="Empleados" asp-action="Index"><i class="fas fa-user-tie"></i> Empleados</a></li>
+                                        @if (esAdmin)
+                                        {
+                                            <li><a class="dropdown-item" asp-controller="Empleados" asp-action="Index"><i class="fas fa-user-tie"></i> Empleados</a></li>
+                                        }
                                         <li><a class="dropdown-item" asp-controller="Clientes" asp-action="Index"><i class="fas fa-user"></i> Clientes</a></li>
                                     </ul>
                                 </li>
+                            }
 
+                            @* ===== Reportes: Cliente ve SOLO Facturas; Admin ve Facturas y Reportes Financieros ===== *@
+                            @if (esAdmin || esCliente)
+                            {
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" data-bs-toggle="dropdown">
                                         <i class="fas fa-chart-bar"></i><span>Reportes</span>
                                     </a>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" asp-controller="Facturas" asp-action="Index"><i class="fas fa-file-invoice"></i> Facturas</a></li>
-                                        <li><a class="dropdown-item" asp-controller="ReportesFinancieros" asp-action="Index"><i class="fas fa-chart-line"></i> Reportes Financieros</a></li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Facturas" asp-action="Index">
+                                                <i class="fas fa-file-invoice"></i> Facturas
+                                            </a>
+                                        </li>
+                                        @if (esAdmin)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="ReportesFinancieros" asp-action="Index">
+                                                    <i class="fas fa-chart-line"></i> Reportes Financieros
+                                                </a>
+                                            </li>
+                                        }
                                     </ul>
                                 </li>
                             }
 
-                            @* Asistencias: admin o empleado *@
-                            @if (RoleHelper.IsAdmin(Context) || RoleHelper.IsEmployee(Context))
+                            @* Asistencias: Admin o Empleado (Cliente NO lo ve) *@
+                            @if (esAdmin || esEmpleado)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link d-flex align-items-center gap-1" asp-controller="Asistencias" asp-action="Index">
@@ -125,6 +151,7 @@
                                 </li>
                             }
 
+                            @* Visibles para todos los autenticados *@
                             <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center gap-1" asp-controller="Vehiculos" asp-action="Index">
                                     <i class="fas fa-car"></i><span>Vehículos</span>
@@ -137,7 +164,8 @@
                                 </a>
                             </li>
 
-                            @if (RoleHelper.IsAdmin(Context))
+                            @* Tareas: Admin o Empleado (Cliente NO lo ve) *@
+                            @if (esAdmin || esEmpleado)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link d-flex align-items-center gap-1" asp-controller="TareasVehiculo" asp-action="Index">
@@ -157,7 +185,7 @@
                     </ul>
 
                     <ul class="navbar-nav ms-auto">
-                        @if (Context.Session.GetString("UserId") != null)
+                        @if (autenticado)
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
@@ -219,7 +247,7 @@
     </footer>
 
     @* ===== Chatbot (solo con sesión) ===== *@
-    @if (Context.Session.GetString("UserId") != null)
+    @if (autenticado)
     {
         <style>
             .mf-chat-fab {
@@ -327,7 +355,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    @if (Context.Session.GetString("UserId") != null)
+    @if (autenticado)
     {
         <script>
             const mfFab   = document.getElementById('mfFab');
@@ -356,12 +384,8 @@
                 mfBody.scrollTop = mfBody.scrollHeight;
             }
             function showTyping() {
-                const n = document.createElement('div');
-                n.id = 'mfTyping';
-                n.className = 'mf-msg bot';
-                n.innerText = 'Escribiendo…';
-                mfBody.appendChild(n);
-                mfBody.scrollTop = mfBody.scrollHeight;
+                const n = document.createElement('div'); n.id = 'mfTyping'; n.className = 'mf-msg bot'; n.innerText = 'Escribiendo…';
+                mfBody.appendChild(n); mfBody.scrollTop = mfBody.scrollHeight;
             }
             function hideTyping() { const n = document.getElementById('mfTyping'); if (n) n.remove(); }
 

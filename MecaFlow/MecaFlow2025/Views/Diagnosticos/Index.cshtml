@@ -1,6 +1,8 @@
 ﻿@model IEnumerable<MecaFlow2025.Models.Diagnostico>
 @{
     ViewData["Title"] = "Diagnósticos";
+    var userRole = ViewBag.UserRole as string;
+    var isClient = userRole == "Cliente";
 }
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
@@ -9,8 +11,66 @@
     body {
         background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
         color: #f8f9fa;
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
     }
 
+    @@keyframes gradient {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13,110,253,.4);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(13,110,253,0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(13,110,253,0);
+        }
+    }
+
+    /* Estilos para vista de administrador */
     .kpi-card {
         border-radius: 1rem;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -18,7 +78,7 @@
 
         .kpi-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
     .card-title, .card-text {
@@ -34,244 +94,367 @@
         opacity: 0;
     }
 
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
     .table thead th {
         color: #f8f9fa;
     }
 
-    /* 🔹 Todas las filas con el mismo color fijo (sin zebra) */
-    .table tbody tr {
-        background-color: #212529 !important;
+    /* Estilos para vista de cliente */
+    .diagnostico-card {
+        background-color: #1f1f1f;
+        border: 1px solid #2c2c2c;
+        color: white;
+        border-radius: 1rem;
+        transition: transform .3s ease, box-shadow .3s ease;
+        margin-bottom: 1rem;
+        position: relative;
+        animation: fadeInUp .5s ease-in-out;
     }
 
-    /* 🔹 Igual que Empleados: modal oscuro */
+        .diagnostico-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,.3);
+        }
+
+    .diagnosticos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-control:focus {
+        background-color: #2c2c2c;
+        color: #fff;
+        border-color: #66afe9;
+        box-shadow: 0 0 0 .2rem rgba(102,175,233,.25);
+    }
+
+    .icon-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 1.25rem;
+        color: inherit;
+    }
+
+    .action-icons {
+        position: absolute;
+        top: .75rem;
+        right: 1rem;
+        display: flex;
+        gap: .75rem;
+        z-index: 2;
+    }
+
+        .action-icons form {
+            display: inline;
+        }
+
     .modal-content {
         background-color: #1f1f1f;
         color: white;
         animation: fadeIn .3s ease-in-out;
     }
+
+    .btn-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    .client-info-banner {
+        background: linear-gradient(135deg, #17a2b8, #138496);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .no-diagnosticos-message {
+        text-align: center;
+        padding: 3rem;
+        color: #adb5bd;
+    }
+
+        .no-diagnosticos-message i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+    .detalle-truncated {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.4;
+        max-height: 2.8em;
+    }
 </style>
 
-<div class="container mt-5 fade-in">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">
-            <i class="bi bi-clipboard-heart-fill text-danger"></i> Diagnósticos
-        </h2>
-        <div>
-            <a asp-action="ExportToExcel" class="btn btn-outline-success me-2">
-                <i class="bi bi-file-earmark-excel"></i> Excel
-            </a>
-            <a asp-action="ExportToPdf" class="btn btn-outline-danger me-2">
-                <i class="bi bi-file-earmark-pdf"></i> PDF
-            </a>
-            <a asp-action="Create" class="btn btn-success"
-               id="btn-create" data-url="@Url.Action("Create", "Diagnosticos")">
-                <i class="bi bi-plus-circle-fill"></i> Nuevo Diagnóstico
-            </a>
+@if (isClient)
+{
+    <!-- =============================== -->
+    <!-- VISTA DE CLIENTE (Cards Design) -->
+    <!-- =============================== -->
+    <div class="container py-4">
+        <div class="client-info-banner">
+            <h4><i class="bi bi-person-check me-2"></i>Mis Diagnósticos</h4>
+            <p class="mb-0">Aquí puedes ver todos los diagnósticos realizados a tus vehículos en nuestro taller.</p>
         </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-white">
+                <i class="bi bi-clipboard-heart me-2"></i>Mis Diagnósticos
+            </h2>
+            <div class="d-flex align-items-center">
+                <input id="diagnosticoSearch" type="search"
+                       class="form-control form-control-sm me-3 bg-dark text-white border-secondary"
+                       placeholder="Buscar por vehículo o detalle…" />
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="no-diagnosticos-message">
+                <i class="bi bi-clipboard-heart"></i>
+                <h4>No tienes diagnósticos registrados</h4>
+                <p>Los diagnósticos aparecerán aquí cuando se realicen a tus vehículos.</p>
+            </div>
+        }
+        else
+        {
+            <div id="diagnosticosGrid" class="diagnosticos-grid">
+                @foreach (var item in Model)
+                {
+                    <div class="diagnostico-card card p-3">
+                        <div class="action-icons">
+                            <a href="#" class="text-info icon-btn" title="Detalles" onclick="openDiagnosticoDetails(@item.DiagnosticoId)">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+
+                        <h5 class="card-title" style="color:#66ccff;font-weight:700;">
+                            <i class="bi bi-clipboard-heart me-1"></i>Diagnóstico #@item.DiagnosticoId
+                        </h5>
+                        <p class="card-text mb-1"><i class="bi bi-calendar3 me-1 text-secondary"></i><strong>Fecha:</strong> @item.Fecha.ToString("dd/MM/yyyy")</p>
+                        <p class="card-text mb-1"><i class="bi bi-car-front-fill me-1 text-secondary"></i><strong>Vehículo:</strong> @item.Vehiculo?.Placa - @item.Vehiculo?.Marca?.Nombre @item.Vehiculo?.Modelo?.Nombre</p>
+                        <p class="card-text mb-1"><i class="bi bi-person-gear me-1 text-secondary"></i><strong>Empleado:</strong> @item.Empleado?.Nombre</p>
+                        <p class="card-text mb-1"><i class="bi bi-chat-square-text me-1 text-secondary"></i><strong>Detalle:</strong></p>
+                        <p class="card-text detalle-truncated small text-muted">@item.Detalle</p>
+                    </div>
+
+                    <!-- Modal Details para cliente -->
+                    <div class="modal fade" id="diagnosticoDetails-@item.DiagnosticoId" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Detalles del Diagnóstico</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body" id="diagnosticoDetailsBody-@item.DiagnosticoId">
+                                    <p class="text-center">Cargando…</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </div>
-
-    <div class="row text-white mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary shadow kpi-card text-center p-3">
-                <h5>Total Diagnósticos</h5>
-                <h3 class="fw-bold">@Model.Count()</h3>
+}
+else
+{
+    <!-- =============================== -->
+    <!-- VISTA DE ADMINISTRADOR (Original) -->
+    <!-- =============================== -->
+    <div class="container mt-5 fade-in">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">
+                <i class="bi bi-clipboard-heart-fill text-danger"></i> Diagnósticos
+            </h2>
+            <div>
+                <a asp-action="ExportToExcel" class="btn btn-outline-success me-2">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </a>
+                <a asp-action="ExportToPdf" class="btn btn-outline-danger me-2">
+                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                </a>
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="bi bi-plus-circle-fill"></i> Nuevo Diagnóstico
+                </a>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success shadow kpi-card text-center p-3">
-                <h5>Última Fecha</h5>
-                <h3 class="fw-bold">
-                    @Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("yyyy-MM-dd")
-                </h3>
+
+        <div class="row text-white mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary shadow kpi-card text-center p-3">
+                    <h5>Total Diagnósticos</h5>
+                    <h3 class="fw-bold">@Model.Count()</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success shadow kpi-card text-center p-3">
+                    <h5>Última Fecha</h5>
+                    <h3 class="fw-bold">
+                        @(Model.OrderByDescending(d => d.Fecha).FirstOrDefault()?.Fecha.ToString("dd/MM/yyyy") ?? "N/A")
+                    </h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning shadow kpi-card text-center p-3">
+                    <h5>Por Empleado</h5>
+                    <h3 class="fw-bold">@Model.Select(d => d.Empleado?.Nombre).Distinct().Count()</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-dark shadow kpi-card text-center p-3">
+                    <h5>Hoy</h5>
+                    <h3 class="fw-bold">@Model.Count(d => d.Fecha.Date == DateTime.Today)</h3>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning shadow kpi-card text-center p-3">
-                <h5>Por Empleado</h5>
-                <h3 class="fw-bold">@Model.Select(d => d.Empleado?.Nombre).Distinct().Count()</h3>
+
+        <form method="get" asp-action="Index" class="input-group mb-4">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Buscar por placa, detalle o empleado...">
+            <button class="btn btn-outline-light" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+        </form>
+
+        <div class="card mb-4 shadow-sm fade-in">
+            <div class="card-body bg-dark rounded">
+                <canvas id="diagnosticosChart" height="100"></canvas>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-dark shadow kpi-card text-center p-3">
-                <h5>Hoy</h5>
-                <h3 class="fw-bold">@Model.Count(d => d.Fecha.Date == DateTime.Today)</h3>
-            </div>
-        </div>
-    </div>
 
-    <form method="get" asp-action="Index" class="input-group mb-4">
-        <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Buscar por placa, detalle o empleado...">
-        <button class="btn btn-outline-light" type="submit">
-            <i class="bi bi-search"></i>
-        </button>
-    </form>
-
-    <div class="card mb-4 shadow-sm fade-in">
-        <div class="card-body bg-dark rounded">
-            <canvas id="diagnosticosChart" height="100"></canvas>
-        </div>
-    </div>
-
-    <!-- 🔹 Tabla sin "table-striped" -->
-    <table class="table table-dark table-hover text-center align-middle shadow fade-in">
-        <thead class="bg-gradient">
-            <tr>
-                <th>#</th>
-                <th>Vehículo</th>
-                <th>Fecha</th>
-                <th>Detalle</th>
-                <th>Empleado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var d in Model)
-            {
+        <table class="table table-dark table-striped table-hover text-center align-middle shadow fade-in">
+            <thead class="bg-gradient">
                 <tr>
-                    <td>@d.DiagnosticoId</td>
-                    <td>@d.Vehiculo.Placa</td>
-                    <td>@d.Fecha.ToString("yyyy-MM-dd")</td>
-                    <td>@d.Detalle</td>
-                    <td>@d.Empleado?.Nombre</td>
-                    <td>
-                        <!-- Igual que Empleados: usamos data-url y clases -->
-                        <button type="button" class="btn btn-sm btn-warning btn-edit"
-                                title="Editar"
-                                data-url="@Url.Action("Edit", "Diagnosticos", new { id = d.DiagnosticoId })">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-danger btn-delete"
-                                title="Eliminar"
-                                data-url="@Url.Action("Delete", "Diagnosticos", new { id = d.DiagnosticoId })">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
+                    <th>#</th>
+                    <th>Vehículo</th>
+                    <th>Fecha</th>
+                    <th>Detalle</th>
+                    <th>Empleado</th>
+                    <th>Acciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                @foreach (var d in Model)
+                {
+                    <tr class="@(d.Fecha.Date == DateTime.Today ? "table-success" : "")">
+                        <td>@d.DiagnosticoId</td>
+                        <td>@d.Vehiculo.Placa</td>
+                        <td>@d.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@d.Detalle</td>
+                        <td>@d.Empleado?.Nombre</td>
+                        <td>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-warning"
+                               onclick="openModal('@Url.Action("Edit", "Diagnosticos", new { id = d.DiagnosticoId })')">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="javascript:void(0)" class="btn btn-sm btn-danger"
+                               onclick="openModal('@Url.Action("Delete", "Diagnosticos", new { id = d.DiagnosticoId })')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
-<!-- 🔹 Modal genérico IGUAL AL DE EMPLEADOS -->
-<div class="modal fade" id="modalCrud" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalCrudTitle">...</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="modalCrudBody">
-                <p class="text-center">Cargando…</p>
+    <!-- Modal para administrador -->
+    <div class="modal fade" id="modalDiagnostico" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Editar / Eliminar Diagnóstico</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalContent">
+                    <div class="text-center text-muted">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
+}
+
+<!-- Toast de éxito -->
+<div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+        <div class="toast-body">¡Acción realizada con éxito!</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @using System.Text.Json
-    <script>
-        // ====== Modal igual al de Empleados ======
-        const modalEl = document.getElementById('modalCrud');
-        const modal = new bootstrap.Modal(modalEl);
-        const modalBody = document.getElementById('modalCrudBody');
-        const modalTitle = document.getElementById('modalCrudTitle');
+<script>
+    const isClient = @(isClient.ToString().ToLower());
 
-        function openModal(url, title) {
-            modalTitle.innerText = title || '...';
-            modalBody.innerHTML = "<p class='text-center'>Cargando…</p>";
+    if (isClient) {
+        // =============================
+        // SCRIPTS PARA VISTA DE CLIENTE
+        // =============================
+
+        // BÚSQUEDA CLIENT-SIDE
+        document.getElementById('diagnosticoSearch').addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#diagnosticosGrid .diagnostico-card').forEach(function (card) {
+                const txt = card.innerText.toLowerCase();
+                card.style.display = txt.includes(q) ? '' : 'none';
+            });
+        });
+
+        // DETALLES (carga en modal por ítem)
+        function openDiagnosticoDetails(id) {
+            const modalId = `diagnosticoDetails-${id}`;
+            const bodyId = `diagnosticoDetailsBody-${id}`;
+            const modal = new bootstrap.Modal(document.getElementById(modalId));
+            const body = document.getElementById(bodyId);
+            body.innerHTML = "<p class='text-center'>Cargando…</p>";
             modal.show();
 
+            fetch(`/Diagnosticos/Details/${id}`)
+                .then(r => r.text())
+                .then(html => { body.innerHTML = html; })
+                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
+        }
+
+        // Hacer función global
+        window.openDiagnosticoDetails = openDiagnosticoDetails;
+
+    } else {
+        // =============================
+        // SCRIPTS PARA VISTA DE ADMINISTRADOR (Original)
+        // =============================
+
+        function openModal(url) {
+            const modal = new bootstrap.Modal(document.getElementById('modalDiagnostico'));
+            document.getElementById('modalContent').innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
             fetch(url)
                 .then(r => r.text())
                 .then(html => {
-                    modalBody.innerHTML = html;
-                    hookAjaxForm();
-                })
-                .catch(() => {
-                    modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el contenido.</div>`;
+                    document.getElementById('modalContent').innerHTML = html;
+                    modal.show();
                 });
         }
 
-        function hookAjaxForm() {
-            const form = modalBody.querySelector("form");
-            if (!form) return;
-
-            form.addEventListener("submit", async function (ev) {
-                ev.preventDefault();
-                const fd = new FormData(form);
-
-                try {
-                    const res = await fetch(form.action, {
-                        method: 'POST',
-                        body: fd,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-
-                    const ct = res.headers.get('content-type') || '';
-                    if (ct.includes('application/json')) {
-                        const resp = await res.json();
-                        if (resp && resp.ok) {
-                            modal.hide();
-                            location.reload();
-                        } else if (resp && resp.error) {
-                            modalBody.innerHTML = `<div class="alert alert-danger">${resp.error}</div>`;
-                        }
-                    } else {
-                        const html = await res.text();
-                        modalBody.innerHTML = html; // re-render con validación
-                        hookAjaxForm();
-                    }
-                } catch {
-                    modalBody.innerHTML = `<div class="alert alert-danger">Ocurrió un error inesperado.</div>`;
-                }
-            });
-        }
-
-        // Delegación de eventos para abrir los modales con título, igual a Empleados
-        document.addEventListener("click", function (ev) {
-            const btn = ev.target.closest(".btn-edit, .btn-delete");
-            if (!btn) return;
-
-            let title = "";
-            if (btn.classList.contains("btn-edit")) title = "Editar Diagnóstico";
-            if (btn.classList.contains("btn-delete")) title = "Eliminar Diagnóstico";
-
-            openModal(btn.dataset.url, title);
-        });
-
-        // (Opcional) botón crear por AJAX también
-        const btnCreate = document.getElementById("btn-create");
-        if (btnCreate) {
-            btnCreate.addEventListener("click", function (e) {
-                e.preventDefault();
-                openModal(this.dataset.url || this.getAttribute("href"), "Nuevo Diagnóstico");
-            });
-        }
-
-        // ====== Chart ======
         document.addEventListener("DOMContentLoaded", function () {
             const ctx = document.getElementById('diagnosticosChart');
             if (!ctx) return;
 
             const labels = @Html.Raw(JsonSerializer.Serialize(
-            Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Key.ToString("yyyy-MM-dd"))
+                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Key.ToString("dd/MM/yyyy"))
             ));
             const data = @Html.Raw(JsonSerializer.Serialize(
         Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Count())
-        ));
+            ));
 
             if (labels.length === 0 || data.length === 0) return;
 
@@ -290,10 +473,24 @@
                 options: {
                     responsive: true,
                     scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
                     }
                 }
             });
         });
-    </script>
+
+        // Hacer función global para administrador
+        window.openModal = openModal;
+    }
+
+    // TOAST ÉXITO (disponible para todos)
+    function showSuccessToast() {
+        new bootstrap.Toast(document.getElementById('toastSuccess')).show();
+    }
+</script>
 }
