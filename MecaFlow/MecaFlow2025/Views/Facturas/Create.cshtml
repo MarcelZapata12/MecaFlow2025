@@ -25,11 +25,17 @@
         color: #f8f9fa;
     }
 
-        .form-control:focus, .form-select:focus {
-            background-color: #2a2a2a;
-            border-color: #66afe9;
-            box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
-        }
+    /* ✅ APLICAR ESTILO AL CAMPO DE FECHA */
+    input.form-control[readonly] {
+        background-color: #2a2a2a !important;
+        color: #f8f9fa !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: #2a2a2a;
+        border-color: #66afe9;
+        box-shadow: 0 0 0 0.2rem rgba(102, 175, 233, 0.25);
+    }
 
     .btn-primary {
         background-color: #007bff;
