@@ -1,21 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-
 using MecaFlow2025.Models;
 using MecaFlow2025.Helpers;
 using MecaFlow2025.Attributes;
-
-using ClosedXML.Excel;          // ⬅ Excel
-using QuestPDF.Fluent;          // ⬅ PDF
-using QuestPDF.Infrastructure;  // ⬅ PDF
 
 namespace MecaFlow2025.Controllers
 {
@@ -29,40 +20,40 @@ namespace MecaFlow2025.Controllers
 
         public FacturasController(MecaFlowContext ctx) => _ctx = ctx;
 
-        // ---------- Helper: query base respetando el rol/cliente ----------
-        private IQueryable<Factura> BaseQuery()
-        {
-            var userRole = HttpContext.Session.GetString("UserRole");
-            var userEmail = HttpContext.Session.GetString("UserEmail");
-
-            var query = _ctx.Facturas
-                            .Include(f => f.Cliente)
-                            .Include(f => f.Vehiculo)
-                            .AsQueryable();
-
-            if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
-            {
-                // Buscar el cliente real por email
-                var cliente = _ctx.Clientes.FirstOrDefault(c => c.Correo == userEmail);
-                if (cliente != null)
-                    query = query.Where(f => f.ClienteId == cliente.ClienteId);
-                else
-                    query = query.Where(_ => false); // sin resultados si no hay match
-            }
-
-            return query;
-        }
-
         // GET: /Facturas
         public async Task<IActionResult> Index()
         {
             var userRole = HttpContext.Session.GetString("UserRole");
+            var userEmail = HttpContext.Session.GetString("UserEmail"); // Usar EMAIL en lugar de UserId
 
-            var data = await BaseQuery()
+            IQueryable<Factura> query = _ctx.Facturas
+                .Include(f => f.Cliente)
+                .Include(f => f.Vehiculo);
+
+            // Si es cliente, buscar por EMAIL para encontrar su ClienteId real
+            if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
+            {
+                // Primero encontrar el ClienteId real basado en el email
+                var cliente = await _ctx.Clientes
+                    .FirstOrDefaultAsync(c => c.Correo == userEmail);
+
+                if (cliente != null)
+                {
+                    // Filtrar facturas por el ClienteId real
+                    query = query.Where(f => f.ClienteId == cliente.ClienteId);
+                }
+                else
+                {
+                    // Si no se encuentra el cliente, no mostrar nada
+                    query = query.Where(f => false);
+                }
+            }
+
+            var data = await query
                 .OrderByDescending(f => f.FacturaId)
                 .ToListAsync();
 
-            // Pasar el rol a la vista para controlar la UI (botones, etc.)
+            // Pasar el rol a la vista para controlar la UI
             ViewBag.UserRole = userRole;
 
             return View(data);
@@ -81,11 +72,15 @@ namespace MecaFlow2025.Controllers
                 .Include(f => f.Vehiculo)
                 .Where(m => m.FacturaId == id);
 
-            // Si es cliente, verificar que la factura le pertenezca por email
+            // Si es cliente, verificar que la factura le pertenezca
             if (userRole == "Cliente" && !string.IsNullOrEmpty(userEmail))
+            {
+                // Verificar que la factura pertenezca al cliente por email
                 query = query.Where(f => f.Cliente.Correo == userEmail);
+            }
 
             var factura = await query.FirstOrDefaultAsync();
+
             if (factura == null) return NotFound();
 
             var tareas = await _ctx.TareasVehiculos
@@ -97,30 +92,28 @@ namespace MecaFlow2025.Controllers
 
             // Si es una llamada AJAX, devolver vista parcial
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
                 return PartialView(factura);
+            }
 
             return View(factura);
         }
 
         // GET: /Facturas/Create - Solo para Admin y Empleados
         [AuthorizeRole("Administrador", "Empleado")]
-        [HttpGet]
         public async Task<IActionResult> Create()
         {
             await CargarSelects();
             ViewData["Metodos"] = MetodosSelect();
+            ViewBag.Hoy = DateOnly.FromDateTime(DateTime.Now);
 
-            var model = new Factura
-            {
-                Fecha = DateOnly.FromDateTime(DateTime.Now)
-            };
-            ViewBag.Hoy = model.Fecha;
-
-            // Si es una llamada AJAX, devolver vista parcial (ruta explícita por si acaso)
+            // Si es una llamada AJAX, devolver vista parcial
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                return PartialView("~/Views/Facturas/Create.cshtml", model);
+            {
+                return PartialView();
+            }
 
-            return View(model);
+            return View();
         }
 
         // POST: /Facturas/Create - Solo para Admin y Empleados
@@ -162,7 +155,9 @@ namespace MecaFlow2025.Controllers
 
                 // Si es AJAX, devolver vista parcial con errores
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
                     return PartialView(factura);
+                }
 
                 return View(factura);
             }
@@ -174,7 +169,9 @@ namespace MecaFlow2025.Controllers
 
             // Si es AJAX, devolver JSON para indicar éxito
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
                 return Json(new { success = true, message = "Factura creada correctamente." });
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -194,7 +191,9 @@ namespace MecaFlow2025.Controllers
 
             // Si es una llamada AJAX, devolver vista parcial
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
                 return PartialView(factura);
+            }
 
             return View(factura);
         }
@@ -235,7 +234,9 @@ namespace MecaFlow2025.Controllers
 
                 // Si es AJAX, devolver vista parcial con errores
                 if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
                     return PartialView(dto);
+                }
 
                 return View(dto);
             }
@@ -251,7 +252,9 @@ namespace MecaFlow2025.Controllers
 
             // Si es AJAX, devolver JSON para indicar éxito
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
                 return Json(new { success = true, message = "Factura actualizada correctamente." });
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -271,7 +274,9 @@ namespace MecaFlow2025.Controllers
 
             // Si es una llamada AJAX, devolver vista parcial
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
                 return PartialView(factura);
+            }
 
             return View(factura);
         }
@@ -293,7 +298,9 @@ namespace MecaFlow2025.Controllers
 
             // Si es AJAX, devolver JSON para indicar éxito
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
                 return Json(new { success = true, message = "Factura eliminada correctamente." });
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -310,171 +317,7 @@ namespace MecaFlow2025.Controllers
             return PartialView("~/Views/Facturas/_TareasPorVehiculo.cshtml", tareas);
         }
 
-        // ======================== EXPORTS ==============================
-
-        // GET: /Facturas/ExportToExcel
-        [HttpGet]
-        public async Task<IActionResult> ExportToExcel()
-        {
-            // CultureInfo preparado por si luego quieres formatear moneda/fecha
-            var cr = new CultureInfo("es-CR");
-
-            var data = await BaseQuery()
-                .OrderByDescending(f => f.FacturaId)
-                .Select(f => new
-                {
-                    f.FacturaId,
-                    FechaDT = f.Fecha.ToDateTime(TimeOnly.MinValue), // Excel friendly
-                    Cliente = f.Cliente != null ? f.Cliente.Nombre : "-",
-                    Vehiculo = f.Vehiculo != null ? f.Vehiculo.Placa : "-",
-                    Metodo = string.IsNullOrWhiteSpace(f.Metodo) ? "-" : f.Metodo,
-                    Monto = f.MontoTotal
-                })
-                .ToListAsync();
-
-            using var wb = new XLWorkbook();
-            var ws = wb.Worksheets.Add("Facturas");
-
-            // Encabezados
-            ws.Cell(1, 1).Value = "Factura #";
-            ws.Cell(1, 2).Value = "Fecha";
-            ws.Cell(1, 3).Value = "Cliente";
-            ws.Cell(1, 4).Value = "Vehículo";
-            ws.Cell(1, 5).Value = "Método";
-            ws.Cell(1, 6).Value = "Monto (₡)";
-            ws.Range(1, 1, 1, 6).Style.Font.SetBold();
-
-            // Datos
-            int row = 2;
-            foreach (var r in data)
-            {
-                ws.Cell(row, 1).Value = r.FacturaId;
-                ws.Cell(row, 2).Value = r.FechaDT; // como DateTime
-                ws.Cell(row, 3).Value = r.Cliente;
-                ws.Cell(row, 4).Value = r.Vehiculo;
-                ws.Cell(row, 5).Value = r.Metodo;
-                ws.Cell(row, 6).Value = r.Monto;
-                row++;
-            }
-
-            // Formatos
-            ws.Column(2).Style.DateFormat.Format = "dd/MM/yyyy";
-            ws.Column(6).Style.NumberFormat.Format = "#,##0.00";
-            ws.Columns().AdjustToContents();
-
-            using var stream = new MemoryStream();
-            wb.SaveAs(stream);
-            var bytes = stream.ToArray();
-
-            var fileName = $"Facturas_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
-            return File(bytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                fileName);
-        }
-
-        // GET: /Facturas/ExportToPdf
-        [HttpGet]
-        public async Task<IActionResult> ExportToPdf()
-        {
-            var cr = new CultureInfo("es-CR");
-
-            var data = await BaseQuery()
-                .OrderByDescending(f => f.FacturaId)
-                .Select(f => new
-                {
-                    f.FacturaId,
-                    Fecha = f.Fecha.ToString("dd/MM/yyyy"),
-                    Cliente = f.Cliente != null ? f.Cliente.Nombre : "-",
-                    Vehiculo = f.Vehiculo != null ? f.Vehiculo.Placa : "-",
-                    Metodo = string.IsNullOrWhiteSpace(f.Metodo) ? "-" : f.Metodo,
-                    Monto = f.MontoTotal
-                })
-                .ToListAsync();
-
-            decimal total = data.Sum(x => x.Monto);
-
-            var pdfBytes = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Margin(30);
-
-                    // Header
-                    page.Header().Row(row =>
-                    {
-                        row.RelativeItem().Column(col =>
-                        {
-                            col.Item().Text("MecaFlow Taller").FontSize(16).Bold().FontColor("#1a5276");
-                            col.Item().Text("Listado de Facturas").FontSize(22).Bold();
-                            col.Item().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm}")
-                                      .FontSize(10).FontColor("#7d7d7d");
-                        });
-                    });
-
-                    // Tabla
-                    page.Content().PaddingVertical(15).Column(col =>
-                    {
-                        col.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(cols =>
-                            {
-                                cols.RelativeColumn(1);    // #
-                                cols.RelativeColumn(1.3f); // Fecha
-                                cols.RelativeColumn(2.2f); // Cliente
-                                cols.RelativeColumn(1.6f); // Vehículo
-                                cols.RelativeColumn(1.4f); // Método
-                                cols.RelativeColumn(1.4f); // Monto
-                            });
-
-                            // Encabezado
-                            table.Header(h =>
-                            {
-                                string bg = "#154360", fg = "#FFFFFF";
-                                h.Cell().Background(bg).Padding(5).Text("Factura #").FontColor(fg).Bold();
-                                h.Cell().Background(bg).Padding(5).Text("Fecha").FontColor(fg).Bold();
-                                h.Cell().Background(bg).Padding(5).Text("Cliente").FontColor(fg).Bold();
-                                h.Cell().Background(bg).Padding(5).Text("Vehículo").FontColor(fg).Bold();
-                                h.Cell().Background(bg).Padding(5).Text("Método").FontColor(fg).Bold();
-                                h.Cell().Background(bg).Padding(5).AlignRight().Text("Monto (₡)").FontColor(fg).Bold();
-                            });
-
-                            bool alt = false;
-                            foreach (var r in data)
-                            {
-                                string bg = alt ? "#f2f3f4" : "#ffffff"; alt = !alt;
-
-                                table.Cell().Background(bg).Padding(5).Text(r.FacturaId);
-                                table.Cell().Background(bg).Padding(5).Text(r.Fecha);
-                                table.Cell().Background(bg).Padding(5).Text(r.Cliente);
-                                table.Cell().Background(bg).Padding(5).Text(r.Vehiculo);
-                                table.Cell().Background(bg).Padding(5).Text(r.Metodo);
-                                table.Cell().Background(bg).Padding(5)
-                                     .AlignRight()
-                                     .Text(r.Monto.ToString("N2"));
-                            }
-
-                            // Total
-                            table.Cell().ColumnSpan(5).AlignRight().Padding(5).Background("#d5dbdb")
-                                 .Text("TOTAL:").Bold();
-                            table.Cell().Padding(5).Background("#d5dbdb").AlignRight()
-                                 .Text(total.ToString("N2")).Bold();
-                        });
-                    });
-
-                    page.Footer().AlignCenter().Text(t =>
-                    {
-                        t.DefaultTextStyle(x => x.FontSize(9).FontColor("#7d7d7d"));
-                        t.Span("Reporte generado automáticamente por ");
-                        t.Span("MecaFlow").Bold();
-                    });
-                });
-            }).GeneratePdf();
-
-            var fileName = $"Facturas_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
-            return File(pdfBytes, "application/pdf", fileName);
-        }
-
-        // ======================== Helpers =============================
+        // Helpers
         private async Task CargarSelects(int? clienteId = null, int? vehiculoId = null)
         {
             ViewData["ClienteId"] = new SelectList(
