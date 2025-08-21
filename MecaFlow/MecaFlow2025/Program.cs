@@ -9,7 +9,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.IO;
-using Microsoft.Extensions.Caching.Memory;   // ← añadido
+using Microsoft.Extensions.Caching.Memory;  
+using Microsoft.AspNetCore.Http;            
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,9 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    // Recomendado para producción:
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 // DbContext (connection string en appsettings.json)
@@ -90,6 +94,30 @@ app.MapGet("/debug/openai", (IConfiguration cfg) =>
 });
 
 
+// =========== Helper: respuesta de respaldo (modo básico) ===========
+static string FallbackReply(string? msg)
+{
+    var t = (msg ?? string.Empty).ToLowerInvariant();
+
+    if (t.Contains("hora") || t.Contains("abren") || t.Contains("cierran"))
+        return "Horario: L–V 7:00–17:00. Sábado y domingo: cerrado.";
+    if (t.Contains("tel") || t.Contains("whats"))
+        return "Tel/WhatsApp: +506 6052 7657.";
+    if (t.Contains("direc") || t.Contains("ubic"))
+        return "Dirección: Barrio del Carmen, San José, Costa Rica.";
+    if (t.Contains("correo") || t.Contains("email"))
+        return "Correo: tallerhiburt@gmail.com";
+
+    return "Estoy en modo básico temporalmente.\n" +
+           "• Horario: L–V 7:00–17:00\n" +
+           "• Tel/WhatsApp: +506 6052 7657\n" +
+           "• Correo: tallerhiburt@gmail.com\n" +
+           "• Dirección: Barrio del Carmen, San José, CR\n" +
+           "¿En qué te ayudo?";
+}
+// ================================================================
+
+
 // ===================== CHATBOT: /api/chat =====================
 app.MapPost("/api/chat", async (
     HttpContext http,
@@ -140,10 +168,10 @@ app.MapPost("/api/chat", async (
             chatId = chatIdEl.GetString();
 
         var apiKey = cfg["OpenAI:ApiKey"];
+        // === Si NO hay API key -> responder en modo básico (HTTP 200) ===
         if (string.IsNullOrWhiteSpace(apiKey))
-            return Results.Json(new { error = "API key no configurada" }, statusCode: 500);
+            return Results.Ok(new { reply = FallbackReply(message) });
 
-        // 👇 TU INFORMACIÓN (sin cambios)
         var systemPrompt = """
         Eres el asistente virtual del Taller MecaFlow.
         Responde en español, breve y claro.
@@ -220,37 +248,29 @@ app.MapPost("/api/chat", async (
             if (status == 429 || status >= 500)
             {
                 var wait = resp.Headers.RetryAfter?.Delta ??
-                           TimeSpan.FromSeconds(Math.Pow(2, attempt + 1) * 2); // 2s, 4s, 8s...
+                           TimeSpan.FromSeconds(Math.Pow(2, attempt + 1) * 2); 
                 await Task.Delay(wait);
                 continue;
             }
 
-            // Otros errores: devolver tal cual
-            return Results.Json(
-                new { error = "OpenAI devolvió error", status, detail = env.IsDevelopment() ? raw : null },
-                statusCode: status
-            );
+            // Otros errores 4xx (p.ej. 400/401) -> responder en modo básico
+            return Results.Ok(new { reply = FallbackReply(message) });
         }
 
-        // Si se agotaron los reintentos
-        return Results.Json(
-            new { error = "Rate limit alcanzado. Intenta de nuevo en unos segundos." },
-            statusCode: 429
-        );
+        // Si se agotaron los reintentos -> modo básico
+        return Results.Ok(new { reply = FallbackReply(message) });
         // ---------------------------------------------------------
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        return Results.Json(
-            new { error = "Excepción en /api/chat", message = ex.Message, stack = env.IsDevelopment() ? ex.StackTrace : null },
-            statusCode: 500
-        );
+        // Cualquier excepción -> modo básico
+        return Results.Ok(new { reply = FallbackReply("fallback") });
     }
 })
 .WithName("ChatApi");
 
 
-// ===== Reinicio del chat: limpia cualquier estado del lado servidor (si existiera) =====
+// ===== Reinicio del chat: limpia cualquier estado del lado servidor 
 app.MapPost("/api/chat/reset", (HttpContext ctx) =>
 {
     // Si en el futuro guardas algo del chat en sesión, límpialo aquí:

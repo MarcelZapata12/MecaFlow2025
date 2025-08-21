@@ -353,7 +353,7 @@ else
                                 <i class="bi bi-pencil-square"></i>
                             </a>
                             <a href="javascript:void(0)" class="btn btn-sm btn-danger"
-                               onclick="openModal('@Url.Action("Delete", "Diagnosticos", new { id = d.DiagnosticoId })')">
+                               onclick="confirmDiagnosticoDelete(@d.DiagnosticoId)">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
@@ -363,7 +363,7 @@ else
         </table>
     </div>
 
-    <!-- Modal para administrador -->
+    <!-- Modal para administrador (edición/eliminación via partial si quieres mantenerlo) -->
     <div class="modal fade" id="modalDiagnostico" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content shadow">
@@ -381,8 +381,30 @@ else
             </div>
         </div>
     </div>
-}
 
+    <!-- Nuevo: Modal de confirmación de eliminación directa -->
+    <div class="modal fade" id="diagnosticoDelete" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:#1f1f1f;color:#fff;">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar este diagnóstico?</p>
+                    <form id="diagnosticoDeleteForm" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" id="diagnosticoDeleteId" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-danger" onclick="submitDiagnosticoDelete()">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 <!-- Toast de éxito -->
 <div class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3" id="toastSuccess" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="d-flex">
@@ -392,105 +414,105 @@ else
 </div>
 
 @section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @using System.Text.Json
 <script>
     const isClient = @(isClient.ToString().ToLower());
 
-    if (isClient) {
-        // =============================
-        // SCRIPTS PARA VISTA DE CLIENTE
-        // =============================
-
-        // BÚSQUEDA CLIENT-SIDE
-        document.getElementById('diagnosticoSearch').addEventListener('input', function () {
-            const q = this.value.toLowerCase();
-            document.querySelectorAll('#diagnosticosGrid .diagnostico-card').forEach(function (card) {
-                const txt = card.innerText.toLowerCase();
-                card.style.display = txt.includes(q) ? '' : 'none';
-            });
-        });
-
-        // DETALLES (carga en modal por ítem)
-        function openDiagnosticoDetails(id) {
-            const modalId = `diagnosticoDetails-${id}`;
-            const bodyId = `diagnosticoDetailsBody-${id}`;
-            const modal = new bootstrap.Modal(document.getElementById(modalId));
-            const body = document.getElementById(bodyId);
-            body.innerHTML = "<p class='text-center'>Cargando…</p>";
-            modal.show();
-
-            fetch(`/Diagnosticos/Details/${id}`)
-                .then(r => r.text())
-                .then(html => { body.innerHTML = html; })
-                .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
-        }
-
-        // Hacer función global
-        window.openDiagnosticoDetails = openDiagnosticoDetails;
-
-    } else {
-        // =============================
-        // SCRIPTS PARA VISTA DE ADMINISTRADOR (Original)
-        // =============================
-
-        function openModal(url) {
-            const modal = new bootstrap.Modal(document.getElementById('modalDiagnostico'));
-            document.getElementById('modalContent').innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
-            fetch(url)
-                .then(r => r.text())
-                .then(html => {
-                    document.getElementById('modalContent').innerHTML = html;
-                    modal.show();
+        if (isClient) {
+            // =============================
+            // SCRIPTS PARA VISTA DE CLIENTE
+            // =============================
+            document.getElementById('diagnosticoSearch')?.addEventListener('input', function () {
+                const q = this.value.toLowerCase();
+                document.querySelectorAll('#diagnosticosGrid .diagnostico-card').forEach(function (card) {
+                    const txt = card.innerText.toLowerCase();
+                    card.style.display = txt.includes(q) ? '' : 'none';
                 });
-        }
+            });
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const ctx = document.getElementById('diagnosticosChart');
-            if (!ctx) return;
+            function openDiagnosticoDetails(id) {
+                const modalId = `diagnosticoDetails-${id}`;
+                const bodyId = `diagnosticoDetailsBody-${id}`;
+                const modal = new bootstrap.Modal(document.getElementById(modalId));
+                const body = document.getElementById(bodyId);
+                body.innerHTML = "<p class='text-center'>Cargando…</p>";
+                modal.show();
 
-            const labels = @Html.Raw(JsonSerializer.Serialize(
-                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Key.ToString("dd/MM/yyyy"))
-            ));
+                fetch(`/Diagnosticos/Details/${id}`)
+                    .then(r => r.text())
+                    .then(html => { body.innerHTML = html; })
+                    .catch(() => { body.innerHTML = `<div class="alert alert-danger">Error al cargar detalles</div>`; });
+            }
+            window.openDiagnosticoDetails = openDiagnosticoDetails;
+
+        } else {
+            // =============================
+            // SCRIPTS PARA VISTA DE ADMINISTRADOR (Original)
+            // =============================
+            function openModal(url) {
+                const modal = new bootstrap.Modal(document.getElementById('modalDiagnostico'));
+                document.getElementById('modalContent').innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary"></div></div>';
+                fetch(url)
+                    .then(r => r.text())
+                    .then(html => {
+                        document.getElementById('modalContent').innerHTML = html;
+                        modal.show();
+                    });
+            }
+            window.openModal = openModal;
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const ctx = document.getElementById('diagnosticosChart');
+                if (!ctx) return;
+
+                const labels = @Html.Raw(JsonSerializer.Serialize(
+                                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Key.ToString("dd/MM/yyyy"))
+                        ));
             const data = @Html.Raw(JsonSerializer.Serialize(
-        Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Count())
-            ));
+                                Model.GroupBy(d => d.Fecha.Date).OrderBy(g => g.Key).Select(g => g.Count())
+                        ));
 
             if (labels.length === 0 || data.length === 0) return;
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Diagnósticos por Fecha',
-                        data: data,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Diagnósticos por Fecha',
+                            data: data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true, ticks: { stepSize: 1 } }
                         }
                     }
-                }
+                });
             });
-        });
+        }
 
-        // Hacer función global para administrador
-        window.openModal = openModal;
-    }
+        // ===========================
+        // ELIMINAR (Modal de confirmación)
+        // ===========================
+        function confirmDiagnosticoDelete(id) {
+            const modal = new bootstrap.Modal(document.getElementById('diagnosticoDelete'));
+            document.getElementById('diagnosticoDeleteId').value = id;
+            document.getElementById('diagnosticoDeleteForm').action = `/Diagnosticos/Delete/${id}`;
+            modal.show();
+        }
+        function submitDiagnosticoDelete() {
+            document.getElementById('diagnosticoDeleteForm').submit();
+        }
 
-    // TOAST ÉXITO (disponible para todos)
-    function showSuccessToast() {
-        new bootstrap.Toast(document.getElementById('toastSuccess')).show();
-    }
-</script>
+        // TOAST ÉXITO (disponible para todos)
+        function showSuccessToast() {
+            new bootstrap.Toast(document.getElementById('toastSuccess')).show();
+        }
+    </script>
 }
