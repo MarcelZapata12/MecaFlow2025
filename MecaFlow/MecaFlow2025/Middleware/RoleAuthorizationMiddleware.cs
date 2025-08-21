@@ -6,14 +6,10 @@ namespace MecaFlow2025.Middleware
     {
         private readonly RequestDelegate _next;
 
-        public RoleAuthorizationMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
+        public RoleAuthorizationMiddleware(RequestDelegate next) => _next = next;
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // 0) Respetar [AllowAnonymous]
             var endpoint = context.GetEndpoint();
             if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
             {
@@ -22,10 +18,10 @@ namespace MecaFlow2025.Middleware
             }
 
             var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+            var isApi = path.StartsWith("/api/");
             var userId = context.Session.GetString("UserId");
             var userRole = context.Session.GetString("UserRole");
 
-            // 1) Rutas públicas y estáticos
             if (path == "/" ||
                 path.StartsWith("/auth") ||
                 path.StartsWith("/home") ||
@@ -42,17 +38,47 @@ namespace MecaFlow2025.Middleware
                 return;
             }
 
-            // 2) Si no hay sesión, enviar a Login
+            // --- ALLOWLIST: Chat para cualquier usuario autenticado ---
+            if (path.StartsWith("/api/chat")) 
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsJsonAsync(new { error = "No autenticado" });
+                    return;
+                }
+                await _next(context);
+                return;
+            }
+            // -----------------------------------------------------------
+
+            // 2) Sin sesión
             if (string.IsNullOrEmpty(userId))
             {
-                context.Response.Redirect("/Auth/Login");
+                if (isApi)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsJsonAsync(new { error = "No autenticado" });
+                }
+                else
+                {
+                    context.Response.Redirect("/Auth/Login");
+                }
                 return;
             }
 
-            // 3) Chequeo de permisos por rol
+            // 3) Chequeo de permisos por rol (solo para lo no-API o APIs distintas a /api/chat)
             if (!HasPermission(path, userRole))
             {
-                context.Response.Redirect("/Auth/AccessDenied");
+                if (isApi)
+                {
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsJsonAsync(new { error = "Acceso denegado" });
+                }
+                else
+                {
+                    context.Response.Redirect("/Auth/AccessDenied");
+                }
                 return;
             }
 
@@ -74,16 +100,16 @@ namespace MecaFlow2025.Middleware
                        path.Contains("/diagnosticos") ||
                        path.Contains("/vehiculos") ||
                        path.Contains("/pagos") ||
-                       path.Contains("/facturas") ||  // ← AGREGADO PARA EMPLEADOS
+                       path.Contains("/facturas") ||
                        path.Contains("/home");
             }
 
-            // Cliente  
+            // Cliente
             if (userRole == "Cliente")
             {
                 return path.Contains("/diagnosticos") ||
                        path.Contains("/vehiculos") ||
-                       path.Contains("/facturas") ||  // ← AGREGADO PARA CLIENTES
+                       path.Contains("/facturas") ||
                        path.Contains("/home");
             }
 
